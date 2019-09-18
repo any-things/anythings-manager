@@ -1,0 +1,440 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-button/things-button-bar.html">
+<link rel="import" href="../../bower_components/things-i18n-msg/things-i18n-msg.html">
+<link rel="import" href="../../bower_components/things-input-field/things-input-field.html">
+<link rel="import" href="../../bower_components/things-msg-box-behavior/things-assert-behavior.html">
+<link rel="import" href="../../bower_components/things-resource-combo/things-code-combo.html">
+<link rel="import" href="../../bower_components/things-tristate-radio/things-tristate-radio.html">
+
+<!--
+## mps-system-new-user
+
+	사용자 추가 팝업
+-->
+
+<dom-module id="mps-system-new-user">
+	<template>
+		<style>
+			:host {
+				display: block;
+				box-sizing: border-box;
+				@apply --things-default-padding;
+				@apply --layout-vertical;
+				@apply --layout-flex;
+			}
+			.container {
+				@apply --layout-horizontal;
+				@apply --layout-flex;
+			}
+			.sub-container {
+				@apply --layout-vertical;
+				@apply --layout-flex;
+			}
+			paper-toolbar {
+				background-color:var(--things-white-background-color);
+				height: 50px;
+				@apply --things-tight-padding;
+			}
+			paper-toolbar::shadow #bottomBar {
+				height: 50px;
+				@apply --layout-horizontal;
+				@apply --layout-end-justified;
+				padding: 0 10px;
+			}
+		</style>
+
+		<things-i18n-msg auto msgid="label.user_id" msg="{{labelUserId}}" hidden></things-i18n-msg>
+		<things-i18n-msg auto msgid="label.login" msg="{{labelLogin}}" hidden></things-i18n-msg>
+		<things-i18n-msg auto msgid="label.name" msg="{{labelName}}" hidden></things-i18n-msg>
+		<things-i18n-msg auto msgid="label.password" msg="{{labelPassword}}" hidden></things-i18n-msg>
+		<!--things-i18n-msg auto msgid="label.email" msg="{{labelEmail}}" hidden></things-i18n-msg-->
+		<things-i18n-msg auto msgid="label.confirmed_password" msg="{{labelConfirmPassword}}" hidden></things-i18n-msg>
+		<things-i18n-msg auto msgid="label.admin_flag" msg="{{labelAdminFlag}}" hidden></things-i18n-msg>
+		<things-i18n-msg auto msgid="label.active" msg="{{labelActiveFlag}}" hidden></things-i18n-msg>
+
+		<things-ajax
+			id="add-user-ajax"
+			resource-url="users"
+			resource-action="create">
+		</things-ajax>
+
+		<things-ajax
+			id="check-add-user-opts"
+			method="GET"
+			resource-url="settings"
+			resource-action="index"
+			last-response="{{addUserOptions}}">
+		</things-ajax>
+
+		<div class="container">
+			<div class="sub-container">
+				<things-input-field
+					id="login-field"
+					label="[[labelLogin]]"
+					value="{{login}}"
+					minlength="3"
+					maxlength="20"
+					placeholder="로그인 아이디 : 3글자 이상 20글자 이하로 입력하세요"
+					tab-index="1"
+					required
+					on-input="_execValidate">
+				</things-input-field>
+
+				<things-input-field
+					id="name-field"
+					label="[[labelName]]"
+					value="{{name}}"
+					minlength="2"
+					maxlength="10"
+					placeholder="사용자 이름 : 2글자 이상 10글자 이하로 입력하세요"
+					tab-index="2"
+					required
+					on-input="_execValidate">
+				</things-input-field>
+
+				<!--things-input-field
+					id=""
+					label="[[labelEmail]]"
+					value="{{email}}"
+					validator="things-validator-email"
+					maxlength="32"
+					placeholder="사용자 이메일 : 30글자 이하로 입력하세요"
+					tab-index="3"
+					required
+					on-input="_execValidate">
+				</things-input-field-->
+
+				<things-input-field
+					hidden
+					id="passwd-field"
+					label="[[labelPassword]]"
+					type="password"
+					value="{{password}}"
+					minlength="2"
+					maxlength="15"
+					placeholder="[[passwordPatternLabel]]"
+					tab-index="4"
+					required
+					on-input="_passwordValidate">
+				</things-input-field>
+
+				<things-input-field
+					hidden
+					required
+					id="confirm-passwd-field"
+					label="[[labelConfirmPassword]]"
+					type="password"
+					value="{{confirmedPassword}}"
+					minlength="2"
+					maxlength="15"
+					placeholder="비밀번호 확인 : 위 비밀번호와 동일하게 입력하세요"
+					tab-index="5"
+					required
+					on-input="_confirmPasswordValidate">
+				</things-input-field>
+
+				<things-tristate-radio
+					id="admin-flag"
+					label="[[labelAdminFlag]]"
+					value="{{adminFlag}}"
+					tab-index="6">
+				</things-tristate-radio>
+
+				<things-tristate-radio
+					id="active-flag"
+					label="[[labelActiveFlag]]"
+					value="{{activeFlag}}"
+					tab-index="7">
+				</things-tristate-radio>
+			</div>
+		</div>
+
+		<paper-toolbar id="toolbar" justify='end'>
+			<div class="bottom">
+				<things-button-bar id="button-group" buttons="[[buttons]]"></things-button-bar>
+			</div>
+		</paper-toolbar>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'mps-system-new-user',
+
+			behaviors: [
+				Things.MsgBoxBehavior,
+				Things.AssertBehavior,
+				Things.EncryptBehavior,
+				Things.PwdValidateBehavior
+			],
+
+			properties: {
+				/**
+				 * 버튼 그룹
+				 *******
+				 *@type {Array}
+				 */
+				buttons: {
+					type: Array,
+					value: function() {
+						return [ {
+							id: 'save-btn',
+							text: 'save'
+						} ];
+					}
+				},
+
+				/**
+				 * 비밀번호 patter을 표시하기 위한 placeholder 값
+				 */
+				passwordPatternLabel: {
+					type: String,
+					value: function() {
+						var translatedLabel = Things.DataGlobal.t('text.password_pattern');
+
+						if(translatedLabel === 'text.password_pattern') {
+							return '사용자 비밀번호 : 2글자 이상 15글자 이하로 입력하세요';
+						} else {
+							return translatedLabel;
+						}
+					}
+				},
+
+				addUserOptions: {
+					type: Array,
+					observer: '_addUserOptsChanged'
+				},
+
+				/**
+				 * password validation 사용 여부
+				 */
+				usePwdValidation: {
+					type: Boolean,
+					value: false
+				},
+
+				/**
+				 * 설정을 통해 결정한 초기 비밀번호
+				 */
+				initialPwd: {
+					type: String,
+					observer: '_initialPwdChanged'
+				}
+			},
+
+			listeners: {
+				'save-btn-tap': 'addUser',
+				'add-user-ajax.things-ajax-response': 'addSuccess'
+			},
+
+      /**
+       * checkUseValidation 호출하여 setting의 값을 읽어옴
+       */
+			ready: function() {
+				this.checkAddUserOptions();
+			},
+
+      /**
+       * things framework의 설정 값중 'user.password.validation.enable'에 해당되는 value를 조회
+       * 하는 ajax를 호출
+       */
+			checkAddUserOptions: function() {
+				var checkAddUserOptionsAjax = this.$['check-add-user-opts'];
+				checkAddUserOptionsAjax.queryFields = [{
+					name: 'name',
+					value: 'user.password.validation.enable,security.init.pass',
+					operator: 'in'
+				}];
+				checkAddUserOptionsAjax.generateRequest();
+			},
+
+			/**
+			 * 사용자 추가시 사용하는 설정 상의 값들을 읽어옴
+			 */
+			_addUserOptsChanged: function(addUserOptions) {
+				var initialPwd;
+				addUserOptions.items.forEach(function(option) {
+					if(option.name == 'user.password.validation.enable') {
+						this.usePwdValidation = JSON.parse(option.value);
+					} else if (option.name == 'security.init.pass') {
+						initialPwd = option.value;
+					}
+
+				}.bind(this));
+
+				this.initialPwd = initialPwd ? initialPwd : null;
+			},
+
+			/**
+			 * 초기 비밀번호 값이 변경되면 호출되며
+			 * 설정된 초기 비밀번호 값이 있으면 this.password의 값을 초기화 
+			 * 없을 경우 _showPwdFields을 호출하여 비밀번호 입력 필드 출력
+			 */
+			_initialPwdChanged: function(initialPwd) {
+				if(initialPwd) {
+					this.password = initialPwd;
+				} else {
+					this._showPwdFields();
+				}
+			},
+
+			/**
+			 * 비밀번호 자동 생성이 아닐경우 숨겨진 비밀번호 필드를 화면에 출력
+			 */
+			_showPwdFields: function() {
+				this._getPwdField().removeAttribute('hidden');
+				this._getConfirmPwdField().removeAttribute('hidden');
+			},
+
+			_getPwdField: function() {
+				return this.$['passwd-field'];
+			},
+
+			_getConfirmPwdField: function() {
+				return this.$['confirm-passwd-field'];
+			},
+
+			/**
+			 * 사용자 추가
+			 *******
+			 */
+			addUser: function() {
+				if(this._formValidate()) {
+					var addAjax = this.$['add-user-ajax'];
+					addAjax.body = {
+						login: this.login,
+						name: this.name,
+						email: this.login,
+						locale: 'ko-KR',
+						encrypted_password: this.sha256(this.password),
+						super_user: false,
+						admin_flag: this.adminFlag,
+						active_flag: this.activeFlag
+					};
+					addAjax.generateRequest();
+
+				} else {
+					this.openConfirmMsg({
+						type: 'error',
+						title: Things.DataGlobal.t('error.VALIDATION_ERROR'),
+						text: Things.DataGlobal.t('text.invalid_input')
+					})
+				}
+			},
+
+      /**
+       * form submit 이전에 유효성 검사를 수행한다.
+       * 유효성 검사 도중 문제 발생시 throw 문제가 없다면 true를 리턴
+       *
+       * form element 아래의 모든 input 중 invalid가 true인 (validation 실패한) 필드가 있다면
+       * false를 return
+       *
+       * @return Boolean
+       */
+			_formValidate: function() {
+				var formFields = [
+					this.$['login-field'],
+					this.$['name-field'],
+					this.$['passwd-field'],
+					this.$['confirm-passwd-field']
+				];
+
+				var result = true;
+
+				for(var i = 0; i < formFields.length; i++) {
+					if(!formFields[i].isValid) {
+						result = false;
+						break;
+					}
+				}
+
+				return result;
+			},
+
+			/**
+			 * on-input event handler
+			 *
+			 * 비밀번호가 아닌 필드들에 대한 공통 event handler
+			 * 값이 입력되면 validate를 호출하여 validationd을 수행함
+			 */
+			_execValidate: function(event) {
+				event.currentTarget.validate();
+			},
+
+      /**
+       * on-input event handler
+       * 새로운 비밀번호에 대한 validation 수행
+       * things-pwd-validate-behavior의 함수를 통해
+       * validation을 수행하고 결과값 (errorMessage)를 input field에 초기화함
+       */
+			_passwordValidate: function() {
+				var pwField = this.$['passwd-field'];
+				var pw = pwField.value;
+				pwField.isValid = true;
+
+				try {
+					this.checkEmpty(pw, 'label.password');
+					this.execPwdValidation({
+						id: this.$['login-field'].value,
+						password: pw
+					});
+				} catch (e) {
+					pwField.isValid = false;
+					pwField.errorMessage = e;
+				}
+			},
+
+      /**
+       * on-input event hadler
+       * 새로운 비밀번호에 대한 validation 수행
+       * things-pwd-validate-behavior의 함수를 통해
+       * validation을 수행하고 결과값 (errorMessage)를 input field에 초기화함
+       */
+			_confirmPasswordValidate: function() {
+				var confirmPwField = this.$['confirm-passwd-field'];
+				var confirmPw = confirmPwField.value;
+				confirmPwField.isValid = true;
+
+				try {
+					this.checkEmpty(confirmPw, 'label.confirmed_password');
+					this.checkNotEqual(this.$['passwd-field'].value, confirmPw);
+				} catch (e) {
+					confirmPwField.isValid = false;
+					confirmPwField.errorMessage = e;
+				}
+			},
+
+			/**
+			 * 사용자 추가 성공시
+			 *******
+			 * @param {Object} event
+			 */
+			addSuccess: function(event) {
+				this.clearValue();
+				var dialogCloseEvent = new CustomEvent('things-dialog-close');
+				document.dispatchEvent(dialogCloseEvent);
+			},
+
+			/**
+			 * clearValue
+			 *******
+			 */
+			clearValue: function() {
+				this.login = null;
+				this.name = null;
+				this.email = null;
+				this.password = null;
+				this.confirmedPassword = null;
+				this.adminFlag = false;
+				this.activeFlag = false;
+			}
+		})
+	</script>
+</dom-module>

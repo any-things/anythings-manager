@@ -1,0 +1,172 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
+
+<link rel="import" href="../../bower_components/things-global-behavior/things-global-behavior.html">
+<link rel="import" href="../../bower_components/things-i18n-msg/things-i18n-msg.html">
+
+<link rel="import" href="./things-profile-dialog.html">
+<link rel="import" href="./things-profile-history.html">
+
+<!--
+## things-profile
+	`<things-profile-dialog>`  프로파일 컴포넌트
+
+	Example
+
+			<things-profile></things-profile>
+
+@demo demo/index.html
+-->
+
+<dom-module id="things-profile">
+	<template>
+		<style>
+			:host {
+				display: inline-block;
+				background-color: var(--things-secondary-background-color);
+			}
+
+			paper-icon-button {
+				@apply(--things-small-icon);
+				margin-right: 3px;
+			}
+
+			#user-name {
+				cursor: pointer;
+			}
+		</style>
+
+		<things-i18n-msg msgid="button.profile" msg="{{labelProfile}}" auto hidden>profile</things-i18n-msg>
+		<things-i18n-msg msgid="label.menu" msg="{{labelMenu}}" auto hidden>Menu</things-i18n-msg>
+
+		<div>
+			<div hidden="[[!isMobile]]">[[labelMenu]]</div>
+			
+			<paper-icon-button 
+				id="account"
+				icon="icons:account-circle"
+				title="[[labelProfile]]"
+				on-tap="open">
+			</paper-icon-button>
+			
+			<span id="user-name" on-tap="openUserLog" hidden="[[isMobile]]">{{globals.user.name}}</span>
+		</div>
+		
+		<things-profile-dialog 
+			id="dialog"
+			system="[[system]]"
+			role-list-url="[[roleListUrl]]"
+			default-locale ="[[defaultLocale]]"
+			locale-hidden="[[localeHidden]]"></things-profile-dialog>
+
+	</template>
+
+	<script>
+		Polymer({
+			is: 'things-profile',
+
+			properties: {
+				/**
+				 * 버튼 활성화 여부
+				 * *******
+				 * @type {String}
+				 */
+				buttonEnable: {
+					type: Boolean,
+					computed: '_isSignedIn(globals.user.name)'
+				},
+
+				/**
+				 * 시스템 명
+				 * *******
+				 * @type {String}
+				 */
+				system: {
+					type: String
+				},
+
+				/**
+				 * 권한 요청 URL
+				 * *******
+				 * @type {String}
+				 */
+				// roleRequestUrl: {
+				// 	type: String,
+				// 	value: 'request_auths/account/auth/request'
+				// },
+
+				/**
+				 * 역할 리스트 조회 URL
+				 * *******
+				 * @type {String}
+				 */
+				roleListUrl: {
+					type: String
+				},
+				/**
+				 * 기본 locale
+				 * *******
+				 * @type {String}
+				 */
+				defaultLocale: {
+					type: String
+				},
+				/**
+				 * 로케일 설정을 숨기기 위한 옵션 
+				 */
+				localeHidden: {
+					type: Boolean,
+					value: false
+				},
+
+				isMobile: {
+					type: Boolean,
+					value: false
+				}
+			},
+
+			behaviors: [
+				Things.GlobalBehavior
+			],
+
+			/**
+			 * Profile Dialog를 오픈한다.
+			 * ******
+			 */
+			open: function() {
+				var profileDialog = this.$['dialog'];
+				profileDialog.getSiteList();
+				profileDialog.open();
+				
+			},
+
+			openUserLog: function() {
+				event.preventDefault();
+				var view = document.createElement('things-profile-history');
+				view.title = Things.DataGlobal.t('title.security_event');
+
+				this.fire('things-open-custom-size-dialog', {
+					view: view,
+					modal: true,
+					dialogSize: 'large',
+					closeCallback: function(){}
+				});
+			},
+
+			/**
+			 * 로그인 된 상황인 지 체크
+			 * @param {String} name name을 체크하여 로인인 체크
+			 */
+			_isSignedIn: function(name) {
+				return name ? false : true;
+			}
+		});
+	</script>
+</dom-module>

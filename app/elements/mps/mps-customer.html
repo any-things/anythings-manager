@@ -1,0 +1,178 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+
+<!--
+	마스터 > 거래처
+-->
+<dom-module id="mps-customer">
+  <template>
+    <style>
+      :host {
+        @apply --layout-vertical;
+      }
+      things-resource-grid {
+        @apply --layout-flex;
+      }
+    </style>
+
+		<things-ajax
+			auto
+			id="resource-meta"
+			method="GET"
+			resource-url="[[menuMetaUrl]]"
+			last-response="{{metaData}}">
+    </things-ajax>
+
+    <!-- 수신 준비 -->
+    <things-ajax
+      id="ready-to-receive-ajax"
+      resource-url="customer/receive/ready/:id"
+      method="POST"
+      content-type="application/json">
+    </things-ajax>
+
+    <!-- 수신 -->
+    <things-ajax
+      id="receive-ajax"
+      resource-url="customer/receive/start/:id"
+      method="POST"
+      content-type="application/json">
+    </things-ajax>
+
+		<things-search-form
+			id="search-form"
+			title="[[menuInfo.title]]"
+			form-fields="[[searchFormFields]]"
+			select-fields="[[selectFields]]"
+			sort-fields="[[sortFields]]"
+			action-url="[[menuInfo.resource_url]]"
+			page="{{page}}"
+      limit="[[limit]]"
+      last-response="{{lastResponse}}">
+    </things-search-form>
+
+    <things-resource-grid
+      id="grid"
+      config="[[gridConfig]]"
+      model="[[gridModel]]"
+      columns="[[gridColumns]]"
+      data="[[lastResponse.items]]"
+      total-count="[[itemCount]]"
+      current-page="{{page}}"
+      limit="[[limit]]"
+      fixed-column-count="[[menuInfo.fixed_columns]]"
+      grid-save-action="[[menuInfo.grid_save_url]]"
+      buttons="[[buttons]]">
+    </things-resource-grid>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mps-customer',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
+
+      listeners: {
+        'grid.receive-btn-tap': '_receiveBtnTapped',
+        'ready-to-receive-ajax.things-ajax-response': '_receiveCustomer',
+        'receive-ajax.things-ajax-response': '_endReceivingCustomer'
+      },
+
+      /**
+       * 수신 버튼 click event handler
+       *******************
+       * @param {Object} event
+       */
+      _receiveBtnTapped: function(event) {
+        var comCd = this._checkForReceive();
+        if(comCd) {
+          this._readyToReceive(event, comCd);
+        }
+      },
+
+      /**
+       * 거래처 마스터 수신 준비 - 수신할 거래처 건수 조회
+       *******************
+       * @param {Object} event
+       * @param {String} comCd
+       */
+      _readyToReceive: function(event, comCd) {
+        var title = Things.DataGlobal.t(event.detail.text);
+        var ajax = this.$['ready-to-receive-ajax'];
+        ajax.resourceId = comCd;
+        ajax.generateRequest();
+      },
+
+      /**
+       * 수신을 위한 체크
+       *******************
+       */
+      _checkForReceive: function() {
+        var searchFormData = this.$['search-form'].serializeMyForm();
+        var comCd = searchFormData.com_cd;
+
+        if(!comCd) {
+          var text = '고객사를 선택하세요';
+          this.openInfoMsg({ type: 'info', title: text, closeOnConfirm: true });
+        }
+
+        return comCd;
+      },
+
+      /**
+       * 거래처 마스터 수신
+       *******************
+       * @param {Object} event
+       */
+      _receiveCustomer: function(event) {
+        this._realReceiveCustomer(event);
+      },
+
+      /**
+       * 거래처 마스터 수신
+       *******************
+       * @param {Object} event
+       */
+      _realReceiveCustomer: function(event) {
+        var comCd = event.detail.com_cd;
+        var custCount = event.detail.count;
+
+        if(custCount == 0) {
+          this.openInfoMsg({ type: 'info', title: '수신할 거래처 정보가 없습니다.', closeOnConfirm: true });
+
+        } else {
+          var ajax = this.$['receive-ajax'];
+          var title = Things.DataGlobal.t('button.receive');
+          var text = '거래처 건수: [' + custCount + ']\n' + Things.DataGlobal.t('text.Sure to X', { x: title });
+
+          this.openConfirmMsg({
+            type: 'info', title: title, text: text, showCancelButton: true, closeOnConfirm: false
+          }, function() {
+            this.openConfirmMsg({
+              type: 'info',
+              title: title,
+              text: Things.DataGlobal.t('text.please_wait'),
+              showConfirmButton: false
+            });
+            ajax.resourceId = comCd;
+            ajax.generateRequest();
+          }.bind(this));
+        }
+      },
+
+      /**
+       * 거래처 마스터 수신 완료 후 ...
+       *******************
+       * @param {Object} event
+       */
+      _endReceivingCustomer: function(event) {
+        var text = Things.DataGlobal.t('text.Success to Process');
+        this.openInfoMsg({ type: 'info', title: text, closeOnConfirm: true });
+      }
+    })
+  </script>
+</dom-module>

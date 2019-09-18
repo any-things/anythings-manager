@@ -1,0 +1,109 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-tooltip/paper-tooltip.html">
+
+<link rel="import" href="../../bower_components/things-global-behavior/things-global-behavior.html">
+<link rel="import" href="../../bower_components/things-i18n-msg/things-i18n-msg.html">
+
+<!--
+  Sidebar Toggle을 위한 화면 
+  브랜드 이미지가 표시되고 해당 이미지를 클릭하면 Toggle이 작동하여 Sidebar가 show/hide 동작을 한다. 
+-->
+
+<dom-module id="things-sidebar-toggle">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      paper-button {
+        /*background:url(/images/icon-brand.png) no-repeat transparent;*/
+        @apply(--things-brand-btn);
+        background-size:45px 45px !important;
+      }
+    </style>
+
+    <!-- menu toggle -->
+    <paper-button id="sidebar-toggler" style$="background:url({{imageUrl}}) no-repeat transparent;"></paper-button>
+
+    <paper-tooltip for="sidebar-toggler">
+      <things-i18n-msg msgid="button.toggle_sidebar" auto>Toggle Sidebar</things-i18n-msg>
+    </paper-tooltip>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'things-sidebar-toggle',
+
+      behaviors: [
+        Things.GlobalBehavior
+      ],
+
+      properties: {
+        /**
+         * Drawer ID
+         * ******
+         * @type {String}
+         */
+        drawerId: {
+          type: String
+        },
+
+        /**
+         * Brand 이미지를 나타내기 위한 첨부파일(이미지) 아이디
+         * ******
+         * @type {String}
+         */
+        brandImageId: {
+          type: String
+        },
+
+        /**
+         * Brand 이미지를 나타내기 위한 첨부파일(이미지) URL
+         * *******
+         * @type {String}
+         */
+        imageUrl: {
+          type: String,
+          value: '/images/icon-brand.png',
+          computed: '_computeImageUrl(brandImageId)'
+        }
+      },
+
+      listeners: {
+        'sidebar-toggler.tap': 'toggleSidebar'
+      },
+
+      /**
+       * brandImageId가 변경된 이후 brand image를 조회하는 URL을 계산
+       ********
+       * @param {String} brandImageId
+       */
+      _computeImageUrl: function(brandImageId) {
+        var baseUrl = this.get('globals.baseUrl');
+        return baseUrl + '/download/' + brandImageId;
+      },
+
+      /**
+       * Toggle Sidebar. 로그인 이후에만 toggle이 적용됨
+       * **********
+       * @param {Object} e
+       */
+      toggleSidebar: function(e) {
+        var drawer = app.$[this.drawerId];
+
+        if(drawer.forceNarrow) {
+          drawer.forceNarrow = false
+        } else if(!drawer.narrow) {
+          drawer.forceNarrow = true
+        } else {
+          drawer.togglePanel();
+        }
+      }
+    });
+  </script>
+</dom-module>

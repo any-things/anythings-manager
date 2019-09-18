@@ -1,0 +1,79 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<!doctype html>
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <title>things-date-from-to demo</title>
+  <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+
+  <link rel="import" href="../../polymer/polymer.html">
+  <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+  <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+
+  <link rel="import" href="../things-date-from-to.html">
+
+  <style is="custom-style">
+
+    .output {
+      margin-top: 20px;
+      word-wrap: break-word;
+      @apply(--paper-font-common-code);
+    }
+    form > paper-button {
+      width: 45%;
+      margin-top: 20px;
+    }
+    form > paper-button:not([disabled]) {
+      background: var(--paper-light-blue-500);
+      color: white;
+    }
+    button {
+      margin-top: 20px;
+    }
+    paper-spinner {
+      width: 14px;
+      height: 14px;
+      margin-right: 20px;
+    }
+    paper-dropdown-menu {
+      display: block;
+    }
+    demo-snippet {
+      --demo-snippet-code: {
+        max-height: 300px;
+      };
+    }
+
+  </style>
+
+</head>
+
+<body unresolved>
+  <demo-snippet class="centered-demo">
+    <template>
+      11<sample-date-from-to></sample-date-from-to>
+
+      <dom-module id="sample-date-from-to">
+        <template>
+          <things-date-from-to
+            locale="ko"
+            read-format="YYYY-MM-DD">
+          </things-date-from-to>
+        </template>
+
+        <script>
+          Polymer({
+            is: "sample-date-from-to"
+          });
+        </script>
+      </dom-module>
+    </template>
+  </demo-snippet>
+
+</body>
+</html>

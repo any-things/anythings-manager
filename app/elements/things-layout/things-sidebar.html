@@ -1,0 +1,480 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/paper-badge/paper-badge.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-global-behavior/things-global-behavior.html">
+<link rel="import" href="../../bower_components/things-i18n-msg/things-i18n-msg.html">
+<link rel="import" href="../../bower_components/things-image-button/things-image-button.html">
+
+<link rel="import" href="./things-routing-behavior.html">
+<script src="../../bower_components/page/page.js"></script>
+<script src="../../bower_components/jsonfn/jsonfn.js"></script>
+
+<!--
+화면의 사이드에 위치하면서 모든 메뉴를 navigation 할 수 있는 화면을 제공한다.
+해당 Element는
+
+  1.things-routing-behavior.html를 사용하여 Routing 등록 및 설정을 수행한다.
+
+  2.action에서 제공하는 Url로 Menu를 검색하여 Routing 등록 및 화면 좌측에 메뉴로 제공한다.
+
+  3.메뉴성이기에 Drawer Attribute가 꼭 필요하다.
+
+  Example:
+
+     <things-sidebar drawer class="layout vertical"
+      title="MENU" screens="{{screens}}" action="menus.json?mode=auth">
+     </things-sidebar>
+-->
+
+<dom-module id="things-sidebar">
+  <template>
+    <style>
+      :host {
+        display: block;
+        background-color:var(--things-sidebar-background-color);
+        color:#fff
+      }
+      paper-scroll-header-panel {
+        height: 100%;
+        @apply --things-sidebar-panel;
+      }
+      .brand {
+        height:39px;
+        padding: 14px 0 0 10px;
+        font-size:26px
+      }
+      paper-button {
+        display: block;
+        border-bottom: 1px solid rgba(0, 0, 0, .15);
+        margin: 0;padding:7px 5px 4px 10px;
+        font-size: 17px;
+        font-weight:bold;
+        text-align: left;
+        color:var(--things-sidebar-text-color);
+        @apply --border-radius-clear;
+      }
+      paper-button[active]{
+        background-color:var(--things-whitegrey-background-color);
+        color:#fff;
+      }
+      iron-collapse:focus,a:focus{outline:none;}
+      paper-button iron-icon {
+        @apply --things-small-icon;
+        margin-top: -2px;
+        margin-right: 4px
+      }
+      paper-listbox {
+        background: -moz-linear-gradient(top, #3768a5 40%, #2a3646 100%); /* FF3.6-15 */
+        background: -webkit-linear-gradient(top, #3768a5 40%,#2a3646 100%); /* Chrome10-25,Safari5.1-6 */
+        background: linear-gradient(to bottom, #3768a5 40%,#2a3646 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+        border-top:1px solid #315d94;
+        padding:0;
+      }
+      paper-item:before {
+        content:"";
+        display:inline-block;
+        width:3px;height:3px;
+        position:relative;
+        top:-3px;
+        margin-right:3px;
+        background-color:rgba(255,255,255,.3);
+      }
+      paper-item {
+        padding: 0 10px 0 11px;
+        display: block !important;
+        min-height:25px !important;
+        font-size: 13px !important;
+        color:rgba(255,255,255,.9);
+      }
+      paper-item[active]{
+        color:#fff;
+        font-weight:bold;
+        background-color:rgba(0,0,0,.1);
+      }
+      paper-item[active]:before{
+        background-color:var(--things-secondary-background-color);
+        opacity:1;
+      }
+      iron-image {
+        display:block !important;
+      }
+      .things-image-button {
+        display:block;
+        text-align:center;
+        text-decoration:none;
+        font-size:15px;
+      }
+      a {
+        text-decoration:none;
+      }
+    </style>
+
+    <things-ajax
+      auto
+      id="refresh"
+      resource-url="[[resourceUrl]]"
+      resource-action="[[resourceAction]]"
+      query-fields="[[queryFields]]"
+      last-response="{{menus}}">
+    </things-ajax>
+
+    <div class="brand">[[brandName]]
+      <img src="/images/icon-cj.png" hidden/>
+    </div>
+
+    <!-- Drawer Scroll Header Panel -->
+    <paper-scroll-header-panel id="panel">
+      <content></content>
+
+      <template is="dom-repeat" items="{{menuGroup}}" as=group>
+        <!-- Standard Menu -->
+        <template is="dom-if" if={{isStandard}}>
+          <paper-button aria-controls={{group.menuGroupId}} active="[[_computeActiveGroup(group,currentScreen)]]" on-click="toggle">
+            [[group.title]]
+          </paper-button>
+
+          <iron-collapse id="{{group.menuGroupId}}" opened="[[_computeGroupOpend(group,currentScreen)]]" tabindex="0">
+            <paper-listbox selected-item="{{currentMenu}}" class="content">
+              <template is="dom-repeat" items="{{group.child}}" as=item>
+                <a href="[[item.routing]]" on-tap="handleItemTap">
+                  <paper-item data$="{{item}}" active="[[_computeMenuActive(item, currentScreen)]]" parent-menu-group="[[group.menuGroupId]]">[[item.title]]</paper-item>
+                </a>
+              </template>
+            </paper-listbox>
+          </iron-collapse>
+        </template>
+
+        <!-- Terminal Menu -->
+        <template is="dom-if" if={{isTerminal}}>
+          <template is="dom-repeat" items="{{group.child}}" as=item>
+            <a href="[[item.routing]]" class="things-image-button">
+              <things-image-button
+                  item="[[item]]"
+                  title="[[item.title]]"
+                  image-src="[[_computeIconpath(item.icon_path)]]">
+              </things-image-button>
+            </a>
+          </template>
+        </template>
+      </template>
+    </paper-scroll-header-panel>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'things-sidebar',
+
+      properties: {
+        /**
+         * 메뉴 카테고리 - UI / OI 구분을 위한 메뉴 데이터 조회 파라미터
+         * *******
+         * @type {String}
+         */
+        menuCategory: {
+          type: String,
+          value: 'STANDARD'
+        },
+
+        /**
+         * homeRouting
+         * ******
+         * @type {String}
+         */
+        homeRouting :{
+          type: String,
+          value: 'home'
+        },
+
+        /**
+         * login routing
+         * *******
+         * @type {String}
+         */
+        loginRouting :{
+          type: String,
+          value: 'login'
+        },
+
+        /**
+         * 동적으로 메뉴 화면을 iron-pages내 content로 추가하기 위한 id 정보
+         * *******
+         * @type {String}
+         */
+        pageContentId : {
+          type: String,
+          value: 'content'
+        },
+
+        /**
+         * Brand title that will be show on top of menu
+         * ********
+         * @type {String}
+         */
+        brandName: {
+          type: String
+        },
+
+        /**
+         * url that where the menu data get from
+         * ********
+         * @type {String}
+         */
+        resourceUrl: {
+          type: String,
+          value: 'menus/user_menus/STANDARD',
+          computed: '_computedMenuUrl(menuCategory)'
+        },
+
+        /**
+         * action that where the menu data get
+         * *******
+         * @type {String}
+         */
+        resourceAction: {
+          type: String,
+          value: 'index'
+        },
+
+        /**
+         * query condition for query menu data
+         * *******
+         * @type {Array}
+         */
+        queryFields : {
+          type: Array,
+          computed: '_computedQuery(menuCategory)'
+        },
+
+        /**
+         * menu group returns menu tree as Array
+         * [ {
+         *    id: 1, name: 'System', title: 'System', menu_type: 'Menu', child: [ { child menus ...} ]
+         * }, {
+         *    id: 2, name: 'Base', title: 'Base', menu_type: 'Menu', child: [ { child menus ...} ]
+         * } ]
+         */
+        menuGroup: {
+          type: Array,
+          notify: true
+        },
+
+        /**
+         * 사용자 권한에 따른 메뉴 리스트
+         * *******
+         * @type {Array}
+         */
+        menus: {
+          type: Array,
+          value: []
+        },
+
+        /**
+         * 메뉴 리스트 중에 App 안에 나타날 실제 화면 (menu_type이 'SCREEN') 정보.
+         * 화면 정보들만 라우팅에 추가된다.
+         * ********
+         * @type {Array}
+         */
+        screens: {
+          type: Array,
+          notify: true,
+          value: []
+        },
+
+        /**
+         * 현재 선택된 메뉴
+         * ******
+         * @type {Object}
+         */
+        currentMenu: {
+          type: Object,
+          notify: true
+        },
+
+        /**
+         * 현재 페이지의 routing
+         * *****
+         * @type {Object}
+         */
+        currentScreen: {
+          type: Object
+        },
+      },
+
+      observers: [
+        '_onChangeMenus(menus)'
+      ],
+
+      behaviors: [
+        Things.RoutingBehavior,
+        Things.GlobalBehavior
+      ],
+
+      /**
+       * Life Cycle
+       * *******
+       */
+      attached: function() {
+          // ******** Routing 초기화 ***********
+          this.addLoginRouting(this.loginRouting);
+          // *********************************
+      },
+
+      /**
+       * group, currentMenu가 변화 될때 해당 메소드가 호출되며 그룹메뉴의 비교값을 리턴한다.
+       * 리턴된 값은 paper-button의 active attribute에 할당된다.
+       ********
+       * @param {Object} group
+       * @param {Object} currentMenu
+       */
+      _computeActiveGroup: function(group, currentMenu) {
+        return group.id === currentMenu.parent_id;
+      },
+
+      /**
+       * group, currentMenu가 변화 될때 해당 메소드가 호출되며 그룹메뉴의 비교값을 리턴한다.
+       * 리턴된 값은 iron-collapse의 opened attribute에 할당된다.
+       ********
+       * @param {Object} group
+       * @param {Object} currentMenu
+       */
+      _computeGroupOpend: function(group, currentMenu){
+        if (this.isMobile) {
+          return true;
+        } else {
+          return group.id == currentMenu.parent_id;
+        }
+      },
+      /**
+       * menu, currentMenu가 변화 될때 해당 메소드가 호출되며 그룹메뉴의 비교값을 리턴한다.
+       ********
+       * @param {Object} menu
+       * @param {Object} currentMenu
+       */
+      _computeMenuActive: function(menu, currentMenu){
+        return menu.id == currentMenu.id
+      },
+      /**
+       * When last response data recieved this function will be called
+       * then convert these data to menu tree and set to menuGroup
+       * also convert to screen array and set to screens.
+       *
+       * screen 변경시 things-screens-changed 이벤트 호출
+       ********
+       * @param {Object} menus 메뉴 정보 menu.total : 총 메뉴 개수, menu.items : 메뉴 리스트
+       */
+      _onChangeMenus: function(menus) {
+        if(menus && menus.length > 0) {
+          var groups = [], screens = [], me = this;
+
+          menus.forEach(function(item) {
+            if (item.menu_type === 'MENU') {
+              item.child = me._getChildMenu(item, menus);
+              item.menuGroupId = 'group' + item.id;
+              groups.push(item);
+            } else if(item.menu_type === 'SCREEN') {
+              screens.push(item);
+            } else if(item.menu_type === 'HIDDEN'){
+              screens.push(item);
+            }
+          });
+
+          // ******** Routing 초기화 ***********
+          this.init(this.homeRouting,screens);
+          // *********************************
+          this.menuGroup = groups;
+          this.screens = screens;
+          this.fire('things-screens-changed', this.screens);
+        }
+      },
+
+      /**
+       * Find child menu and return it
+       ********
+       * @param  {Array} menuGroup parent group id
+       * @param  {Array} items all menu list
+       * @return {Array} child screen array
+       */
+      _getChildMenu: function(menuGroup, items) {
+        return items.filter(function(item) {
+          var screenMenuFlag = (item && item.menu_type === 'SCREEN' && item.parent_id === menuGroup.id);
+          if(screenMenuFlag) {
+            item.parent_name = menuGroup.title;
+          }
+          return screenMenuFlag;
+        });
+      },
+
+      /**
+       * 메뉴 URL 생성
+       *******
+       * @param {String} menuCategory
+       */
+      _computedMenuUrl: function(menuCategory) {
+        return 'menus/user_menus/' + menuCategory;
+      },
+
+      /**
+       * 메뉴 검색 조건 생성
+       *******
+       * @param {String} menuCategory
+       */
+      _computedQuery: function(menuCategory) {
+        if (menuCategory === 'MOBILE') {
+          this.isStandard = true;
+          this.isTerminal = false;
+          this.isMobile = true;
+        } else if(menuCategory === 'STANDARD') {
+          this.isStandard = true;
+          this.isTerminal = false;
+        } else if(menuCategory === 'TERMINAL') {
+          this.isStandard = false;
+          this.isTerminal = true;
+        }
+
+        return '[{ name: "category", operator: "eq", value: ' + menuCategory + '}, { name: "hidden_flag", operator: "is_not_true" }]';
+      },
+
+      /**
+       * Icon path 구성
+       *******
+       * @param {String} icon 메뉴 아이콘 조회 URL 구성을 위한 첨부파일(이미지) ID
+       */
+      _computeIconpath: function(icon) {
+        return this.globals.baseUrl + '/download/' + icon;
+      },
+
+      /**
+       * Toggle menu group box
+       * ******
+       * @param {Object} e 버튼 클릭 이벤트
+       */
+      toggle: function(e) {
+        var target = this.$$('#' + e.target.ariaControls);
+        if(target && target.toggle) {
+          target.toggle();
+        }
+      },
+
+      handleItemTap: function(e) {
+        if(location.pathname.length > 1) {
+          e.preventDefault();
+          var routing = e.currentTarget.getAttribute('href');
+          page('/' + routing);
+        }
+
+        if (this.isMobile) {
+          this.fire('tap-menu-item');
+        }
+      }
+    });
+  </script>
+</dom-module>

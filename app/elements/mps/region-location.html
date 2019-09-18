@@ -1,0 +1,394 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-menu-grid-content-behavior.html">
+<link rel="import" href="../../bower_components/things-detail/things-menu-detail-grid.html">
+
+<!--
+  마스터 관리 / 호기-로케이션
+-->
+<dom-module id="region-location">
+  <template>
+    <style>
+      :host {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .container {
+        @apply(--layout-flex);
+        display: grid;
+        grid-template-rows: 30px auto;
+        grid-template-columns: 620px auto;
+      }
+      #region-grid {
+        grid-row-start: 2;
+        grid-row-end: 3;
+      }
+      #location-grid {
+        grid-row-start: 2;
+        grid-row-end: 3;
+      }
+      #location-subtitle {
+        @apply(--things-default-padding);
+        @apply(--things-subtitle);
+        padding-left: 25px;
+        font-size: 20px;
+        grid-row-start: 1;
+        grid-row-end: 2;
+        grid-column-start: 2;
+        grid-column-end: 3;
+      }
+      #region-subtitle {
+        @apply(--things-default-padding);
+        @apply(--things-subtitle);
+        padding-left: 25px;
+        font-size: 20px;
+        grid-row-start: 1;
+        grid-row-end: 2;
+        grid-column-start: 1;
+        grid-column-end: 2;
+      }
+    </style>
+
+    <things-ajax
+      auto
+      id="resource-meta"
+      method="GET"
+      resource-url="[[menuMetaUrl]]"
+      last-response="{{metaData}}">
+    </things-ajax>
+
+    <things-ajax
+      id="search-location"
+      resource-url="location"
+      sort-fields='[{"field" : "loc_cd", "ascending" : true}]'
+      query-fields="[[locationQueryFields]]"
+      resource-action="index"
+      limit="100000"
+      last-response="{{locationItems}}">
+    </things-ajax>
+
+    <things-search-form
+      id="search-form"
+      form-fields="[[searchFormFields]]"
+      select-fields="[[masterSelectFields]]"
+      sort-fields="[[sortFields]]"
+      action-url="[[menuInfo.resource_url]]"
+      page="{{page}}"
+      limit="100000"
+      last-response="{{lastResponse}}">
+    </things-search-form>
+
+    <div class="container">
+      <div id="region-subtitle">[[menuInfo.title]] : [[_formatTotal(itemCount)]]</div>
+
+      <things-resource-grid
+        id="region-grid"
+        grid-height="[[gridHeight]]"
+        model="[[gridModel]]"
+        columns="[[gridColumns]]"
+        config="[[gridConfig]]"
+        buttons="[[emptyButtons]]"
+        current-page="{{page}}"
+        limit="100000"
+        data="[[items]]"
+        total-count="[[itemCount]]"
+        fixed-column-count="[[menuInfo.fixed_columns]]"
+        grid-save-action="[[menuInfo.grid_save_url]]"
+        export-file-name="[[menuInfo.title]]"
+        export-sheet-name="[[menuInfo.title]]">
+      </things-resource-grid>
+
+      <div id="location-subtitle">[[locationTitle]] : [[_formatTotal(locationItems.total)]] [[currentRegionName]]</div>
+
+      <things-resource-grid
+        id="location-grid"
+        model="[[detailGridModel]]"
+        columns="[[detailGridColumns]]"
+        config="[[gridConfig]]"
+        buttons="[[emptyButtons]]"
+        limit="100000"
+        data="[[locationItems.items]]"
+        fixed-column-count=2
+        total-count="[[locationItems.total]]"
+        export-file-name="[[menuInfo.title]]"
+        export-sheet-name="[[menuInfo.title]]">
+      </things-resource-grid>
+    </div>
+  </template>
+
+  <script>
+  Polymer({
+    is: 'region-location',
+
+    behaviors: [
+      Things.MenuGridContentBehavior
+    ],
+
+    properties: {
+      /**
+       * 그리드 구성
+       */
+      gridConfig: {
+        type: Object,
+        value: function() {
+          return {
+            checkBar: false
+          };
+        }
+      },
+
+      /**
+       * 메뉴 ID
+       */
+      menuId: {
+        type: String
+      },
+
+      /**
+       * 상세 화면 구성을 위해 필요한 메뉴 메타 데이터를 조회하기 위한 URL
+       */
+      menuDetailMetaUrl: {
+        type: String,
+        computed: '_computeMenuDetailMetaUrl(menuId)',
+        observer: '_invokeDetailMetaData'
+      },
+
+      /**
+       * 마스터 데이터를 마스터 그리드에 표시할 select 필드
+       */
+      masterSelectFields: {
+        type: String
+      },
+
+      /**
+       * 메뉴 Detail 화면 구성을 위한 메타 데이터
+       */
+      detailMetaData: {
+        type: Array,
+        observer: '_parseDetailMetaData'
+      },
+
+      /**
+       * 상세 그리드 모델
+       */
+      detailGridModel: {
+        type: Object
+      },
+
+      /**
+       * 상세 그리드 컬럼
+       */
+      detailGridColumns: {
+        type: Array
+      },
+
+      /**
+       * 상세 조회 URL
+       */
+      detailSearchUrl: {
+        type: String
+      },
+
+      /**
+       * 상세 저장 URL
+       */
+      detailSaveUrl: {
+        type: String
+      },
+
+      /**
+       * 상세 그리드의 바인딩 데이터
+       */
+      detailItems: {
+        type: Array
+      },
+
+      /**
+       * 상세 그리드 데이터가 참조할 마스터 필드명
+       */
+      masterField: {
+        type: String
+      },
+
+      /**
+       * 상세 그리드 타이틀
+       */
+      detailTitle: {
+        type: String
+      },
+
+      /**
+       * 로케이션 그리드 타이틀
+       */
+      locationTitle: {
+        type: String,
+        value: function() {
+          return Things.DataGlobal.t('menu.Location');
+        }
+      },
+
+      /**
+       * 로케이션 쿼리 필드
+       */
+      locationQueryFields: {
+        type: Array,
+        value: [{
+          name: 'region_cd',
+          operator: 'eq',
+          value: ''
+        }]
+      },
+
+      /**
+       * 로케이션 리스트
+       */
+      locationItems: {
+        type: Object,
+        value: [{
+          total: 0
+        }]
+      },
+
+      /**
+       * 현재 선택된 호기명
+       */
+      currentRegionName: {
+        type: String
+      },
+
+      /**
+       * 빈 버튼
+       */
+      emptyButtons: {
+        type: Array,
+        value: []
+      }
+    },
+
+    listeners: {
+      'region-grid.things-grid-row-data-select': 'resetResource',
+      'location-grid.things-grid-handle-save': '_beforeDetailsSave'
+    },
+
+    observers: [
+      '_gridColumnsChanged(gridColumns)'
+    ],
+
+    /**
+     * 마스터 그리드 컬럼이 변경된 이후
+     *********
+     * @param {Object} gridColumns 그리드 컬럼
+     */
+    _gridColumnsChanged: function(gridColumns) {
+      var selectColumns = '';
+
+      gridColumns.forEach(function(metaData) {
+        if(!metaData.virtual_field || metaData.virtual_field == false) {
+          selectColumns += metaData.name + ',';
+        }
+      });
+
+      if(selectColumns.length > 2) {
+        this.masterSelectFields = selectColumns.substr(0, selectColumns.length - 1);
+      }
+    },
+
+    /**
+     * 메뉴 디테일 메타 정보 조회
+     *********
+     * @param {String} menuDetailMetaUrl
+     */
+    _invokeDetailMetaData: function(menuDetailMetaUrl) {
+      var detailMetaAjax = document.createElement('things-ajax');
+      detailMetaAjax.resourceId = this.menuId;
+      detailMetaAjax.resourceUrl = menuDetailMetaUrl;
+      detailMetaAjax.addEventListener('things-ajax-response', function(event) {
+        this.detailMetaData = event.detail;
+      }.bind(this));
+
+      detailMetaAjax.generateRequest();
+    },
+
+    /**
+     * menuId로 부터 메뉴 상세 메타 데이터 조회를 위한 URL을 생성
+     * *******
+     * @param {String} menuId 메뉴 아이디
+     * @return {String} 메뉴 상세 메타 데이터 조회를 위한 URL
+     */
+    _computeMenuDetailMetaUrl: function(menuId) {
+      return 'menu_details/' + menuId + '/meta';
+    },
+
+    /**
+     * 서버로 부터 응답받은 메뉴 상세에 대한 메타 데이터를 상세 화면 구성을 위해 필요한 메타 데이터로 변환한다.
+     * *******
+     * @param {Array} detailMetaList 서버로 부터 응답받은 메뉴 상세에 대한 메타 데이터
+     */
+    _parseDetailMetaData: function(detailMetaList) {
+      if(!detailMetaList || detailMetaList.length == 0) {
+        return;
+      }
+
+      for(var i = 0 ; i < detailMetaList.length ; i++) {
+        var metaData = detailMetaList[i];
+
+        if(metaData.association != 'one-to-many') {
+          continue;
+        }
+
+        this.detailTitle = metaData.name;
+        this.detailSearchUrl = metaData.search_url;
+        this.detailSaveUrl = metaData.save_url;
+        this.masterField = metaData.master_field;
+
+        if(metaData.menu_detail_buttons) {
+          var buttons = this._parseButtons(metaData.menu_detail_buttons);
+          if(buttons && buttons.length > 0) {
+            buttons.forEach(function(button) { button.id = button.name + '-btn'; });
+          }
+
+          this.detailButtons = buttons;
+        }
+
+        if(metaData.menu_detail_columns) {
+          // Parse Grid Models - Grid
+          this.detailGridModel = this._parseGridModel(metaData.menu_detail_columns);
+          // Parse Grid Columns - Grid
+          this.detailGridColumns = this._parseGridColumns(metaData.menu_detail_columns);
+        }
+      }
+
+      this.fire('detail-meta-data-configured');
+    },
+
+    /**
+     * 그리드 Detail 버튼 선택 시 ...
+     * *******
+     * @param {Object} event 그리드 Detail 버튼 선택 이벤트
+     */
+    resetResource: function(event) {
+      this.currentRegionName = '(' + event.detail.region_nm + ')';
+      this.locationQueryFields.forEach(function(field) {
+        if(field.name == 'region_cd') {
+          field.value = event.detail.region_cd;
+        }
+      });
+
+      this.$['search-location'].generateRequest();
+      this.resource = event.detail;
+      this.resourceId = this.menuInfo.id_field ? this.resource[this.menuInfo.id_field] : this.resource.id;
+    },
+
+    /**
+     * Total 값 체크
+     * *******
+     * @param {Number} total
+     */
+    _formatTotal: function(total) {
+      return total ? total : 0;
+    }
+  });
+  </script>
+</dom-module>

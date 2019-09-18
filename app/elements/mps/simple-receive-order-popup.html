@@ -1,0 +1,344 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<!--
+  주문 및 작업 > 작업 배치 > 주문 수신 팝업 화면 2 (간단한 수신 요약 정보)
+-->
+
+<dom-module id="simple-receive-order-popup">
+   <template>
+      <style>
+         :host {
+            @apply --layout-flex;
+            @apply --layout-vertical;
+         }
+
+         #contents {
+            @apply --layout-flex;
+            @apply --things-default-padding;
+            display: grid;
+            grid-template:
+               "pro" auto
+               "gri" 1fr
+               "bar" auto / calc(100% - calc(10px / 2));
+            grid-gap: 10px;
+         }
+         #contents>#grid { grid-area: gri; }
+         #contents>#editor { grid-area: edi; }
+         #contents>#bar { grid-area: bar; }
+         #contents>#progress-rate {
+            grid-area: pro;
+            display: grid;
+            grid-template:
+               "a" auto
+               "b" auto / 1fr;
+         }
+         #contents>#progress-rate>p { grid-area: a; }
+         #contents>#progress-rate>paper-progress { grid-area: b; width: unset;}
+
+         #progress-bar {
+            --paper-progress-active-color: var(--paper-light-blue-500);
+    		   --paper-progress-secondary-color: var(--paper-light-blue-100);
+
+            --paper-progress-transition-duration: 1s;
+            --paper-progress-transition-timing-function: ease;
+            --paper-progress-transition-transition-delay: 0s;
+         }
+
+         /* 바깥 여백 제거 */
+         .margin-zero { margin: 0px; }
+         /* 안쪽 여백 제거 */
+         .padding-zero { padding: 0px; }
+
+         paper-toolbar::shadow #bottomBar {
+            @apply --layout-horizontal;
+            @apply --layout-end-justified;
+         }
+      </style>
+
+      <!-- 메타 호출 ajax -->
+      <things-ajax
+         auto
+         id="resource-meta"
+         resource-url="[[menuMetaUrl]]"
+         resource-action="index"
+         last-response="{{metaData}}">
+      </things-ajax>
+
+      <!-- 주문 취소 ajax -->
+      <things-ajax
+         id="cancel-receive-ajax"
+         resource-id="[[receiptSummaryId]]"
+         resource-url="job_batch/receive_orders/cancel/:id"
+         method="post">
+      </things-ajax>
+
+      <!-- 주문 수신 시작 ajax -->
+      <things-ajax
+         id="start-receiving-ajax"
+         resource-id="[[receiptSummaryId]]"
+         resource-url="job_batch/receive_orders/start"
+         resource-action="update_multiple">
+      </things-ajax>
+
+      <div id="contents">
+        <div id="progress-rate">
+           <p class="margin-zero">[[progressMessage]]</p>
+        </div>
+
+         <things-resource-grid
+            id="grid"
+            class="padding-zero"
+            config="[[gridConfig]]"
+            model="[[gridModel]]"
+            columns="[[gridColumns]]"
+            buttons=""
+            paginatable=[[menuInfo.pagination]]
+            show-paginator=[[menuInfo.pagination]]
+            current-page="{{page}}"
+            limit="{{limit}}"
+            data="[[items]]"
+            total-count="[[itemCount]]"
+            fixed-column-count="[[menuInfo.fixed_columns]]"
+            grid-save-action="[[menuInfo.grid_save_url]]">
+         </things-resource-grid>
+
+         <paper-toolbar id="bar">
+            <div class="bottom">
+               <things-button-bar id="button-group" buttons="[[buttons]]"></things-button-bar>
+            </div>
+         </paper-toolbar>
+      </div>
+   </template>
+
+   <script>
+      Polymer({
+         is: 'simple-receive-order-popup',
+
+         behaviors: [
+            Things.MsgBoxBehavior,
+            Things.NamedMetaBehavior
+         ],
+
+         properties: {
+            /**
+             * 그리드 구성
+             ***************
+             * @type {Object}
+             */
+            gridConfig: {
+              type: Object,
+              value: function () {
+                return {
+                  options: {
+                    edit: {
+                      editable: false,
+                      pasteEnabled: false
+                    },
+                    displayOptions: {
+                      fitStyle: 'fill'
+                    }
+                  }
+                };
+              }
+            },
+
+            /**
+             * 에디터의 값. 그리드의 config 컬럼 값과 동기화할 용도
+             ***************
+             * @type String
+             */
+            configValue: {
+               type: String
+            },
+
+            /**
+             * 주문 수신 상태 업데이트를 위한 주문 수신 서머리 ID
+             ***************
+             * @type String
+             */
+            receiptSummaryId: {
+               type: String
+            },
+
+            /**
+             * 주문 수신 상태 업데이트를 위한 주문 수신 서머리 값
+             ***************
+             * @type Object
+             */
+            receiptSummary: {
+               type: Object,
+               observer: 'receiptSummaryChanged'
+            },
+
+            /**
+             * 그리드 내용
+             ***************
+             * @type {Array}
+             */
+            items: {
+               type: Array
+            },
+
+            /**
+             * 주문 수신 ajax 호출 후 응답 데이터
+             ***************
+             * @type {Object}
+             */
+            receiveOrderResponse: {
+               type: Object
+            },
+
+            /**
+             * 진행 중 메시지
+             ***************
+             * @type {String}
+             */
+            progressMessage : {
+              type: String,
+              value: ''
+            },
+
+            /**
+             * 수신 주문 완료 여부
+             ***************
+             * @type {Boolean}
+             */
+            isFinished: {
+               type: Boolean,
+               value: function () {
+                  return false;
+               }
+            }
+         },
+
+         listeners: {
+            "grid.things-grid-configured": "_onGridConfigured",
+            "start-receiving-ajax.things-ajax-response": "_receivingCompleted",
+            "start-receiving-ajax.things-ajax-error": "_receivingFailed",
+            "button-group.receive_order-btn-tap": "startReceiving",
+            "button-group.cancel-btn-tap": "cancelReceiving"
+         },
+
+         /**
+          * 그리드 구성 완료 시
+          **********************
+          * @param {Object} event
+          */
+         _onGridConfigured: function (event) {
+            var gridObj = this.$['grid'].getGridObject();
+            // status 컬럼 값에 따라 행의 스타일 변경
+            gridObj.body().setCellDynamicStyles([{
+              // '완료' 상태에서 녹색
+              expression: "values['status'] == 'F'",
+              styles: {
+                  background: '#e5ffe2',
+                  foreground: '#494f48'
+                }
+              }, {
+                // '에러' 상태에서 붉은색
+                expression: "values['status'] == 'E'",
+                styles: {
+                  background: '#fce5e5',
+                  foreground: '#740000'
+                }
+              }]);
+
+            gridObj.checkAll(true);
+         },
+
+         /**
+          * 주문 수신 서머리 변경시
+          **********************
+          * @param {Object} receiptSummary
+          */
+         receiptSummaryChanged: function(receiptSummary) {
+           this.items = receiptSummary && receiptSummary.items;
+         },
+
+         /**
+          * 주문 수신 완료시
+          **********************
+          * @param {Object} event
+          */
+         _receivingCompleted: function(event) {
+           this.isFinished = false;
+           this.progressMessage = '수신 완료';
+           this.receiptSummary = event.detail;
+           // 팝업 창 닫기
+           var dialogCloseEvent = new CustomEvent('things-dialog-close');
+           document.dispatchEvent(dialogCloseEvent);           
+         },
+
+         /**
+          * 주문 수신 실패 (에러 발생) 시
+          **********************
+          * @param {Object} event
+          */
+         _receivingFailed: function(event) {
+           this.isFinished = true;
+           this.progressMessage = '수신 에러';
+         },
+
+         /**
+          * 주문 수신 취소
+          **********************
+          * @param {Object} event
+          */
+         cancelReceiving: function (event) {
+            var ajax = this.$['cancel-receive-ajax'];
+            ajax.generateRequest();
+         },
+
+         /**
+          * 주문 수신 시작
+          **********************
+          * @param {Object} event
+          */
+         startReceiving: function (event) {
+          this.isFinished = false;
+          var summaryItems = this.receiptSummary.items;
+
+          // 1. 그리드에서 체크 안 된 항목은 skip_flag를 true로 설정
+          var grid = this.$['grid'];
+          let rows = grid.grid.getCheckedRows();
+
+          // 2. 체크된 항목만 skip_flag를 false로 설정
+          if (rows && rows.length > 0) {
+            // 3. skip_flag를 모두 true로 설정
+            summaryItems.forEach(function(item) {
+              item.skip_flag = true;
+            });
+
+            rows.forEach(function (row) {
+              var rowObj = row.getRowObject();
+              var summaryItem = summaryItems.find(function(item) {
+                return rowObj.id == item.id;
+              });
+
+              if(summaryItem != null) {
+                summaryItem.skip_flag = false;
+              }
+            }.bind(this));
+
+            // 4. 주문 수신 시작
+            var startAjax = this.$['start-receiving-ajax'];
+            startAjax.body = this.receiptSummary;
+            startAjax.generateRequest();
+            this.progressMessage = '수신 중 ..... 잠시만 기다리세요.';
+
+          } else {
+            this.openInfoMsg({ type: 'info', title: '수신할 항목을 체크하세요.' });
+          }
+         }
+      });
+   </script>
+</dom-module>

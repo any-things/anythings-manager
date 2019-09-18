@@ -1,0 +1,596 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-meta/things-named-meta-behavior.html">
+
+<!--
+주문 및 작업 > 배치 로케이션 할당 현황
+-->
+
+<dom-module id="rtn-location-assignment">
+   <template>
+      <style>
+         :host {
+            @apply --layout-flex;
+            @apply --layout-vertical;
+            @apply --things-default-padding;
+
+            --grid-gap: 10px;
+         }
+
+         /* 그리드 컨테이너 */
+         #container {
+            @apply --layout-flex;
+            display: grid;
+            grid-template: 
+               "a a" auto 
+               "b c" auto 
+               "f g" 57px
+               "d e" minmax(120px, 1fr) / minmax(334px, calc(50% - calc(var(--grid-gap) / 2))) minmax(334px, calc(50% - calc(var(--grid-gap) / 2)));
+            grid-gap: var(--grid-gap);
+         }
+         
+         /***** 서치폼 ******/ #container>#search-form {grid-area: a;}
+         /*** 왼쪽 폼 집합 ***/ #container>#first-select-form-gridarea {grid-area: b;}
+         /** 오른쪽 폼 집합 ***/ #container>#second-select-form-gridarea {grid-area: c;}
+         /** 왼쪽 호기 그리드 */ #container>#first-gridarea {grid-area: d;}
+         /* 오른쪽 호기 그리드 */ #container>#second-gridarea {grid-area: e;}
+         /* 왼쪽 요약 그리드 **/ #container>#first-summary-gridarea {grid-area: f;}
+         /* 오른쪽 요약 그리드 */ #container>#second-summary-gridarea {grid-area: g;}
+
+
+         /****** 폼 레이아웃 정렬을 위한 스타일 덮어쓰기 ******/
+         /* 콤보 박스 */
+         things-combo {
+            display: grid;
+            grid-template: 
+               "a b c" auto / minmax(62px, 15%) minmax(100px, 1fr) auto;
+            grid-gap: 5px;
+
+            --things-label: {
+               min-height:25px;
+               color:var(--things-primary-text-color);
+               text-align:right;
+               line-height:25px;
+               padding-right:5px;
+            };
+
+            --things-input: {
+               width: auto !important;
+               padding:3px 5px 2px 5px;
+               -webkit-border-radius:4px;
+               -moz-border-radius:4px;
+               border-radius:4px;
+               border:1px solid rgba(0,0,0,.2);
+               font-size:15px;
+               font-weight:300;
+            };
+
+            --things-picker-button: {
+               width: 30px;
+               height: 25px;
+               margin-left: 2px;
+               -webkit-border-radius: 3px;
+               -moz-border-radius: 3px;
+               border-radius: 3px;
+            };
+         }
+
+         things-combo>label { grid-area: a; }
+         things-combo>input.input-size:not(#input) { grid-area: b; }
+         things-combo>iron-icon { grid-area: c;}
+
+         /* 인풋 필드 */
+         things-input-field {
+            display: grid;
+            grid: auto / minmax(62px, 30%) minmax(100px, 1fr);
+            grid-gap: 5px;
+
+            --things-label: {
+               min-height:25px;
+               color:var(--things-primary-text-color);
+               text-align:right;
+               line-height:25px;
+               padding-right:5px;
+            };
+
+            --things-input: {
+               padding:3px 5px 2px 5px;
+               -webkit-border-radius:4px;
+               -moz-border-radius:4px;
+               border-radius:4px;
+               border:1px solid rgba(0,0,0,.2);
+               font-size:15px;
+               font-weight:300;
+            };
+         }
+
+         /* 바깥 여백 제거 */ .margin-zero { margin: 0px; }
+         /* 안쪽 여백 제거 */ .padding-zero { padding: 0px; }
+
+         /* 폼 집합 그리드 레이아웃 */
+         .select-form {
+            display: grid;
+            grid-template: 
+               "a b" auto
+               "c c" auto / 1fr 1fr;
+            grid-row-gap: 10px;
+         }
+
+         /* 로케이션 인풋 필드 */ .select-form>.location-input-field { grid-area: a; }
+         /* 거래처 인풋 필드 */ .select-form>.sku-input-field { grid-area: b;}
+         /* 호기 콤보 박스 */ .select-form>.region-combo { grid-area: c; }
+      </style>
+
+      <!-- 메타 호출 ajax -->
+      <things-ajax
+         auto
+         id="resource-meta" 
+         method="GET" 
+         resource-url="[[menuMetaUrl]]" 
+         last-response="{{metaData}}">
+      </things-ajax>
+
+      <!-- 스왑 호출 ajax -->
+      <things-ajax 
+         id="das-loc-assign" 
+         method="POST">
+      </things-ajax>
+
+      <!-- 왼쪽 그리드 - 호기 로케이션 정보 호출 -->
+      <things-ajax id="first-selected-region-ajax" method="GET">
+      </things-ajax>
+
+      <!-- 오른쪽 그리드 - 호기 로케이션 정보 호출 -->
+      <things-ajax id="second-selected-region-ajax" method="GET">
+      </things-ajax>
+
+      <!-- 그리드 컨테이너 -->
+      <div id="container">
+         <!-- 서치 폼 -->
+         <things-search-form 
+            id="search-form"
+            class="margin-zero"
+            form-fields="[[searchFormFields]]"
+            select-fields="[[selectFields]]" 
+            sort-fields="[[sortFields]]"
+            action-url="[[menuInfo.resource_url]]" 
+            page="{{page}}" 
+            limit="[[limit]]" 
+            last-response="{{lastResponse}}">
+         </things-search-form>
+
+         <!-- 왼쪽 폼 집합 -->
+         <div id=first-select-form-gridarea class="select-form">
+            <!-- 로케이션 인풋 필드 -->
+            <things-input-field
+               id="first-loc-input-field"
+               class="location-input-field"
+               name="location"
+               label="[[labels.location]]"
+               readonly=true>
+            </things-input-field>
+            <!-- 상품 인풋 필드 -->
+            <things-input-field
+               id="first-sku-input-field"
+               class="sku-input-field"
+               name="sku"
+               label="[[labels.sku]]"
+               readonly=true>
+            </things-input-field>
+            <!-- 호기 선택 콤보 박스 -->
+            <things-combo
+               id="first-select-combo"
+               class="region-combo padding-zero margin-zero"
+               except-empty=true
+               label="[[labels.regionSelect]]"
+               label-path="description"
+               value-path="name">
+            </things-combo>
+         </div>
+
+         <!-- 오른쪽 폼 집합 -->
+         <div id=second-select-form-gridarea class="select-form">
+            <!-- 로케이션 인풋 필드 -->
+            <things-input-field
+               id="second-loc-input-field"
+               class="location-input-field"
+               name="location"
+               label="[[labels.location]]"
+               readonly=true>
+            </things-input-field>
+            <!-- 거래처 인풋 필드 -->
+            <things-input-field
+               id="second-sku-input-field"
+               class="sku-input-field"
+               name="sku"
+               label="[[labels.sku]]"
+               readonly=true>
+            </things-input-field>
+            <!-- 호기 선택 콤보 박스 -->
+            <things-combo
+               id="second-select-combo"
+               class="region-combo padding-zero margin-zero"
+               except-empty=true
+               label="[[labels.regionSelect]]"
+               label-path="description" 
+               value-path="name">
+            </things-combo>
+         </div>
+
+         <!-- 호기 요약 정보 - 왼쪽 -->
+         <things-resource-grid
+            id="first-summary-gridarea"
+            class="padding-zero"
+            model="[[sumGridModel]]"
+            columns="[[sumGridColumns]]"
+            config="[[sumGridConfig]]"
+            buttons=""
+            fixed-column-count="0">
+         </things-resource-grid>
+         <!-- 호기의 로케이션 정보 - 왼쪽 -->
+         <things-resource-grid 
+            id="first-gridarea"
+            order="first"
+            class="padding-zero"
+            model="[[gridModel]]" 
+            columns="[[myGridColumns]]" 
+            config="[[gridConfig]]"
+            limit="10000"
+            fixed-column-count="0">
+         </things-resource-grid>
+
+         <!-- 호기 요약 정보 - 오른쪽 -->
+         <things-resource-grid 
+            id="second-summary-gridarea" 
+            class="padding-zero" 
+            model="[[sumGridModel]]" 
+            columns="[[sumGridColumns]]"
+            config="[[sumGridConfig]]" 
+            buttons=""
+            fixed-column-count="0">
+         </things-resource-grid>
+         <!-- 호기의 로케이션 정보 - 오른쪽 -->
+         <things-resource-grid 
+            id="second-gridarea" 
+            order="second"
+            class="padding-zero"
+            model="[[gridModel]]" 
+            columns="[[myGridColumns]]" 
+            config="[[gridConfig]]"
+            limit="10000"
+            fixed-column-count="0"
+            buttons="[[buttons]]">
+         </things-resource-grid>
+      </div>
+   </template>
+
+   <script>
+      Polymer({
+         is: 'rtn-location-assignment',
+
+         behaviors: [
+            Things.MsgBoxBehavior,
+            Things.NamedMetaBehavior
+         ],
+
+         properties: {
+            // 라벨 텍스트 모음
+            labels: {
+               type: Object,
+               value: function() {
+                  return {
+                     regionSelect: Things.DataGlobal.t("title.region_select"),
+                     location: Things.DataGlobal.t('label.location'),
+                     sku: Things.DataGlobal.t('label.sku')
+                  };
+               }
+            },
+
+            // 호기의 로케이션 정보 그리드 설정
+            gridConfig: {
+               type: Object,
+               value: function () {
+                  return {
+                     options: {
+                        edit: {
+                           pasteEnabled: false
+                        },
+                        display: {
+                           fitStyle: 'fill'
+                        },
+                        checkBar: {
+                           exclusive: true
+                        }
+                     }
+                  };
+               }
+            },
+
+            // 요약 정보 그리드 설정
+            sumGridConfig: {
+               type: Object,
+               value: function () {
+                  return {
+                     options: {
+                        edit: {
+                           pasteEnabled: false
+                        },
+                        rowIndicator: {
+                           visible: false
+                        },
+                        display: {
+                           fitStyle: 'fill'
+                        },
+                        checkBar: {
+                           visible: false
+                        }
+                     }
+                  };
+               }
+            },
+
+            // 요약 정보 그리드 모델
+            sumGridModel: {
+               type: Array,
+               value: function () {
+                  return [{
+                     fieldName: 'sku_cnt', dataType: 'number'
+                  }, {
+                     fieldName: 'cust_qty', dataType: 'number'
+                  }, {
+                     fieldName: 'pcs_qty', dataType: 'number'
+                  }];
+               }
+            },
+
+            // 요약 정보 그리드 컬럼 
+            sumGridColumns: {
+               type: Array,
+               value: function () {
+                  return [{
+                     fieldName: 'sku_cnt',
+                     name: 'sku_cnt',
+                     header: { text: Things.DataGlobal.t('label.sku_cnt') },
+                     editable: false,
+                     styles: {
+                        textAlignment: 'far', numberFormat: '#,###'
+                     }
+                  }, {
+                     fieldName: 'cust_qty',
+                     name: 'cust_qty',
+                     header: { text: Things.DataGlobal.t('label.cust_qty') },
+                     editable: false,
+                     styles: {
+                        textAlignment: 'far', numberFormat: '#,###'
+                     }
+                  }, {
+                     fieldName: 'pcs_qty',
+                     name: 'pcs_qty',
+                     header: { text: Things.DataGlobal.t('label.pcs_qty') },
+                     editable: false,
+                     styles: {
+                        textAlignment: 'far', numberFormat: '#,###'
+                     }
+                  }];
+               }
+            }
+         },
+
+         listeners: {
+            /* 메타 정보 받음 */ 'resource-meta.things-ajax-response':'_gotMeta',
+            /* 서치 폼 구성됨 */ 'search-form.things-search-form-configured': '_initSearchForm',
+            /* 왼쪽 콤보 박스 내용 선택됨 */ 'first-select-combo.things-combo-value-changed': 'searchFirstRegion',
+            /* 오른쪽 콤보 박스 내용 선택됨 */ 'second-select-combo.things-combo-value-changed': 'searchSecondRegion',
+            /* 왼쪽 호기의 로케이션 정보 받음 */ 'first-selected-region-ajax.things-ajax-response': 'setFirstGridData',
+            /* 오른쪽 호기의 로케이션 정보 받음 */'second-selected-region-ajax.things-ajax-response': 'setSecondGridData',
+            /* 그리드 구성됨 */ 'things-grid-configured': '_gridConfigured',
+            /* 로케이션 스왑 버튼 누름 */ 'second-gridarea.swap-btn-tap': '_callSwapAjax',
+            /* 초기화 버튼 누름 */ 'second-gridarea.reset-btn-tap': '_reset',
+            /* 스왑 처리 완료됨 */ 'das-loc-assign.things-ajax-response': '_openSuccessToProcessMsg',
+            /* 서치 폼의 검색 버튼 누름 */ 'search-form.things-form-pre-submit': '_reset',
+            /* 검색한 정보 받음 */ 'search-form.things-form-submit-success': '_onSubmitSuccess'
+         },
+
+         // 메타 정보 받음
+         _gotMeta: function(e) {
+            this._setColumns();
+         },
+
+         // 컬럼 설정
+         _setColumns: function () {
+            var columns = this.gridColumns; // 메타 내용 불러옴
+
+            // 사이드(앞·뒤) 컬럼 옵션
+            var side = columns.findIndex(function (element) {
+               return element.name === "side_cd";
+            });
+            if (side) columns[side].editable = false; // 컬럼 편집 불가
+
+            this.myGridColumns = columns; // 적용
+         },
+
+         // 서치 폼 초기화
+         _initSearchForm: function (e) {
+            e.target.setFormData({batch_id: this.batchId});
+            e.target.submitMyForm();
+         },
+
+         // 왼쪽 콤보 박스에서 선택한 호기의 로케이션 정보 검색
+         searchFirstRegion: function (e) {
+            var region = this.$['first-select-combo'].value;
+            if(!region) return;
+            var ajaxUrl = this.menuInfo.resource_url + '/' + this.batchId + '/' + region + '/locations';
+            this.$['first-selected-region-ajax'].resourceUrl = ajaxUrl;
+            this.$['first-selected-region-ajax'].generateRequest();
+         },
+
+         // 오른쪽 콤보 박스에서 선택한 호기의 로케이션 정보 검색
+         searchSecondRegion: function (e) {
+            var region = this.$['second-select-combo'].value;
+            if(!region) return;
+            var ajaxUrl = this.menuInfo.resource_url + '/' + this.batchId + '/' + region + '/locations';
+            this.$['second-selected-region-ajax'].resourceUrl = ajaxUrl;
+            this.$['second-selected-region-ajax'].generateRequest();
+         },
+
+         // 왼쪽 그리드의 데이터 입력
+         setFirstGridData: function (e) {
+            this.$['first-gridarea'].getGridDataSet().setRows(e.detail && e.detail.locList);
+            this.$['first-summary-gridarea'].getGridDataSet().setRows(e.detail && [e.detail.summary]);
+         },
+
+         // 오른쪽 그리드의 데이터 입력
+         setSecondGridData: function (e) {
+            this.$['second-gridarea'].getGridDataSet().setRows(e.detail && e.detail.locList);
+            this.$['second-summary-gridarea'].getGridDataSet().setRows(e.detail && [e.detail.summary]);
+         },
+
+         // 그리드 구성됨
+         _gridConfigured: function (e) {
+            // autoFill 옵션 해제
+            e.target.grid.autoFill().setEnabled(false);
+            
+            // 로케이션 정보 그리드인지 확인
+            switch(e.target.id) {
+               case "first-gridarea":
+               case "second-gridarea": {
+                  var locField = this.$[e.target.getAttribute('order') + "-loc-input-field"];
+                  var skuField = this.$[e.target.getAttribute('order') + "-sku-input-field"];
+
+                  // 체크 이벤트 추가
+                  e.target.grid.onRowChecked = function (grid, row, checked) {
+                     var rowObject = row.getRowObject();
+
+                     locField.value = rowObject.loc_cd;
+                     skuField.value = rowObject.sku_cd;
+
+                     locField["batch-id"] = rowObject.batch_id;
+                  }
+               } break;
+            }
+         },
+
+         // 서버에 로케이션 스왑 요청
+         _callSwapAjax: function (e) {
+            firstLoc = this.$['first-loc-input-field'].value;
+            secondLoc = this.$['second-loc-input-field'].value;
+
+            // 바꿀 로케이션이 선택되지 않았을 때
+            if (!firstLoc || !secondLoc) {
+               this.openConfirmMsg({
+                  type: 'info',
+                  title: Things.DataGlobal.t('title.info'),
+                  text: Things.DataGlobal.t('text.please_choose_location'),
+                  showCancelButton: false
+               });
+               return;
+            };
+            // 같은 로케이션을 선택했을 때
+            if(firstLoc === secondLoc) {
+               this.openConfirmMsg({
+                  type: 'info',
+                  title: Things.DataGlobal.t('title.info'),
+                  text: Things.DataGlobal.t('text.is_same_location'),
+                  showCancelButton: false
+               });
+               return;
+            };
+            
+            this.$['das-loc-assign'].resourceUrl = 
+               this.menuInfo.resource_url + '/' + 
+               this.$['first-loc-input-field']["batch-id"] + '/' + 
+               firstLoc + '/' +
+               this.$['second-loc-input-field']["batch-id"] + '/' +
+               secondLoc + '/swap';
+            this.$['das-loc-assign'].generateRequest();
+         },
+
+         /**
+          * 현재 서치 폼에 입력된 배치 ID
+          **************
+          * @return {String} 현재 서치 폼에 입력된 배치 ID
+          */
+         _getCurrentBatchId: function () {
+            var formData = this.$['search-form'].serializeMyForm();
+            return formData.batch_id;
+         },
+
+         // 스왑 성공 시 메시지 창 띄움
+         _openSuccessToProcessMsg: function (e) {
+            // 로케이션 정보를 갱신하고 폼 내용 비움
+            refresh = function () {
+               this.searchFirstRegion();
+               this.searchSecondRegion();
+               this.$['first-loc-input-field'].value = '';
+               this.$['first-sku-input-field'].value = '';
+               this.$['second-loc-input-field'].value = '';
+               this.$['second-sku-input-field'].value = '';
+            }.bind(this);
+
+            // 성공 메시지 띄우기
+            this.openConfirmMsg({
+               type: 'success', 
+               title: Things.DataGlobal.t('label.success'), 
+               text: Things.DataGlobal.t('text.Success to Process'), 
+               showCancelButton: false
+            }, refresh);
+         },
+
+         /**
+          * 서치 폼으로 호기 목록을 받으면, 목록 첫번째 호기의 로케이션 데이터를 ajax 호출
+          **************
+          * @param {Array} list 호기 목록
+          */
+         _callLocationInfo: function (list) {
+            this.$['first-select-combo'].value = list[0] ? list[0][this.$['first-select-combo'].valuePath] : '';
+            this.$['second-select-combo'].value = list[0] ? list[0][this.$['second-select-combo'].valuePath] : '';
+
+            this.searchFirstRegion();
+            this.searchSecondRegion();
+         },
+
+         // 폼 내용 비우고, 그리드 체크 해제
+         _reset: function () {
+            try {
+               this.$['first-loc-input-field'].value = '';
+               this.$['first-sku-input-field'].value = '';
+               this.$['second-loc-input-field'].value = '';
+               this.$['second-sku-input-field'].value = '';
+               this.$['first-gridarea'].grid.checkAll(false);
+               this.$['second-gridarea'].grid.checkAll(false);
+            } catch(e) {
+            }
+         },
+
+         /**
+          * 호기 목록을 콤보 박스에 넣음
+          **************
+          * @param {Array} list 호기 목록
+          */
+         _setComboItems: function (list) {
+            this.$['first-select-combo'].items = list;
+            this.$['second-select-combo'].items = list;
+         },
+
+         // 검색으로 호기 목록 받음
+         _onSubmitSuccess: function (e) {
+            var list = e.detail;
+            this.batchId = this._getCurrentBatchId();
+
+            if(list.length === 0) {
+               this._purgeGrid();
+            }
+            this._callLocationInfo(list);
+            this._setComboItems(list);
+         },
+
+         // 그리드 내용 비움
+         _purgeGrid: function () {
+            this.querySelectorAll('things-resource-grid').forEach(function(grid) {
+               grid.getGridDataSet().setRows([]);
+            });
+         }
+      });
+   </script>
+</dom-module>

@@ -1,0 +1,636 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-dialog-behavior/paper-dialog-behavior.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-auth/things-change-password.html">
+<link rel="import" href="../../bower_components/things-global-behavior/things-global-behavior.html">
+<link rel="import" href="../../bower_components/things-i18n-msg/things-i18n-msg.html">
+<link rel="import" href="../../bower_components/things-msg-box-behavior/things-msg-box-behavior.html">
+<link rel="import" href="../../bower_components/things-resource-combo/things-code-combo.html">
+<link rel="import" href="../../bower_components/things-resource-combo/things-locale-combo.html">
+<link rel="import" href="../../bower_components/things-resource-combo/things-resource-combo.html">
+
+<!--
+## things-profile-dialog
+  `<things-profile-dialog>` 사용자 프로파일
+
+  Example
+
+    <things-profile-dialog
+      name="elidom"
+      email="elidom@example.com"
+      role-list-url ="roles"
+      role-request-url ="request_role"
+      img="../../images/profile.png">
+    </things-profile-dialog>
+
+@demo demo/index.html
+-->
+
+<dom-module id="things-profile-dialog">
+  <template>
+    <style>
+      :host {
+        display: inline-flex;
+        @apply --things-profile-dialog;
+      }
+
+      paper-card {
+        min-width: 280px;
+      }
+
+      paper-card::shadow .header {
+        background-color: var(--paper-blue-grey-400);
+      }
+
+      paper-card::shadow .title-text {
+        padding: 15px 0 70px 0 !important;
+        color: #fff !important;
+        text-align: center;
+      }
+
+      img {
+        @apply --things-profile-img;
+      }
+
+      div#info {
+        @apply --layout-vertical;
+      }
+
+      .close {
+        background-color: transparent;
+        position: absolute;
+        opacity: .7;
+        top: 10px;
+        right: 5px;
+        border: none;
+        padding: 0;
+        color: #fff;
+      }
+
+      .logout {
+        @apply --things-profile-logout;
+      }
+
+      .logout iron-icon {
+        @apply --things-icon;
+        margin-top:-1px;
+        margin-right:0px;
+      }
+
+      .user {
+        margin-top: 60px;
+        color: var(--things-primary-text-color);
+        text-align: center;
+        font-size: 13px;
+      }
+
+      .user strong {
+        display: block;
+        font-size: 15px;
+      }
+
+      paper-button {
+        @apply --things-button-important;
+        @apply --things-default-margin;
+        @apply --things-login-button;
+        width: 89%;
+        margin-left: auto; margin-right: auto;
+      }
+
+      things-resource-combo {
+        @apply --things-default-margin;
+        width: 89%;
+      }
+
+      button:focus {
+        outline: none
+      }
+
+      things-resource-combo::shadow iron-icon {
+        @apply --things-button;
+        padding:4px !important;
+        margin-bottom:4px;
+        -webkit-border-radius: 4px;-moz-border-radius: 4px;border-radius: 4px;
+      }
+
+      things-resource-combo {
+        margin:0;
+        float:left;
+        width:200px;
+      }
+
+      things-resource-combo::shadow label {
+        width:50px
+      }
+
+      things-resource-combo::shadow input {
+        width:100px
+      }
+
+      img{
+        margin-left:33%
+      }
+      #combo-container {
+        @apply --layout-vertical;
+      }
+    </style>
+    
+    <things-ajax
+      id="requestRole"
+      resource-url="[[roleRequestUrl]]"
+      method="POST"
+      content-type="application/json"
+      on-things-ajax-response="_handleSuccess">
+    </things-ajax>
+
+    <things-ajax
+      id="site-list-ajax"
+      method="POST"
+      resource-url="site_list_by_user/:id"
+      content-type="application/json"
+      last-response="{{siteList}}">
+    </things-ajax>
+
+    <things-ajax
+      id="terms-ajax"
+      method="GET"
+      resource-url="terminologies"
+      resource-action="index"
+      last-response="{{terms}}">
+    </things-ajax>
+
+    <things-i18n-msg 
+      msgid="label.role" 
+      msg="{{lRoles}}" 
+      auto 
+      hidden>Roles</things-i18n-msg>
+
+    <things-i18n-msg 
+      msgid="text.request-role-success" 
+      msg="{{tRequestRoleSucess}}" 
+      auto 
+      hidden>Role requested and admin will check it at e-mail.</things-i18n-msg>
+
+    <things-i18n-msg
+      msgid="label.site"
+      msg="{{tSiteLabel}}"
+      auto
+      hidden>Site</things-i18n-msg>
+
+    <things-i18n-msg
+      msgid="button.cancel"
+      msg="{{tCancelBtnText}}"
+      auto
+      hidden>Cancel</things-i18n-msg>
+      
+    <!--paper-card heading="[[heading]]"-->
+    <paper-card>
+      <button on-tap="closeProfile" class="close">
+        <iron-icon icon="icons:cancel"></iron-icon>
+      </button>
+
+      <!--img src="[[img]]"></img-->
+
+      <!--button on-tap="logout" class="logout">
+        <iron-icon icon="icons:exit-to-app"></iron-icon>
+      </button-->
+
+      <div id="info">
+        <content>
+          <div class="user">
+            <strong>[[globals.user.name]]</strong> [[globals.user.login]]
+          </div>
+
+          <paper-button raised color="green" on-tap="showChangePasswordScreen">
+            <things-i18n-msg msgid="button.change_password" auto>Change Password</things-i18n-msg>
+          </paper-button>
+
+          <things-logout
+            id="logout"
+            action="logout"
+            logout-path="logout"
+            icon="icons:exit-to-app"
+            hidden>
+          </things-logout>
+        </content>
+
+        <div name="role-request">
+          <div id="combo-container">
+            <!-- locale selector -->
+            <things-locale-combo
+              id="locale-selector"
+              default-locale="[[defaultLocale]]"
+              hidden="[[localeHidden]]">
+            </things-locale-combo>
+
+            <things-combo
+              id="site-selector"
+              label="[[tSiteLabel]]"
+              value="[[selectedSite]]"
+              items="[[siteList]]"
+              value-path="subdomain"
+              label-path="brand_name">
+            </things-combo>
+          </div>
+
+
+          <template is="dom-if" if="[[showRequestRole]]">
+            <things-resource-combo
+              required
+              label="[[lRoles]]"
+              resource-url="[[roleListUrl]]"
+              items-prop="items"
+              value="{{roleId}}"
+              value-path="id">
+            </things-resource-combo>
+
+            <paper-button raised color="green" on-tap="onRequestRoleTap">
+              <things-i18n-msg msgid="label.request" auto>request</things-i18n-msg>
+            </paper-button>
+          </template>
+        </div>
+      </div>
+    </paper-card>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'things-profile-dialog',
+
+      properties: {
+        /**
+         * 역할 신청을 표시할 지 여부
+         * *******
+         * @type {Boolean}
+         */
+        showRequestRole: {
+          type: Boolean,
+          value: false
+        },
+
+        /**
+         * 언어 설정을 표시할 지 여부
+         * *******
+         * @type {Boolean}
+         */
+        localeHidden: {
+          type: Boolean,
+          value: false
+        },
+
+        /**
+         * 프로파일 이미지
+         * *******
+         * @type {String}
+         */
+        img: {
+          type: String,
+          value: '../../images/profile.png'
+        },
+
+        /**
+         * 시스템 명
+         * *******
+         * @type {String}
+         */
+        system: {
+          type: String,
+          value: 'system-name'
+        },
+
+        /**
+         * Card Heading Title
+         ******
+         */
+        heading: {
+          computed: 'computeSystemName(system)'
+        },
+
+        /**
+         * 권한 신청시 선택한 Role
+         * *******
+         * @type {String}
+         */
+        roleId: {
+          type: String,
+          value: ''
+        },
+
+        /**
+         * 기본 locale
+         * *******
+         * @type {String}
+         */
+        defaultLocale: {
+          type: String
+        },
+
+        /**
+         * 권한 신청을 위해 조회할 Role List URL
+         * *******
+         * @type {String}
+         */
+        roleListUrl: {
+          type: String
+        },
+
+        /**
+         * 권한 신청 URL
+         * *******
+         * @type {String}
+         */
+        roleRequestUrl: {
+          type: String,
+          observer: '_roleReqUrlChanged'
+        }
+      },
+
+      behaviors: [
+        Things.GlobalBehavior,
+        Polymer.PaperDialogBehavior,
+        Things.MsgBoxBehavior,
+        Things.EncryptBehavior
+      ],
+
+      listeners: {
+        'locale-selector.things-combo-value-changed': '_localeSelected',
+        'site-selector.things-combo-value-changed': '_siteSelected',
+        'terms-ajax.things-ajax-response': '_confirmRefresh'
+      },
+
+      /**
+       * Logout
+       * @param {event} event logout event 입력
+       * ******
+       */
+      logout: function(event) {
+        this.$.logout.logout();
+        this.closeProfile();
+      },
+
+      /**
+       * Show Change Password Screen
+       * ******
+       * @param {event} event 비밀번호변경 Screen 이벤트 입력
+       */
+      showChangePasswordScreen: function(event) {
+        var element = document.createElement('things-change-password');
+        element.title = Things.DataGlobal.t('button.change_password')
+
+        element.actionUrl = 'users/change_pass/' + this.globals.user.id;
+        element.method = 'POST';
+        element.currentUserInfo = this.globals.user;
+        var me = this;
+
+        element.addEventListener("things-change-password-success", function() {
+          this.fire('things-dialog-close');
+          me.logout();
+        });
+
+        element.addEventListener("things-change-password-failure", function(event) {
+          var response = event.detail.request.xhr.response;
+          this.openResponseError(response);
+        });
+
+        var event = {
+          view: element,
+          modal: true,
+          openCallback: null
+        };
+
+        this.fire('things-open-popup-view', event);
+      },
+
+      /**
+       * Profile Screen 닫음
+       *******
+       * @param {event} event Profile close event 입력
+       *
+       */
+      closeProfile: function(event) {
+        this.close();
+      },
+
+      /**
+       * 시스템 명
+       * ******
+       * @param {String} system 시스템 명 입력
+       * @return {String} 시스템 명 대문자로 바꿈
+       */
+      computeSystemName: function(system) {
+        return system.toUpperCase()
+      },
+
+      /**
+       * roleRequestUrl이 변경되면 실행
+       * roleRequestUrl의 값이 있으면 showRequestRole을 true로
+       * roleRequestUrl의 값이 없으면 showRequestRole을 false
+       * @param  String roleReqUrl role 정보를 요청하는 url
+       */
+      _roleReqUrlChanged: function(roleReqUrl) {
+        this.showRequestRole = roleReqUrl ? true : false;
+      },
+
+      /**
+       * Role Request
+       * *****
+       */
+      onRequestRoleTap: function(e) {
+        if(!this.roleId) return;
+        var me = this;
+
+        this.openConfirmMsg({
+          type: 'info',
+          title: Things.DataGlobal.t('label.final_confirm'),
+          text: Things.DataGlobal.t('text.Sure to X', {x : Things.DataGlobal.t('button.request_role')}),
+          cancelButtonText: this.tCancelBtnText,
+          showCancelButton: true,
+          allowEscapeKey: false,
+          closeOnConfirm: false
+
+        }, function() {
+          me.$['requestRole'].body = { user_id: me.globals.user.id, role_id: me.roleId };
+          me.$['requestRole'].generateRequest();
+        });
+      },
+
+      /**
+       *  role request 해서 user/roles이 업데이트 성공할때 호출함수
+       */
+      _handleSuccess: function(e) {
+        var me = this;
+        this.openConfirmMsg({
+          type: 'info',
+          title: Things.DataGlobal.t('label.success'),
+          text: me.tRequestRoleSucess
+        });
+      },
+
+      /**
+       * @description profile dialog open하면 선택 가능한 사이트 리스트를 조회함
+       */
+      getSiteList: function() {
+        var siteListAjax = this.$['site-list-ajax'];
+        siteListAjax.resourceId = this.uuidGen();
+        siteListAjax.generateRequest();
+      },
+
+      /**
+       * @description 언어 설정이 변경되면 메시지 박스에 출력할 용어를 조회함
+       */    
+      _localeSelected: function(event) {
+        this._getTerms(event.detail.value);
+      },
+
+      /**
+       * @description 메시지 박스에 출력할 안내 메시지를 조회
+       * 이미 조회된 결과가 있다면 메시지 박스를 바로 출력
+       */
+      _getTerms: function(locale) {
+        if(!this.terms) {
+          var termsAjax = this.$['terms-ajax'];
+          termsAjax.queryFields = [{
+            name: 'name',
+            value: 'sure_to_refresh,adjust_locale',
+            operator: 'in'
+          }];
+
+          termsAjax.generateRequest();
+        } else {
+          this._confirmRefresh();
+        }
+      },
+
+      /**
+       * @description 언어 적용을 위해 리프레시 하겠냐는 알림 메시지를 출력
+       * _getTerms를 통해 조회한 this.terms에서 현재 선택한 locale에 맞는 메시지 값을 추출함
+       */
+      _confirmRefresh: function() {
+        var locale = this.$['locale-selector'].getLocale();
+        var title, text;
+        var me = this;
+
+        this.terms.items.forEach(term => {
+          if(term.locale === locale && term.name === 'adjust_locale') {
+            title = term.display
+          }
+
+          if(term.locale === locale && term.name === 'sure_to_refresh') {
+            text = term.display;
+          }
+        });
+
+        this.openConfirmMsg({
+          type: 'info',
+          title: title,
+          text: text,
+          cancelButtonText: this.tCancelBtnText,
+          showCancelButton: true
+        }, function() {
+          location.reload(true)
+        }, function() {
+          setTimeout(function() {
+            me.open();
+          }, 100); // 메시지 박스가 닫히면서 프로필 다이얼로그도 닫혀서 timeout 처리
+        })
+      },
+
+      /**
+       * @description 사이트 선택시 이동할겠냐는 메시지 박스를 출력함
+       */
+      _siteSelected: function(event) {
+        var me = this;
+        var domain = event.detail.item;
+
+        if(domain) {
+          this.openConfirmMsg({
+            type: 'info',
+            title: domain.brand_name,
+            text: Things.DataGlobal.t('text.Sure to X', {x : Things.DataGlobal.t('button.move')}),
+            cancelButtonText: me.tCancelBtnText,
+            showCancelButton: true
+          }, function() {
+            var url = me._computeDomainUrl(domain);
+            me._moveToSelectedDomain(url);
+          }, function() {
+            setTimeout(function() {
+              me.open();
+            }, 100); // 메시지 박스가 닫히면서 프로필 다이얼로그도 닫혀서 timeout 처리
+          })
+        }
+      },
+
+      /**
+       * @description
+       * 선택한 도메인 정보를 바탕으로 이동하기 위한 url을 계산하여 리턴
+       * domain 정보에서 token 및 brand_name을 추출하여 query string으로 포함시킴
+       * by_pass.html 파일에서 해당 토큰과 brand_name을 토대로 다시 세션 생성을 시도함
+       * @param {Object} 선택한 domain 정보
+       * @returns {String} 이동할 url
+       */
+      _computeDomainUrl: function(domain) {
+        var protocol = location.protocol;
+        var redirectUrl, serverUrl;
+        var port = location.port ? `:${location.port}` : '';
+
+        if(domain.production_mode) { // 운영 모드일 경우 서브도메인 정보를 바탕으로 serverUrl을 계산 및 전달
+          serverUrl = domain.subdomain;
+        } else { // 개발 모드일 경우 현재 설정되어 있는 baseUrl을 추출하여 serverUrl을 계산 및 전달
+          serverUrl = this._getCurrentServerOrigin();
+        }
+
+        // 현재 접속한 클라이언트 URL이 localhost 또는 loopback일 경우 현재 접속 사이트와 동일한 클라이언트 URL을 redirectUrl로 초기화
+        // if(location.host.indexOf('localhost') === 0 || location.host.indexOf('127.0.0.1') === 0) {
+        //   redirectUrl = location.host;
+        // } else { // 현재 접속한 클라이언트 URL이 특정 도메인일 경우 전달받은 domain 정보를 통해 redirectUrl을 초기화
+        //   redirectUrl = domain.subdomain + port;
+        // }
+
+        // return `${protocol}//${redirectUrl}/by_pass.html?otp=${domain.token}&site_name=${domain.brand_name}&domain_id=${domain.id}&server_url=${protocol}//${serverUrl}`;
+
+        return location.origin + `/by_pass.html?site_name=${domain.brand_name}&subdomain=${domain.subdomain}`;
+      },
+
+      /**
+       * @description 개발 모드일 경우 현재 설정되어 있는 서버 url을 추출하여 리턴함
+       * @returns {String} 현재 설정되어 있는 서버 url
+       */
+      _getCurrentServerOrigin: function () {
+        return new URL(this.globals.baseUrl).host;
+      },
+
+      /**
+       * @description
+       * 전달 받은 URL로 redirect
+       * @param {String} 이동할 url
+       */
+      _moveToSelectedDomain: function(url) {
+        location.href = url;
+      },
+
+      /**
+       * @description
+       * uuid 생성기
+       * @returns {String} token과 맵핑할 UUID를 생성하여 return
+       */
+      uuidGen: function() {
+        function s4() {
+          return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+        };
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+      }
+    });
+  </script>
+</dom-module>

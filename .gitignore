@@ -1,0 +1,9 @@
+dist/licenses
+dist
+node_modules
+app/bower_components
+.tmp
+.publish/
+
+npm-debug.log
+.DS_Store

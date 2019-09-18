@@ -1,0 +1,124 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<dom-module id="site-manager">
+    <template>
+        <style>
+            :host {
+                @apply(--layout-flex);
+                @apply(--layout-vertical);
+            }
+
+            things-resource-grid {
+                @apply(--layout-vertical);
+                @apply(--layout-flex);
+            }
+        </style>
+
+        <!-- Get Menu Meta Ajax -->
+        <things-ajax auto id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index" last-response="{{metaData}}">
+        </things-ajax>
+
+        <!-- Search form -->
+        <things-search-form 
+            id="search-form" 
+            title="[[menuInfo.title]]" 
+            form-fields="[[searchFormFields]]" 
+            select-fields="[[selectFields]]"
+            sort-fields="[[sortFields]]"
+            action-url="[[menuInfo.resource_url]]" 
+            page="{{page}}" 
+            limit="{{limit}}" 
+            last-response="{{lastResponse}}">
+        </things-search-form>
+
+        <things-resource-grid 
+            id="grid" 
+            config="[[gridConfig]]" 
+            model="[[gridModel]]" 
+            columns="[[myGridColumns]]" 
+            buttons="[[buttons]]"
+            paginatable=[[paginatable]]
+            show-paginator=[[paginatable]]
+            current-page="{{page}}" 
+            limit="{{limit}}" 
+            data="[[items]]" 
+            total-count="[[itemCount]]" 
+            fixed-column-count="[[menuInfo.fixed_columns]]"
+            grid-save-action="[[menuInfo.grid_save_url]]">
+        </things-resource-grid>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'site-manager',
+
+            behaviors: [
+                Things.ResourceMenuContentBehavior
+            ],
+
+            properties: {
+                paginatable: {
+                    type: Boolean,
+                    value: true
+                },
+
+                gridConfig: {
+                    type: Object,
+                    value: function () {
+                        return {
+                            options: {
+                                displayOptions: {
+                                    fitStyle: 'fill'
+                                }
+                            }
+                        }
+                    }
+                },
+
+                myGridColumns: {
+                    type: Array
+                }
+            },
+
+            listeners: {
+                "resource-meta.things-ajax-response": "_gotMeta"
+            },
+            
+            _gotMeta: function() {
+                this.setGridColumns();
+            },
+
+            setGridColumns: function() {
+                var columns = this.gridColumns; // 메타 수정용
+
+
+                // exists_broker 컬럼의 체크박스를 수정 불가 상태로
+                var exists_broker = columns.findIndex(function(element) {
+                    return element.name === "exists_broker";
+                });
+                columns[exists_broker].renderer.editable = false;
+
+
+                // site_code 컬럼은 새로운 행 추가 시에만 수정 가능
+                var site_code = columns.findIndex(function(element) {
+                    return element.name === "site_code";
+                });
+                columns[site_code].editableCallback = function(index) {
+                    return index.getRow().$_state === "created"
+                };
+
+
+                this.myGridColumns = columns; // 적용
+            }
+        });
+    </script>
+</dom-module>

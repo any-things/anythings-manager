@@ -1,0 +1,343 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/things-detail/things-menu-detail-view.html">
+
+
+<script>
+'use strict';
+
+window.Things = window.Things || {};
+
+/**
+ * ## things-sidebar.html 에 사용될 RoutingBehavior이다.
+ *
+ * @polymerBehavior Things.RoutingBehavior
+ */
+Things.RoutingBehavior = {
+
+  properties: {
+    /**
+     * 현재 선택된 메뉴의 상세 정보
+     * *******
+     * @type {Object}
+     */
+    currentScreen: {
+      type: Object,
+      notify: true
+    }
+
+    /**
+     * 최근 방문한 페이지가 추가되었음을 알리는 이벤트
+     *
+     * @event things-recent-page-added
+     */
+    /**
+     * 현재 라우팅이 변경되었음을 알리는 이벤트
+     * {routing}은 현재 라우팅 값으로 대체됨
+     *
+     * @event things-routing-changed-{routing}
+     */
+    /**
+     * 라우팅이 설정이 완료된 경우
+     *
+     * @event things-routing-configured
+     */ 
+  },
+
+  /**
+   * routings 초기화
+   * *********
+   * @param {String} defaultRouting ### :기본 라우팅 값
+   * @param {Array} menus #### :현재 화면에서 조회된 모든 메뉴 정보
+   *
+   */
+  init: function(defaultRouting, menus) {
+    var me = this;
+
+    var defaultRoutingScreen = menus.filter(function(object) {
+      return ('/' + object.routing) == defaultRouting
+    });
+
+    defaultRoutingScreen.length > 0 ?
+      this.addDefaultRouting(defaultRouting,menus) :
+      this.addDefaultRouting('/', menus);
+      if(location.pathname.length > 1) {
+        this.addHomeRouting();
+      }
+
+    menus.forEach(function(menuData) {
+      var route = menuData.routing;
+      if (route) {
+        page('/' + route, me.scrollToTop, function(ctx) {
+          app.route = menuData.routing;
+
+          // Dynamic Menu라면 Element가 등록되었는지 확인한 후 등록이 안 되었다면 등록한다.
+          if(!menuData.isRegistered) {
+            var routingType = menuData.routing_type;
+
+            if(routingType == 'RESOURCE') {
+              me._registerResourceScreen(menuData);
+
+            } else if(routingType == 'RESOURCE-VIEW') {
+              me._registerResourceViewScreen(menuData);
+
+            } else if(routingType == 'MASTER-DETAIL') {
+              me._registerMasterDetailScreen(menuData);
+
+            } else if(routingType == 'PLAIN') {
+              me._registerPlainScreen(menuData);
+
+            } else if(routingType == 'REPORT') {
+              me._registerReportScreen(menuData);
+
+            } else if (routingType == 'VIEWER') {
+              me._registerSceneViewerScreen(menuData);
+
+            } else if (routingType == 'PLAYER') {
+              me._registerScenePlayerScreen(menuData);
+
+            } else {
+              me._registerStaticScreen(menuData);
+            }
+
+            menuData.isRegistered = true;
+          }
+
+          // 1. currentScreen 변경
+          me.currentScreen = menuData;
+          var eventDetail = {
+            id: menuData.id,
+            domain_id: menuData.domain_id,
+            pageName: menuData.title,
+            routeInfo: menuData.routing,
+            category: menuData.category,
+            initialParams : ctx.state
+          };
+
+          // page.show('/' + menuData.routing);
+          me._registerRoutingEvent(menuData.routing, eventDetail);
+        });
+      }
+    });
+
+    this.addLastRouting();
+
+    var routingConfigured = new CustomEvent('things-routing-configured', { detail: null });
+    document.dispatchEvent(routingConfigured);
+  },
+
+  _registerRoutingEvent: function(routing, eventDetail) {
+    // 2. 라우팅 변경 이벤트 ...
+    var routingChangedEventName = 'things-routing-changed-' + routing;
+    var routeChangeEvent = new CustomEvent(routingChangedEventName, { detail : eventDetail });
+    document.dispatchEvent(routeChangeEvent);
+
+    // 3. Recent Page 추가 이벤트 ...
+    var recentPageAddEvent = new CustomEvent('things-recent-page-added', { detail: eventDetail });
+    document.dispatchEvent(recentPageAddEvent);
+  },
+
+  /**
+   * 메뉴 정보를 이용하여 화면을 화면 레이아웃의 Content 영역에 등록한다.
+   * **********
+   * @param {Object} screen 화면 오브젝트
+   * @param {Object} menuData 현재 선택된 메뉴 정보
+   */
+  _setCommonScreenInfo: function(screen, menuData) {
+    screen.menuInfo = menuData;
+    screen.dataRoute = menuData.routing;
+    screen.id = menuData.routing;
+    var content = document.querySelector('#' + this.pageContentId);
+    Polymer.dom(content).appendChild(screen);
+    Polymer.dom.flush();
+  },
+
+  /**
+   * RESOURCE 타입 (화면 유형 : 검색 폼 - 그리드 화면 구성에 그리드 Row 클릭시 Detail Popup 화면)의 Dynamic Screen을 등록한다.
+   * ******
+   * @param {Object} menuData 현재 선택된 메뉴 정보
+   */
+  _registerResourceScreen: function(menuData) {
+    var screenName = (menuData.category == 'TERMINAL') ? 'things-menu-detail-view' : 'things-resource-menu-content';
+    
+    var screen = document.createElement(screenName);
+    this._setCommonScreenInfo(screen, menuData);
+  },
+
+  /**
+   * RESOURCE-VIEW 타입 (화면 유형 : 검색 폼 - 그리드 - 디테일 폼)의 Dynamic Screen을 등록한다.
+   * ********
+   * @param {Object} menuData 현재 선택된 메뉴 정보
+   */
+  _registerResourceViewScreen: function(menuData) {
+    var screen = document.createElement('things-standard-menu-content');
+    this._setCommonScreenInfo(screen, menuData);
+  },
+
+  /**
+   * MASTER-DETAIL 타입 (화면 유형 : 검색 폼 - 마스터 그리드 - 디테일 그리드)의 Dynamic Screen을 등록한다.
+   * ********
+   * @param {Object} menuData 현재 선택된 메뉴 정보
+   */
+  _registerMasterDetailScreen: function(menuData) {
+    var screen = document.createElement('things-master-detail-content');
+    this._setCommonScreenInfo(screen, menuData);
+  },
+
+  /**
+   * PLAIN 타입 (화면 유형 : 검색 폼 - 그리드 화면 구성)의 Plain Screen을 등록한다.
+   * 화면은 메뉴의 메타 정보로 그려내고 서비스 호출 URL도 화면의 메뉴 메타 정보로 사용한다.
+   * 단순하게 서비스 호출하여 조회된 데이터로 그리드를 그리는 화면 유형
+   * ********
+   * @param {Object} menuData 현재 선택된 메뉴 정보
+   */
+  _registerPlainScreen: function(menuData) {
+    var screen = document.createElement('things-menu-grid-content');
+    this._setCommonScreenInfo(screen, menuData);
+  },
+
+  /**
+   * Report 타입 (조회 중심의 그리드 기반의 화면 구성)의 Screen을 등록한다.
+   * 화면은 DiyGrid 기반으로 그려내고 서비스 호출 URL도 화면의 메뉴 메타 정보로 사용한다.
+   * ********
+   * @param {Object} menuData 현재 선택된 메뉴 정보
+   */
+  _registerReportScreen: function(menuData) {
+    var screen = document.createElement('things-report-content');
+    this._setCommonScreenInfo(screen, menuData);
+  },
+
+  /**
+   * SCENE VIEWER 타입(검색 폼 - Scene Viewer)의 Screen을 등록한다.
+   * ******
+   * @param {Object} menuData 현재 선택된 메뉴 정보
+   */
+  _registerSceneViewerScreen: function(menuData) {
+    var screen = document.createElement('things-scene-content');
+    this._setCommonScreenInfo(screen, menuData);
+  },
+
+  /**
+   * SCENE PLAYER 타입의 화면을 등록한다 menuData의 detail_form_id를 통해
+   * Scene Player에 포함될 Scene들을 전달한다.
+   * *******
+   * @param {Object} menuData 현재 선택된 메뉴 정보
+   */
+  _registerScenePlayerScreen: function(menuData) {
+    var screen = document.createElement('things-scene-player');
+    screen.setAttribute('play-pages', menuData.detail_form_id);
+    this._setCommonScreenInfo(screen, menuData);
+  },
+
+  /**
+   * STATIC 타입(개발자가 임의의 화면 구성)의 Screen을 등록한다.
+   * ********
+   * @param {Object} menuData 현재 선택된 메뉴 정보
+   */
+  _registerStaticScreen: function(menuData) {
+    var screen = document.createElement(menuData.template);
+    this._setCommonScreenInfo(screen, menuData);
+  },
+
+  /**
+   * move screen scroll to top
+   * ********
+   * @param {Object} ctx
+   * @param {Function} next
+   */
+  scrollToTop: function(ctx, next) {
+    // console.log('page.load() -> ctx');
+    // console.log(ctx);
+    // console.log('page.next() -> next');
+    // console.log(next);
+    // app.scrollPageToTop();
+    next();
+  },
+
+  /**
+   * Default Routing 추가
+   * *********
+   * @param {String} defaultRouting 기본 라우팅
+   * @param {Array} screens 화면에서 조회한 모든 메뉴 정보 리스트
+   */
+  addDefaultRouting: function(defaultRouting, screens) {
+    page('/' + defaultRouting, this.scrollToTop, function() {
+      app.route = defaultRouting;
+    });
+
+    var defaultRoutingExists = screens.filter(function(object) {
+      return ('/' + object.routing) == defaultRouting
+    }).length > 0;
+
+    if(defaultRoutingExists) {
+      page('/', this.scrollToTop, function() {
+        if(defaultRouting !== 'home') {
+          page.redirect(defaultRouting);
+        } else {
+          app.route = '/';
+        }
+      });
+    }
+  },
+
+  addHomeRouting: function() {
+    var subdomain = location.pathname;
+    this.setBasePath(subdomain);
+    page(subdomain, this.scrollToTop, function() {
+      app.route = '/';
+    });
+  },
+
+  /**
+   * LoginRouting 추가
+   * *********
+   * @param {String} loginRouting LoginRouting
+   */
+  addLoginRouting: function(loginRouting) {
+    var subdomain = location.pathname;
+    if(subdomain.length > 1) {
+      this.setBasePath(subdomain);
+      page(subdomain, this.scrollToTop, function() {
+        app.route = '/';
+      }); 
+    }
+
+    page('/login', this.scrollToTop, function() {
+      app.route = loginRouting;
+    });
+
+    page('/', this.scrollToTop, function() {
+        app.route = '/';
+    });
+
+    page({ hashbang: true });
+  },
+
+  /**
+   * add last routing, when page not foud redirect to home
+   * *********
+   */
+  addLastRouting: function() {
+    page('*', function(attempted) {
+      var url = window.location.href + attempted.path.substr(1);
+      var msg = `Can't find: ${url}. Redirected to Home Page`;
+      var event = new CustomEvent('things-show-toast', { detail: { msg: msg } });
+      document.dispatchEvent(event);
+      page.redirect('/');
+    });
+
+    page({ hashbang: true });
+
+    if(app.dataRoute !== window.location.hash.replace('#!/', '')) {
+      page('/' + window.location.hash.replace('#!/', ''))
+    }
+  },
+
+  setBasePath: function(basePath) {
+    page.base(basePath);
+  }
+};
+
+</script>

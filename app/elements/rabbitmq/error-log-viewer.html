@@ -1,0 +1,128 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<link rel="import" href="./error-log-viewer-detail.html">
+
+<dom-module id="error-log-viewer">
+  <template>
+    <style>
+      :host {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+
+      things-resource-grid {
+        @apply(--layout-vertical);
+        @apply(--layout-flex);
+      }
+    </style>
+
+    <!-- Get Menu Meta Ajax -->
+    <things-ajax auto id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index" last-response="{{metaData}}">
+    </things-ajax>
+
+    <!-- Search form -->
+    <things-search-form id="search-form" title="[[menuInfo.title]]" form-fields="[[mySearchFormFields]]" select-fields="[[selectFields]]"
+      sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]" page="{{page}}" limit="{{limit}}" last-response="{{lastResponse}}">
+    </things-search-form>
+
+    <things-resource-grid id="grid" config="[[gridConfig]]" model="[[gridModel]]" columns="[[myGridColumns]]" buttons="[[buttons]]"
+      paginatable=[[paginatable]] show-paginator=[[paginatable]] current-page="{{page}}" limit="{{limit}}" data="[[items]]"
+      total-count="[[itemCount]]" fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]">
+    </things-resource-grid>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'error-log-viewer',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
+
+      properties: {
+        paginatable: {
+          type: Boolean,
+          value: true
+        },
+
+        gridConfig: {
+          type: Object,
+          value: function () {
+            return {
+              options: {
+                checkBar: {
+                  visible: false
+                },
+                displayOptions: {
+                  fitStyle: 'fill'
+                }
+              }
+            }
+          }
+        },
+
+        myGridColumns: {
+          type: Array
+        }
+      },
+
+      listeners: {
+        "resource-meta.things-ajax-response": "_gotMeta",
+        "grid.things-grid-detail-tap": "showDetailView"
+      },
+
+      _gotMeta: function () {
+        this.setColumns();
+        this.setSearchForms();
+      },
+
+      setColumns: function () {
+        var columns = this.gridColumns; // 메타 수정용
+
+        ////////////////// trace_type 수정 불가 //////////////////
+        var trace_type = columns.findIndex(function (element) {
+          return element.name === "trace_type";
+        });
+        columns[trace_type].editable = false;
+        //////////////////////////////////////////////////////
+
+        this.myGridColumns = columns; // 적용
+      },
+
+      setSearchForms: function () {
+        var forms = this.searchFormFields;
+
+        //////////////// date picker 값 필수 //////////////
+        var err_date = forms.findIndex(function (element) {
+          return element.name === "err_date";
+        });
+        if (err_date) forms[err_date].userData.required = true;
+        /////////////////////////////////////////////////
+
+        this.mySearchFormFields = forms;
+      },
+
+      showDetailView: function (event) {
+        var prop = {
+          "title": Things.DataGlobal.t("title.error_detail"),
+          "data": event.detail,
+          "parent": this,
+          "resourceUrl": this.menuInfo.resource_url + '/' + event.detail.id
+        };
+
+        var detailView = this.create("error-log-viewer-detail", prop);
+
+        this.openPopupView(detailView, true, null, null);
+      }
+    });
+  </script>
+</dom-module>

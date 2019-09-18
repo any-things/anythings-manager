@@ -1,0 +1,418 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-form.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+
+<!--
+	로그 뷰어 화면
+-->
+
+<dom-module id="mps-log-viewer">
+	<template>
+		<style>
+			:host {
+				display: block;
+				@apply(--layout-vertical);
+				@apply(--layout-flex);
+			}
+			things-layout-hera {
+				@apply(--layout-flex);
+			}
+			things-layout-hades {
+				@apply(--layout-flex);
+			}
+			things-resource-grid {
+				@apply(--layout-flex);
+			}
+			.container {
+				@apply(--layout-vertical);
+				@apply(--layout-flex);
+			}
+		</style>
+
+    <!-- Menu Meta Data Read Ajax -->
+		<things-ajax
+			auto
+			id="resource-meta"
+			resource-url="[[menuMetaUrl]]"
+			resource-action="index"
+			last-response="{{metaData}}">
+		</things-ajax>
+
+    <!-- Read Log File Ajax -->
+    <things-ajax
+			id="read-log-ajax"
+			resource-url="log_management/read/:id"
+      resource-id="[[resourceId]]"
+			resource-action="find"
+			last-response="{{logObj}}">
+		</things-ajax>
+
+    <!-- Delete Log File Ajax -->
+		<things-ajax
+			id="delete-log-ajax"
+			resource-url="log_management/delete/:id"
+			resource-id="[[resourceId]]"
+			resource-action="delete">
+		</things-ajax>
+
+		<things-search-form
+			id="search-form"
+			title="[[menuInfo.title]]"
+			form-fields="[[searchFormFields]]"
+			select-fields="[]"
+			sort-fields="[]"
+			action-url="[[menuInfo.resource_url]]"
+			page="{{page}}"
+			limit="{{limit}}"
+			last-response="{{lastResponse}}">
+		</things-search-form>
+
+		<things-layout-hera
+			left-content-title="[[leftContentTitle]]"
+		  right-content-title="[[rightContentTitle]]"
+			right-ratio="[[rightRatio]]">
+
+			<!-- 레이아웃 좌측의 테이블 리스트 그리드 -->
+			<things-resource-grid
+				left
+				id="grid"
+				config="[[gridConfig]]"
+				model="[[gridModel]]"
+				columns="[[gridColumns]]"
+				data="[[logList]]"
+				selected-row-data="{{resource}}"
+				fixed-column-count="0"
+				buttons="[[buttons]]">
+			</things-resource-grid>
+
+      <things-code-editor
+				right
+				id="log-viewer"
+        class="container"
+				theme="ace/theme/monokai"
+				resource="{{logObj}}"
+				code-field="log"
+				mode="ace/mode/json"
+				buttons="[[logButtons]]">
+			</things-code-editor>
+		</things-layout-hera>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'mps-log-viewer',
+
+			behaviors: [
+				Things.ResourceMenuContentBehavior
+			],
+
+			properties: {
+				/**
+				 * Left Content Title
+				 */
+				leftContentTitle: {
+					type: String,
+					value: function() {
+						return Things.DataGlobal.t('label.file');
+					}
+				},
+
+        /**
+				 * Left Content Title
+				 */
+				rightContentTitle: {
+					type: String,
+					value: function() {
+						return Things.DataGlobal.t('label.log');
+					}
+				},
+
+				/**
+				 * things-layout-hera의 비율을 결정하는 property
+				 */
+				rightRatio: {
+					type: String,
+					value: function() {
+						return 'ratio3'
+					}
+				},
+
+				/**
+				 * Grid Config
+				 */
+				gridConfig: {
+					type: Object,
+					value: function() {
+						return {
+							options: {
+								checkBar: {
+									exclusive: true
+								}
+							}
+						}
+					}
+				},
+
+        /**
+				 * Grid Model
+				 */
+				gridModel: {
+					type: Array,
+					value: function() {
+						return [ {
+              fieldName: 'id'
+            }, {
+              fieldName: 'name'
+            }, {
+              fieldName: 'size',
+              type: 'number'
+            }, {
+							fieldName: 'size_str'
+						} ];
+					}
+				},
+
+        /**
+				 * Grid Columns
+				 */
+				gridColumns: {
+					type: Array,
+					value: function() {
+						return [ {
+							name: 'name',
+							fieldName: 'name',
+							width: 175,
+							header: {
+								text: Things.DataGlobal.t('label.name')
+							}
+						}, {
+							name: 'size_str',
+							fieldName: 'size_str',
+							width: 75,
+							header: {
+								text: Things.DataGlobal.t('label.size')
+							},
+							styles: {
+								textAlignment: 'far'
+							}
+						} ];
+					}
+				},
+
+        logButtons: {
+          type: Array,
+          value: function() {
+            return [ {
+							id: 'refresh-btn',
+							text: 'refresh'
+						} ]
+          }
+        },
+
+        logList: {
+          type: Array,
+          value: []
+        },
+
+        logObj: {
+          type: Object,
+          value: function() {
+            return { id : '1', log : '', }
+          }
+        },
+
+        logDownloadUrl: {
+          type: String,
+          readOnly: true,
+          computed: '_computeDownloadUrl(globals.baseUrl)'
+        },
+
+        unitSystem: {
+          type: Array,
+          value: function() {
+            return ['kB','MB','GB','TB','PB','EB','ZB','YB'];
+          }
+        },
+
+        unitHuman: {
+          type: Array,
+          value: function() {
+            return ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+          }
+        }
+			},
+
+      listeners: {
+				'read-log-ajax.things-ajax-response': 'afterReadLog',
+        'delete-log-ajax.things-ajax-response': 'refreshData',
+				'refresh-btn-tap': 'refreshLogContent',
+        'download-btn-tap': 'downloadLogFile',
+        'delete-btn-tap': 'deleteLogFile'
+			},
+
+      observers: [
+        '_lastResponseChanged(lastResponse)',
+        '_resourceChanged(resource)'
+      ],
+
+      /**
+       * 로그 다운로드 URL
+       ***************
+       * @param {resource} 리소스
+       */
+      _computeDownloadUrl: function(baseUrl) {
+        return baseUrl + '/log_management/download/:id';
+      },
+
+      /**
+       * 리소스 선택이 변경된 경우
+       ***************
+       * @param {resource} 리소스
+       */
+      _resourceChanged: function(resource) {
+        this.resourceId = resource.name;
+        this.refreshLogContent();
+      },
+
+      /**
+       * 로그 파일 리스트 변경시
+       *
+       * @param {lastResponse} 로그 파일 리스트
+       */
+       _lastResponseChanged: function(lastResponse) {
+        if(lastResponse) {
+          this.logList = lastResponse.map(function(file) {
+            file.size_str = this._humanizeByte(file.size);
+            return file;
+          }.bind(this));
+        } else {
+          this.logList = [];
+        }
+      },
+
+      /**
+			 * Byte 정보를 KB, MB, GB 형태로 ...
+			 ************
+			 * @param {Number} bytes
+			 * @param {String} si
+			 */
+			_humanizeByte: function(bytes, si) {
+				var thresh = si ? 1000 : 1024;
+
+				if(Math.abs(bytes) < thresh) {
+					return bytes + ' B';
+				}
+
+				var units = si ? this.unitSystem : this.unitHuman;
+				var u = -1;
+
+				do {
+					bytes /= thresh;
+					++u;
+				} while(Math.abs(bytes) >= thresh && u < units.length - 1);
+
+				return bytes.toFixed(1) + ' ' + units[u];
+			},
+
+      /**
+			 * 그리드에서 체크된 Row의 데이터를 리턴
+			 */
+			gridCheckedRow: function() {
+				var resourceGrid = this.$.grid;
+				var rows = resourceGrid.getGridObject().getCheckedRows();
+
+				if (rows && rows.length > 0) {
+					var ds = resourceGrid.getGridDataSet();
+					var data = ds.getRowObject(rows[0].dataIndex());
+					return data;
+
+				}	else {
+					return null;
+				}
+			},
+
+			/**
+			 * After Log Read
+			 *********
+			 * @param {Object} event
+			 */
+			afterReadLog: function(event) {
+				this.rightContentTitle = Things.DataGlobal.t('label.log') + ' (' + this.resource.name + ')';
+			},
+
+      /**
+			 * Refresh Log Content
+			 *********
+			 * @param {Object} event
+			 */
+      refreshLogContent: function(event) {
+        var formData = this.$['search-form'].serializeMyForm();
+        var lines = formData.lines ? formData.lines : '1000';
+        var readLogAjax = this.$['read-log-ajax'];
+        readLogAjax.params = { lines : lines };
+        readLogAjax.generateRequest();
+      },
+
+      /**
+			 * Delete Log File
+			 *********
+			 * @param {Object} event
+			 */
+			deleteLogFile: function(event) {
+        var log = this.gridCheckedRow();
+				if(log) {
+					var deleteLogAjax = this.$['delete-log-ajax'];
+					deleteLogAjax.resourceId = log.name;
+					this.executeApp(log.name, Things.DataGlobal.t('text.sure_to_delete_file'), deleteLogAjax);
+				}
+			},
+
+      /**
+			 * 로그 파일 다운로드
+			 *********
+			 * @param {Object} event
+			 */
+			downloadLogFile: function(event) {
+        var log = this.gridCheckedRow();
+
+				if(log) {
+          var downloadLogUrl = this.logDownloadUrl.replace(':id', log.name);
+					this.openConfirmMsg({
+						type : 'info',
+						title : Things.DataGlobal.t('text.Want to download file'),
+						text : Things.DataGlobal.t('text.You can download file'),
+						showCancelButton: true
+					}, function() {
+						window.location = downloadLogUrl;
+					});
+				}
+			},
+
+      /**
+			 * Application 수행
+			 *********
+			 * @param {String} title
+			 * @param {String} text
+			 * @param {String} ajax
+			 */
+			executeApp: function(title, text, ajax) {
+				this.openConfirmMsg({
+					type : 'info',
+					title : title,
+					text : text,
+					showCancelButton: true
+				}, function() {
+					ajax.generateRequest();
+				});
+			}
+		})
+	</script>
+</dom-module>

@@ -1,0 +1,232 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-meta/things-named-meta-behavior.html">
+
+<!--
+  주문 및 작업 > 주문 가공 > 로케이션 바꾸기 팝업
+-->
+
+<dom-module id="mps-mpi-change-popup">
+   <template>
+      <style>
+         :host {
+            @apply --layout-flex;
+            @apply --layout-vertical;
+            @apply --things-default-padding;
+
+            --grid-gap: 10px;
+         }
+
+         .container {
+            @apply(--layout-flex);
+            display: grid;
+            grid-template-rows: 50px 50px 50px auto;
+            grid-template-columns: auto auto;
+        }
+
+        #from-mpi-code {
+            grid-row-start: 1;
+            grid-row-end: 2;
+            grid-column-start: 1;
+            grid-column-end: 3;
+        }
+
+        #location-code {
+            grid-row-start: 2;
+            grid-row-end: 3;
+            grid-column-start: 1;
+            grid-column-end: 3;
+        }
+
+        #to-mpi-code {
+            grid-row-start: 3;
+            grid-row-end: 4;
+            grid-column-start: 1;
+            grid-column-end: 3;
+        }
+
+        #button-group {
+            grid-row-start: 4;
+            grid-row-end: 5;
+            grid-column-start: 2;
+            grid-column-end: 3;
+            text-align:right;
+        }
+      </style>
+
+      <!-- 메타 호출 ajax -->
+      <things-ajax
+         auto
+         id="resource-meta"
+         method="GET"
+         resource-url="[[menuMetaUrl]]"
+         last-response="{{metaData}}">
+      </things-ajax>
+
+      <!-- 교체 호출 ajax -->
+      <things-ajax 
+         id="change-mpi" 
+         content-type="application/json" 
+         resource-url="mpi_app/change_mpi/:from/:to"
+         resource-action="update">
+      </things-ajax>
+
+      <!-- 그리드 컨테이너 -->
+      <div class="container">
+            <!-- 이전 표시기 코드 필드 -->
+            <things-input-field
+               id="from-mpi-code"
+               class="from-field"
+               label="[[labels.fromMpiCode]]"
+               value="[[fromMpiCode]]"
+               disabled
+               readonly>
+            </things-input-field>
+
+            <!-- 이전 표시기 명 필드 -->
+            <things-input-field
+               id="location-code"
+               class="input-field"
+               label="[[labels.locationCode]]"
+               value="[[locationCode]]"
+               disabled
+               readonly>
+            </things-input-field>
+
+            <!-- 변경할 표시기 코드 필드-->
+            <things-input-field
+               id="to-mpi-code"
+               class="input-field"
+               label="[[labels.toMpiCode]]"
+               value="[[toMpiCode]]"
+               onfocus>
+            </things-input-field>
+
+            <things-button-bar id="button-group" buttons="[[buttons]]"></things-button-bar>
+      </div>
+   </template>
+
+   <script>
+      Polymer({
+         is: 'mps-mpi-change-popup',
+
+         behaviors: [
+            Things.MsgBoxBehavior,
+            Things.NamedMetaBehavior
+         ],
+
+         properties: {
+            /**
+             * 라벨 텍스트 모음
+             ****************
+             * @type {Object}
+             */
+            labels: {
+               type: Object,
+               value: function() {
+                  return {
+                     fromMpiCode: Things.DataGlobal.t("label.from_mpi_code"),
+                     locationCode: Things.DataGlobal.t('label.location_cd'),
+                     toMpiCode: Things.DataGlobal.t('label.to_mpi_code')
+                  };
+               }
+            },
+
+            buttons: {
+                type: Array,
+                value: function() {
+                return [{
+                    id: 'change-btn',
+                    text: 'change'
+                }, {
+                    id: 'cancel-btn',
+                    text: 'cancel'
+                }]
+                }
+            }
+         },
+
+         listeners: {
+            'button-group.cancel-btn-tap': '_cancel',
+            'button-group.change-btn-tap': '_change',
+            'change-mpi.things-ajax-response': '_onChangeMpiResp',
+            'to-mpi-code.keydown': '_everytimeValueGetChanged'
+         },
+
+         ready: function() {
+            this.$$('#from-mpi-code').$.input.style.textAlign = "right";
+            this.$$('#location-code').$.input.style.textAlign = "right";
+            this.$$('#to-mpi-code').$.input.style.textAlign = "right";
+            this.$$('#to-mpi-code').$.input.style.textTransform = "uppercase";
+            this.$$('#to-mpi-code').setTabindex(1);
+         },
+
+         attached: function() {
+            // document.addEventListener('keydown', function(event){
+            //     console.log(event.keyCode);
+            // }, false);
+
+            // var event = document.createEvent('KeyboardEvent');
+            // event.initKeyboardEvent('keydown', true, false, null, 0, false, 0, false, 9, 0);
+            // var event = new KeyboardEvent('keydown', {'keyCode': 9, 'which': 9});
+            // document.dispatchEvent(event); 
+            var self = this;
+            setTimeout(function(){
+                self.$$('#to-mpi-code').focus();
+            }, 1000);
+         },
+
+         _everytimeValueGetChanged: function(e) {
+            //  console.log(e);
+         },
+
+         _change: function() {
+            var toMpiCode = this.$$('#to-mpi-code').value;
+
+            if(toMpiCode.length >= 0 && this.checkStr(toMpiCode)) {
+                var ajax = this.$['change-mpi'];
+                ajax.resourceUrl = 'mpi_app/change_mpi/' + this.fromMpiCode + '/' + toMpiCode.toUpperCase();
+                ajax.generateRequest();
+            } else {
+                this.openConfirmMsg({
+                    type: 'error',
+                    title: Things.DataGlobal.t('title.error'),
+                    text: "값이 유효하지 않습니다.",
+                    showCancelButton: false
+                });
+            }
+         },
+
+         _cancel: function() {
+            this.fire('things-dialog-close', {});
+         },
+
+         _onChangeMpiResp: function(e){
+            if(e.detail.success){
+                this.openConfirmMsg({
+                    type: 'success',
+                    title: Things.DataGlobal.t('title.success'),
+                    text: Things.DataGlobal.t('text.Success to Update'),
+                    showCancelButton: false,
+                },  function() {
+                        this.fire('things-dialog-close', {});
+				}.bind(this));
+            } else {
+                this.openConfirmMsg({
+                    type: 'error',
+                    title: Things.DataGlobal.t('title.error'),
+                    text: e.detail.msg,
+                    showCancelButton: false
+                });
+            }
+         },
+
+         // 영문 대소문자, 숫자만 체크, 유효하면 true
+         checkStr: function(str) {
+            var regx = /[^\w]/;
+            return !regx.test(str);
+        }
+      });
+   </script>
+</dom-module>

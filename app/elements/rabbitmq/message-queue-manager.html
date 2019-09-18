@@ -1,0 +1,168 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<dom-module id="message-queue-manager">
+    <template>
+        <style>
+            :host {
+                @apply(--layout-flex);
+                @apply(--layout-vertical);
+            }
+
+            things-resource-grid {
+                @apply(--layout-vertical);
+                @apply(--layout-flex);
+            }
+        </style>
+
+        <!-- Get Menu Meta Ajax -->
+        <things-ajax auto id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index" last-response="{{metaData}}">
+        </things-ajax>
+
+
+        <!-- request purging queue -->
+        <things-ajax id="purge-queue-ajax" method="DELETE" !with-credentials>
+        </things-ajax>
+
+
+        <!-- Search form -->
+        <things-search-form id="search-form" title="[[menuInfo.title]]" form-fields="[[searchFormFields]]" select-fields="[[selectFields]]"
+            sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]" page="{{page}}" limit="{{limit}}" last-response="{{lastResponse}}">
+        </things-search-form>
+
+        <things-resource-grid id="grid" config="[[gridConfig]]" model="[[gridModel]]" columns="[[myGridColumns]]" buttons="[[buttons]]"
+            paginatable=true show-paginator=true current-page="{{page}}" limit="{{limit}}" data="[[items]]" total-count="[[itemCount]]"
+            fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]">
+        </things-resource-grid>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'message-queue-manager',
+
+            behaviors: [
+                Things.ResourceMenuContentBehavior
+            ],
+
+            properties: {
+                comboResourceUrl: {
+                    type: String,
+                    value: function () {
+                        return "rabbitmq/vhost/getComboResource";
+                    }
+                },
+
+                gridConfig: {
+                    type: Object,
+                    value: function () {
+                        return {
+                            options: {
+                                displayOptions: {
+                                    fitStyle: 'fill'
+                                }
+                            }
+                        }
+                    }
+                },
+
+                myGridColumns: {
+                    type: Array
+                }
+            },
+
+            listeners: {
+                "resource-meta.things-ajax-response": "_gotMeta",
+                "grid.things-grid-configured": "_gridConfigured"
+            },
+
+            _gotMeta: function (event) {
+                this.setColumns(event);
+            },
+
+            _gridConfigured: function () {
+                this.setOnButtonClickListener(); // 버튼 클릭 리스너
+            },
+
+            setColumns: function (event) {
+                var columns = this.gridColumns; // 메타 수정용
+
+                /////////////////////// clear 컬럼 버튼 설정/////////////////////
+                var clear = columns.findIndex(function (element) {
+                    return element.name === "clear";
+                });
+                columns[clear].renderer = {
+                    type: "button",
+                    imageUrl: "../../images/grid/group_close_hover.png",
+                    enabledCallback: function (index) {
+                        return index.getRow().$_state !== "created";
+                    }
+                };
+                columns[clear].editable = false;
+                /////////////////////////////////////////////////////////////
+
+
+                ///////////////////// 사이트 코드 컬럼 설정 //////////////////////
+                var site_code = columns.findIndex(function (element) {
+                    return element.name === "site_code";
+                });
+                columns[site_code].editableCallback = function (index) {
+                    return index.getRow().$_state === "created";
+                };
+                /////////////////////////////////////////////////////////////
+
+
+                ///////////////////// 큐 이름 컬럼 설정 //////////////////////
+                var queue_name = columns.findIndex(function (element) {
+                    return element.name === "queue_name";
+                });
+                columns[queue_name].editableCallback = function (index) {
+                    return index.getRow().$_state === "created";
+                };
+                /////////////////////////////////////////////////////////////
+
+
+                ////////////////// is_system_queue 수정 불가 //////////////////
+                var is_system_queue = columns.findIndex(function (element) {
+                    return element.name === "is_system_queue";
+                });
+                columns[is_system_queue].renderer.editable = false;
+                /////////////////////////////////////////////////////////////
+
+                this.myGridColumns = columns; // 적용
+            },
+
+            setOnButtonClickListener: function () {
+                this.$.grid.grid.onDataButtonClicked = function (grid, index) {
+
+                    ///////////////////////////////확인 팝업////////////////////////////////
+                    var config = {
+                        "type": "info",
+                        "title": Things.DataGlobal.t('title.confirm'),
+                        "text": Things.DataGlobal.t('text.rabbitmq_purge_queue'),
+                        "showCancelButton": "true",
+                    };
+
+                    this.openConfirmMsg(config, function () {
+                        let material = index.getRow().getRowObject();
+
+                        let purgeQueueAjax = this.$["purge-queue-ajax"];
+                        purgeQueueAjax.resourceUrl = this.menuInfo.resource_url + "/"
+                            + material.site_code + "/"
+                            + material.queue_name.replace(/\//g, '.') + "/"
+                            + material.is_system_queue;
+                        purgeQueueAjax.generateRequest();
+                    }.bind(this));
+                    ///////////////////////////////////////////////////////////////////////
+                }.bind(this);
+            }
+        });
+    </script>
+</dom-module>

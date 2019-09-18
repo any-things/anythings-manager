@@ -1,0 +1,305 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<dom-module id="trace-chart">
+  <template>
+    <style>
+      :host {
+        @apply --layout-vertical;
+        @apply --layout-flex;
+      }
+      things-resource-grid {
+        @apply --layout-vertical;
+        @apply --layout-flex;
+      }
+    </style>
+    
+    <things-ajax
+      auto
+      id="resource-meta"
+      resource-url="[[menuMetaUrl]]"
+      resource-action="index"
+      last-response="{{metaData}}">
+    </things-ajax>
+
+    <things-search-form
+      id="search-form"
+      title="[[menuInfo.title]]"
+      form-fields="[[searchFormFields]]"
+      select-fields="[[selectFields]]"
+      sort-fields="[[sortFields]]"
+      action-url="[[menuInfo.resource_url]]"
+      page="{{page}}"
+      limit="{{limit}}"
+      last-response="{{lastResponse}}">
+    </things-search-form>
+
+    <things-resource-grid
+      id="grid"
+      config="[[gridConfig]]"
+      model="[[gridModel]]"
+      columns="[[gridColumns]]">
+    </things-resource-grid>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'trace-chart',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
+
+      properties: {
+        /**
+         * grid model
+         */
+        gridModel: {
+          type: Array,
+          value: function() {
+            return []
+          }
+        },
+
+        /**
+         * grid columns
+         */
+        gridColumns: {
+          type: Array,
+          value: function() {
+            return [{
+              type: 'label',
+              header: {
+                text: Things.DataGlobal.t('menu.TraceChart')
+              },
+              fillWidth: 1
+            }];
+          }
+        },
+
+        /**
+         * messsage trace 조회 결과
+         */
+        lastResponse: {
+          type: Object,
+          observer: '_lastResponseChanged'
+        },
+
+        /**
+         * data responsed 여부 flag
+         */
+        isDataResponsed: {
+          type: Boolean,
+          value: false
+        },
+
+        /**
+         * grid configured 완료 여부 flag
+         * grid configured가 완료된 뒤 _initChart를 통해 그리드에 차트 속성을 초기화 할 수 있음
+         */
+        isGridConfigured: {
+          type: Boolean,
+          value: false
+        },
+
+        /**
+         * 차트 속성 설정 완료 여부 flag
+         * 차트 속성 초기화가 완료된 뒤 데이터를 통해 화면에 차트를 그릴 수 있음
+         */
+        isChartInited: {
+          type: Boolean,
+          value: false
+        },
+
+        requiredFields: {
+          type: Array,
+          value: function() {
+            return [
+              'pub_time'
+            ]
+          }
+        }
+      },
+
+      listeners: {
+        'search-form.things-form-search': '_beforeSubmitHandler',
+        'grid.things-grid-configured': '_gridConfigured'
+      },
+
+      /**
+       * search form before submit evnet handler
+       * @description 검색 수행 전 필수 값 입력 여부를 판단하고 에러 메시지 출력
+       */
+      _beforeSubmitHandler: function(event) {
+        if(!this._checkRequiredFields()) {
+          event.preventDefault();
+          this.openInfoMsg({
+            type: 'error',
+            title: Things.DataGlobal.t('error.VALIDATION_ERROR'),
+            text: Things.DataGlobal.t('error.SHOULD_NOT_BE_EMPTY', { value: Things.DataGlobal.t('label.pub_time')}),
+            showCancelButton: false
+          });
+        }
+      },
+
+      /**
+       * @description 서치폼의 필수 필드들이 값이 입력 되었는지 확인 하여 결과를 return
+       */
+      _checkRequiredFields: function() {
+        var searchForm = this._getSearchForm();
+        var searchObj = searchForm.serializeMyForm();
+        try {
+          this.requiredFields.forEach(function(requiredField) {
+            if(searchObj[requiredField].toString().length <= 0) {
+              throw new Error('Require field is empty.');
+            }
+          });
+        } catch {
+          return false;
+        }
+
+        return true;
+      },
+
+      /**
+       * @description 그리드 구성 완료 이벤트 핸들러
+       * 그리드 구성이 완료 되면 isGridConfigured flag를 true로 초기화 한 뒤
+       * 1. isChartInited가 false (차트 속성이 그리드에 들어가 있지 않은 상태)
+       *    그리드에 chart 속성을 집어 넣는 _initChart를 호출함
+       * 2. isChartInited와 isDataResponsed가 true (그리드에 차트 속성이 들어가 있고 데이터도 받은 상태)
+       *    데이터를 _injectData를 통해 차트에 그리드를 맵핑함
+       */
+      _gridConfigured: function() {
+        this.isGridConfigured = true;
+        if(!this.isChartInited) {
+          this._initChart();
+        } else if (this.isChartInited && this.isDataResponsed) {
+          this._injectData(this.lastResponse);
+        }        
+      },
+
+      /**
+       * @description 데이터 response event handler
+       * 조회 결과가 response 되면 isDataResponsed flag를 true로 초기화 한 뒤
+       * 차트가 초기화 되었다면 _injectData를 통해 데이터를 그리드 차트에 맵핑함
+       */
+      _lastResponseChanged: function(data) {
+        this.isDataResponsed = true;
+        if(this.isChartInited) {
+          this._injectData(data);
+        }
+      },
+
+      /**
+       * things-grid-configured 이벤트 발생 이후 그리드의 속성에 차트 관련 옵션들을 설정함
+       * 설정 완료 후 isChartInited flag를 true로 초기화함
+       */
+      _initChart: function() {
+        var gridObject = this.$['grid'].getGridObject();
+        gridObject.setOptions({
+          checkBar: {
+            visible: false
+          },
+          header: {
+            visible: false
+          },
+          display: {
+            emptyDataMessage: ''
+          },
+          headerItems: [{
+            type: 'chart',
+            fillHeight: 1,
+            styles: {
+              borderRight: null,
+              borderBottom: null,
+              padding: 10,
+              backgroundcolor: 'tomato'
+            },
+          }]
+        });
+
+        this.isChartInited = true;
+      },
+
+      /**
+       * 전달 받은 데이터를 통해 그리드에 데이터를 맵핑함
+       */
+      _injectData: function(data) {
+        if(!this.isChartInited) return;
+        var modifiedData = this._modifyData(data.items);
+        var chartObj = this._getChartObject(modifiedData);
+        var gridObject = this._getGrid().getGridObject();
+        gridObject.headerItems().getItem(0).setChart(chartObj);
+        var column = gridObject.columns()[0];
+        column.setWidth(this._getGridWidth());
+      },
+
+      /**
+       * 서버로 부터 전달 받은 데이터를 그리드에 표현 할 수 있는 형식으로 가공함
+       */
+      _modifyData: function(data) {
+        var tempData = [];
+        data.forEach(function(item, idx) {
+          tempData.push({
+            time: idx,
+            value: item
+          });
+        }.bind(this));
+
+        return tempData;
+      },
+
+      /**
+       * grid chart object의 기본 구조에 데이터를 맵핑하여 return
+       */
+      _getChartObject: function(data) {
+        return {
+          type: 'column',
+          series: [{
+            labelField: 'time',
+            valueField: 'value',
+            styles: {
+              backgroundcolor: '#0088ff'
+            },
+            items: data
+          }],
+          yAxes: {
+            baseValue: 0,
+            grid: {
+              styles: {
+                line: "#ccc,1px,dotted"
+              }
+            }
+          }
+        };
+      },
+
+      /**
+       * 그리드의 가로 길이를 화면에 맞추기 위해 grid canvas element의 가로 길이를 계산하여 리턴
+       */
+      _getGridWidth: function() {
+        return this._getGrid().querySelector('canvas').clientWidth;
+      },
+
+      _getSearchForm: function() {
+        return this.$['search-form'];
+      },
+
+      /**
+       * return things-resource-grid element
+       */
+      _getGrid: function() {
+        return this.$['grid'];
+      }
+    })
+  </script>
+</dom-module>

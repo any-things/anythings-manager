@@ -1,0 +1,438 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-button/things-button.html">
+<link rel="import" href="../../bower_components/things-form/things-resource-form.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-full-dialog/things-full-dialog.html">
+<link rel="import" href="../../bower_components/things-grid/things-basic-grid.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-meta/things-menu-meta-behavior.html">
+<link rel="import" href="../../bower_components/things-view-open-behavior/things-view-open-behavior.html">
+
+<link rel="import" href="./mps-code-detail.html">
+
+<!--
+공통 코드 화면 셋
+두 개의 그리드로 구성되는데 하나는 마스터 코드 표시용이고
+다른 하나는 마스터 코드를 선택했을 때 서브 코드 리스트를 표시하는데 사용된다.
+-->
+
+<dom-module id="mps-common-code">
+    <template>
+        <style>
+            :host {
+                display: block;
+                @apply(--layout-vertical) @apply(--layout-flex)
+            }
+
+            .subtitle:before {
+                content: "";
+                @apply(--things-subtitle-icon);
+            }
+
+            .subtitle {
+                @apply(--things-default-padding);
+                padding-bottom: 7px;
+                @apply(--things-subtitle);
+            }
+
+            things-resource-grid {
+                @apply(--things-default-padding);
+                padding-top: 0px;
+                padding-bottom: 0px;
+            }
+
+            .things-resource-grid-main {
+                @apply(--layout-flex-2);
+            }
+
+            .things-resource-grid-sub {
+                @apply(--layout-flex);
+                min-height: 150px;
+            }
+        </style>
+
+        <things-ajax
+            auto
+            id="resource-meta"
+            method="GET"
+            resource-url="[[menuMetaUrl]]"
+            last-response="{{metaData}}">
+        </things-ajax>
+
+        <things-search-form
+            id="search-form"
+            title="[[menuInfo.title]]"
+            form-fields="[[searchFormFields]]"
+            select-fields="[[selectFields]]"
+            sort-fields="[[sortFields]]"
+            action-url="[[resourceUrl]]"
+            page="1"
+            limit="1000"
+            last-response="{{commonCodes}}">
+        </things-search-form>
+
+        <span class="subtitle">
+            <things-i18n-msg msgid="label.code_list"></things-i18n-msg>
+        </span>
+
+        <things-resource-grid
+            id="grid"
+            class="things-resource-grid-main"
+            config="[[gridConfig]]"
+            model="[[gridModel]]"
+            columns="[[gridColumns]]"
+            current-page="1"
+            limit="1000"
+            data="[[commonCodeList]]"
+            total-count="[[commonCodeTotal]]"
+            grid-save-action="[[gridSaveUrl]]"
+            selected-row-data="{{selectedRow}}"
+            buttons="[[buttons]]"
+            fixed-column-count="0"
+            enable-detail-column>
+        </things-resource-grid>
+
+        <things-ajax
+            id="subcode-list"
+            resource-url="[[codeDetailUrl]]"
+            resource-action="index"
+            resource-id="{{resourceId}}"
+            last-response="{{subCodeResponse}}">
+        </things-ajax>
+
+        <span class="subtitle">
+            <things-i18n-msg msgid="label.sub_codes"></things-i18n-msg>
+        </span>
+
+        <things-resource-grid
+            id="sub-grid"
+            class="things-resource-grid-sub"
+            config="[[gridConfig]]"
+            model="[[detailModel]]"
+            columns="[[detailColumns]]"
+            current-page="1"
+            limit="1000"
+            data="[[subCodeItems]]"
+            grid-save-action="[[detailSaveUrl]]"
+            buttons="[[subButtons]]"
+            fixed-column-count="0"
+            !enable-detail-column>
+        </things-resource-grid>
+    </template>
+
+    <script>
+    Polymer({
+        is: 'mps-common-code',
+
+        behaviors: [
+            Things.MenuMetaBehavior
+        ],
+
+        properties: {
+            /**
+             * 서버에서 관리하는 메뉴 정보
+             */
+            menuInfo: {
+                type: Object,
+                observer: '_menuInfoChanged'
+            },
+
+            /**
+             * 그리드 저장 (Multiple Save) URL
+             */
+            gridSaveUrl: {
+                type: String,
+                computed: '_computeGridSaveUrl(resourceUrl)'
+            },
+
+            /**
+             * 그리드에서 선택된 Row Data
+             */
+            selectedRow: {
+                type: Object
+            },
+
+            /**
+             * Code Detail Search URL
+             */
+            codeDetailUrl: {
+                type: String,
+                value: 'common_codes/:id'
+            },
+
+            /**
+             * Resource id attribute
+             */
+            resourceId: {
+                type: String
+            },
+
+            /**
+             * Sub code save url
+             */
+            detailSaveUrl: {
+                type: String,
+                value: 'common_codes/:id/update_multiple_codes.json'
+            },
+
+            /**
+             * 커먼 코드의 ajax call response로 null 값일 경우 observer를 통해 초기화 한다.
+             */
+            commonCodes: {
+                type: Object,
+                observer: '_commonCodesChanged'
+            },
+
+            /**
+             * 실제 그리드에 매핑되는 결과값
+             */
+            commonCodeList: {
+                type: Array
+            },
+
+            /**
+             * 실제 그리드에 매핑되는 total값
+             */
+            commonCodeTotal: {
+                type: Number
+            },
+
+            /**
+             * 서브 코드의 ajax call response로 null 값일 경우 observer를 통해 초기화 한다.
+             */
+            subCodeResponse: {
+                type: Object,
+                observer: '_subCodeChanged'
+            },
+
+            /**
+             * 실제 그리드에 매핑되는 결과값
+             */
+            subCodeItems: {
+                type: Array
+            },
+
+            /**
+             * grid config
+             */
+            gridConfig: {
+                type: Object,
+                value: function() {
+                    return {
+                        displayOptions : {
+                            fitStyle : DataLudi.GridFitStyle.EVEN_FILL
+                        }
+                    }
+                }
+            },
+
+            /**
+             * Code Detail Grid Model
+             */
+            detailModel: {
+                type: Array,
+                value: [ {
+                    fieldName: 'id'
+                }, {
+                    fieldName: 'parent_id'
+                }, {
+                    fieldName: 'rank',
+                    dataType: 'number',
+                    rank: true,
+                    increment: 10
+                }, {
+                    fieldName: 'name'
+                }, {
+                    fieldName: 'description'
+                } ]
+            },
+
+            /**
+             * common code detail grid columns
+             */
+            detailColumns: {
+                type: Array,
+                value: function() {
+                    return [];
+                }
+            },
+
+            /**
+             * sub-grid 버튼 정보
+             */
+            subButtons: {
+                type: Array,
+                value: [ {
+                    id: 'add-btn',
+                    text: 'add'
+                }, {
+                    id: 'save-btn',
+                    text: 'save'
+                }, {
+                    id: 'delete-btn',
+                    text: 'delete'
+                } ]
+            }
+        },
+
+        /**
+         * Column 번역을 위하여 Attached로 바꿈
+         */
+        attached: function() {
+            this.detailColumns = [ {
+                name: 'id',
+                fieldName: 'id',
+                width: 0
+            }, {
+                name: 'rank',
+                fieldName: 'rank',
+                width: 60,
+                nullable: false,
+                header: {
+                    text: Things.DataGlobal.t('label.rank')
+                },
+                styles: {
+                    textAlignment: 'center'
+                }
+            }, {
+                name: 'name',
+                fieldName: 'name',
+                width: 150,
+                nullable: false,
+                header: {
+                    text: Things.DataGlobal.t('label.name')
+                },
+                editor: {
+                    maxLength: 64
+                }
+            }, {
+                name: 'description',
+                fieldName: 'description',
+                width: 450,
+                header: {
+                    text: Things.DataGlobal.t('label.description')
+                },
+                editor: {
+                    maxLength: 255
+                }
+            } ];
+        },
+
+        listeners: {
+            'grid.things-grid-detail-tap': '_showSubMenus',
+            'grid.things-grid-save-success': '_reloadMainMenus',
+            'grid.things-grid-configured': '_reloadMainMenus',
+            'sub-grid.things-grid-detail-tap': '_showMenuDetail',
+            'sub-grid.things-grid-save-success': '_reloadSubMenus',
+            'sub-grid.things-grid-handle-save': '_beforeSubMenuSave'
+        },
+
+        /**
+         * 메뉴 정보 변경시 모든 설정을 처리한다.
+         *
+         * @param {Object} menuInfo 메뉴 정보
+         */
+        _menuInfoChanged: function(menuInfo) {
+            if (menuInfo) {
+                this.menuId = menuInfo.id;
+                this.resourceType = menuInfo.resource_name;
+                this.resourceUrl = menuInfo.resource_url;
+                this.dataRoute = menuInfo.routing;
+                this.detailView = menuInfo.detail_form_id;
+            }
+        },
+
+        /**
+         * resourceUrl로 grid save url을 생성
+         *
+         * @param {String} resourceUrl
+         * @return {String} grid save URL
+         */
+        _computeGridSaveUrl: function(resourceUrl) {
+            return resourceUrl + '/update_multiple.json';
+        },
+
+        /**
+         * 서브 코드를 표시한다.
+         *
+         * @param {Event} event 그리드에서 선택된 event
+         */
+        _showSubMenus: function(event) {
+            this.resourceId = event.detail.id;
+            this.$['subcode-list'].generateRequest();
+        },
+
+        /**
+         * 메인 메뉴 그리드 리프레쉬
+         *
+         * @param {Event} event
+         */
+        _reloadMainMenus: function(event) {
+            this.$['search-form'].submitMyForm();
+        },
+
+        /**
+         * 서브 코드 그리드 리프레쉬
+         *
+         * @param {Event} event
+         */
+        _reloadSubMenus: function(event) {
+            this.$['subcode-list'].generateRequest();
+        },
+
+        /**
+         * 서브 코드 저장 전에...
+         *
+         * @param {Event} event
+         */
+        _beforeSubMenuSave: function(event) {
+            var subGrid = event.target;
+            var changedList = subGrid.writeData;
+            if (!changedList || changedList.length == 0) return event;
+            var parentId = this.selectedRow.id;
+
+            changedList.forEach(function(changedData) {
+                if (changedData.cud_flag_ == 'c' && (!changedData.parent || !changedData.parent_id)) {
+                    changedData.parent_id = parentId;
+                }
+            });
+
+            return event;
+        },
+
+        /**
+         * Open Resource Selector Dialog
+         *
+         * @param {Object} event
+         */
+        _openResourceSelector: function(event) {
+            var index = event.detail.index;
+            this.openResourceSelectorByGrid(index._grid, index.rowIndex, event.detail.userData, true);
+        },
+
+        /**
+         * Main code의 ajax response를 받아 빈 값일 경우에 빈 배열로 초기화하고 total 값도 초기화
+         *
+         * @param {Object} response
+         */
+        _commonCodesChanged: function(response) {
+            this.commonCodeList = response.items ? response.items : [];
+            this.commonCodeTotal = response.total ? response.total : 0;
+        },
+
+        /**
+         * sub code의 ajax response를 받아 빈값일 경우에 빈 배열로 초기화
+         *
+         * @param {Object} response
+         */
+        _subCodeChanged: function(response) {
+            this.subCodeItems = response.items ? response.items : [];
+        }
+    });
+    </script>
+</dom-module>

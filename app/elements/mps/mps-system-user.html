@@ -1,0 +1,425 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+
+<link rel="import" href="./mps-system-new-user.html">
+
+<!--
+## mps-system-user
+
+	사용자 관리
+-->
+<dom-module id="mps-system-user">
+	<template>
+		<style>
+			:host {
+				display: block;
+				@apply(--layout-vertical);
+				@apply(--layout-flex);
+			}
+			.subtitle:before {
+				content: '';
+				@apply(--things-subtitle-icon);
+			}
+
+			.subtitle {
+				@apply(--things-default-padding);
+				padding-bottom: 7px;
+				@apply(--things-subtitle);
+			}			
+			#user-info-container {
+				@apply(--layout-horizontal);
+				@apply(--layout-flex);
+			}
+			.grid-container {
+				@apply(--layout-vertical);
+				@apply(--layout-flex);
+			}
+			things-resource-grid {
+				@apply(--layout-flex);
+			}
+		</style>
+
+		<things-ajax
+			auto
+			id="resource-meta"
+			method="GET"
+			resource-url="[[menuMetaUrl]]"
+			last-response="{{metaData}}">
+		</things-ajax>
+
+		<things-ajax
+			id="get-user-domains-ajax"
+			method="GET"
+			resource-url="domain_users/search_by_user/:id"
+			resource-id="[[selectedUserId]]">
+		</things-ajax>
+
+		<things-ajax
+			id="save-user-domain-ajax"
+			resource-action="update_multiple"
+			resource-url="domain_users/update_multiple">
+		</things-ajax>
+
+		<things-search-form
+			id="search-form"
+			title="[[menuInfo.title]]"
+			form-fields="[[searchFormFields]]"
+			select-fields="[[selectFields]]"
+			sort-fields="[[sortFields]]"
+			action-url="[[menuInfo.resource_url]]"
+			page="{{page}}"
+			limit="{{limit}}"
+			total="{{total}}"
+			last-response="{{lastResponse}}">
+		</things-search-form>
+
+		<div id="user-info-container">
+			<div class="grid-container">
+				<span class="subtitle">[[userLabel]]</span>
+				<things-resource-grid
+					id="grid"
+					config="[[gridConfig]]"
+					model="[[gridModel]]"
+					columns="[[gridColumns]]"
+					data="[[items]]"
+					total-count="[[itemCount]]"
+					current-page="{{page}}"
+					limit="{{limit}}"
+					total="{{total}}"
+					fixed-column-count="[[menuInfo.fixed_columns]]"
+					grid-save-action="[[menuInfo.grid_save_url]]"
+					buttons="[[buttons]]">
+				</things-resource-grid>
+			</div>
+
+			<div class="grid-container">
+				<span class="subtitle">[[domainLabel]]</span>
+				<things-resource-grid
+					id="domains-grid"
+					config="[[domainGridConfig]]"
+					model="[[domainGridModel]]"
+					columns="[[domainGridColumns]]"
+					fixed-column-count="0"
+					data="[[currentUserDomains]]"
+					grid-save-action="[[domainSaveActionUrl]]"
+					buttons="[[domainGridButtons]]">
+				</things-resource-grid>			
+			</div>
+		</div>
+
+
+	</template>
+
+	<script>
+		Polymer({
+			is: 'mps-system-user',
+
+			properties: {
+				/**
+				 * @description 사용자 label
+				 */
+				userLabel: {
+					type: String,
+					value: function() {
+						return Things.DataGlobal.t('menu.User')
+					}
+				},
+
+				/**
+				 * @description doamin label
+				 */
+				domainLabel: {
+					type: String,
+					value: function() {
+						return Things.DataGlobal.t('label.user_domain')
+					}
+				},
+
+				/**
+				 * @description domain grid config
+				 */
+				domainGridConfig: {
+					type: Object,
+					value: function() {
+						return {
+							displayOptions: {
+								fitStyle: 'evenFill'
+							}
+						}
+					}
+				},
+
+				/**
+				 * @description domain grid model
+				 */
+				domainGridModel: {
+					type: Array,
+					value: function() {
+						return [{
+							fieldName: 'id'
+						}, {
+							fieldName: 'domain_id'
+						}, {
+							fieldName: 'center'
+						}, {
+							fieldName: 'site_cd'
+						}, {
+							fieldName: 'site_nm'
+						}, {
+							fieldName: 'has_permission'
+						}]
+					}
+				},
+
+				/**
+				 * @description domain grid columns
+				 */
+				domainGridColumns: {
+					type: Array,
+					value: function() {
+						return [{
+							name: 'id',
+							fieldName: 'id',
+							width: 0
+						}, {
+							name: 'domain_id',
+							fieldName: 'domain_id',
+							width: 0
+						}, {
+							name: 'center',
+							fieldName: 'center',
+							header: {
+								text: Things.DataGlobal.t('label.center')
+							},
+							editable: false
+						}, {
+							name: 'site_cd',
+							fieldName: 'site_cd',
+							header: {
+								text: Things.DataGlobal.t('label.site_cd')
+							},
+							editable: false
+						}, {
+							name: 'site_nm',
+							fieldName: 'site_nm',
+							header: {
+								text: Things.DataGlobal.t('label.site_nm')
+							},
+							editable: false
+						}, {
+							name: 'has_permission',
+							fieldName: 'has_permission',
+							header: {
+								text: Things.DataGlobal.t('button.select')
+							},
+							editable: false,
+							width: 90,
+							renderer: {
+								type: 'check',
+								editable: true,
+								threeStates: false,
+								trueValues: 'true',
+								falseValues: 'false'
+							}
+						}]
+					}
+				},
+
+				/**
+				 * @description domain grid buttons
+				 */
+				domainGridButtons: {
+					type: Array,
+					value: function() {
+						return [{
+							id: 'uncheck-all-btn',
+							name: 'uncheck_all'
+						}, {
+							id: 'check-all-btn',
+							name: 'check_all'
+						}, {
+							id: 'save-domain-btn',
+							name: 'save'
+						}]
+					}
+				}
+			},
+
+			behaviors: [
+				Things.ResourceMenuContentBehavior,
+				Things.MsgBoxBehavior
+			],
+
+			listeners: {
+				'grid.things-grid-handle-addrow': 'onAddUser',
+				'grid.things-grid-configured': '_gridConfigured',
+				'grid.things-grid-row-data-select': '_getUserDomains',
+				'get-user-domains-ajax.things-ajax-response': '_userDomainsResponsed',
+				'domains-grid.uncheck-all-btn-tap': '_switchCheck',
+				'domains-grid.check-all-btn-tap': '_switchCheck',
+				'domains-grid.save-domain-btn-tap': '_saveDomains',
+				'save-user-domain-ajax.things-ajax-response': '_saveResponsed'
+			},
+
+			/**
+			 * 그리드 구성 완료 이벤트 리스너
+			 * 사용자 화면에서는 메뉴의 메타 데이터를 통해 추가 (사용자 생성) 화면을 구성한다.
+			 * 메뉴 메타의 데이터가 있어도 디테일 팝업이 나타나지 않도록 그리드 구성 이후
+			 * Detail이라는 명칭의 컬럼을 제거함
+			 * @param {event}
+			 */
+			_gridConfigured: function(event) {
+				var grid = event.detail;
+				var columns = grid.columns();
+
+				for(i in columns) {
+					if(columns[i].name() == 'Detail')
+						columns.splice(i, 1);
+				};
+
+				grid.setColumns(columns);
+			},
+
+      /**
+       * 추가 버튼 클릭시
+       * *******
+       * @param {event} event add button 이벤트
+       */
+			onAddUser: function(event) {
+				event.preventDefault();
+				var detailScreenId = this.menuInfo.detail_form_id ?
+														 this.menuInfo.detail_form_id : 'mps-system-user-add';
+				var view = document.createElement(detailScreenId);
+				view.title = Things.DataGlobal.t('button.add');
+
+				var closeCallback = function() {
+					this.refreshData();
+				}.bind(this);
+
+				this.fire('things-open-custom-size-dialog', {
+					view: view,
+					modal: true,
+					dialogSize: 'medium',
+					closeCallback: closeCallback
+				});
+			},
+
+			/**
+			 * @description 사용자 그리드 로우 클릭 이벤트 핸들러
+			 * 사용자 선택시 해당 사용자의 도메인 할당 정보를 조회함
+			 */
+			_getUserDomains: function(event) {
+				this.selectedUserId = event.detail.id;
+				
+				this.$['get-user-domains-ajax'].generateRequest();
+			},
+
+			/**
+			 * @description 사용자 도메인 조회 response event handler
+			 * 조회한 사용자의 도메인 정보를 currentUserDomains에 초기화 & 그리드에 출력
+			 */
+			_userDomainsResponsed: function(event) {
+				this.currentUserDomains = event.detail;
+			},
+
+			/**
+			 * @description 모두 선택/해제 버튼 클릭 이벤트 핸들러
+			 * event.type의 명칭을 바탕으로 선택/해제
+			 */
+			_switchCheck: function(event) {
+				var isCheck = event.type.startsWith('check');
+				var rows = this._getDomainsGrid().getGridObject().getRows();
+				rows.forEach(row => {
+					row.setValue('has_permission', isCheck);
+				})
+			},
+
+			/**
+			 * @description save-domain-btn click event handler
+			 * 변경한 사용자 도메인 정보를 저장
+			 */
+			_saveDomains: function() {
+				var gridDS = this._getDomainsGrid().getGridDataSet();
+				gridDS.commitClients();
+				var modifiedRowObjs = gridDS.getModifiedRowObjects();
+				var crudArrays = [];
+
+				if(modifiedRowObjs && modifiedRowObjs.length > 0) {
+					modifiedRowObjs.forEach(modifiedRowObj => {
+						var hasPermission = JSON.parse(modifiedRowObj.has_permission);
+						if(hasPermission && this._isDiffCurDomain(modifiedRowObj)) {
+							// create item
+							crudArrays.push({
+								domain_id: modifiedRowObj.domain_id,
+								user_id: this.selectedUserId,
+								cud_flag_: 'c'
+							});
+						} else if(!hasPermission && this._isDiffCurDomain(modifiedRowObj)) {
+							crudArrays.push({
+								id: modifiedRowObj.id,
+								domain_id: modifiedRowObj.domain_id,
+								user_id: this.selectedUserId,
+								cud_flag_: 'd'
+							});
+						}
+					});
+
+					if(crudArrays.length === 0) {
+						this.showErrorPopup(Things.DataGlobal.t('error.VALIDATION_ERROR'), Things.DataGlobal.t('text.NOTHING_CHANGED'));
+					}
+
+					this.$['save-user-domain-ajax'].body = crudArrays;
+					this.$['save-user-domain-ajax'].generateRequest();
+				} else {
+					this.showErrorPopup(Things.DataGlobal.t('error.VALIDATION_ERROR'), Things.DataGlobal.t('text.NOTHING_CHANGED'));
+				}
+			},
+
+			/**
+			 * @description 도메인 정보 저장 ajax response event handler
+			 * 사용자 도메인 정보를 다시 조회함
+			 */
+			_saveResponsed: function() {
+				this.$['get-user-domains-ajax'].generateRequest();
+			},
+
+			/**
+			 * @description 현재 도메인 정보와 수정한 도메인 정보가 다른지 여부를 확인하기 위한 함수
+			 * 그리드를 통해 변경된 사항을 추출하면 false => true => false로 변경된 값도 변경된 사항으로 판단하기 때문에
+			 * 기존에 조회한 실제 도메인 정보와 현재 변경된 그리드의 도메인 데이터를 통해 비교해야함
+			 */
+			_isDiffCurDomain: function(newDomainUser) {
+				var targetDomainUser = this.currentUserDomains.filter(currentUserDomain => {
+					return newDomainUser.domain_id == currentUserDomain.domain_id
+				})[0];
+
+				return JSON.parse(targetDomainUser.has_permission) !== JSON.parse(newDomainUser.has_permission);
+			},
+
+			/**
+			 * @description domains-grid element return
+			 */
+			_getDomainsGrid: function() {
+				return this.$['domains-grid'];
+			},
+
+			/**
+			 * @description error message 출력
+			 */
+			showErrorPopup: function(title, text) {
+				this.openConfirmMsg({
+					type: 'warning',
+					title: title,
+					text: text
+				})
+			}
+		});
+	</script>
+</dom-module>

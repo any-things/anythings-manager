@@ -1,0 +1,135 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+
+<!--
+	마스터 > location
+-->
+<dom-module id="mps-location">
+  <template>
+    <style>
+      :host {
+        @apply --layout-vertical;
+      }
+      things-resource-grid {
+        @apply --layout-flex;
+      }
+    </style>
+
+		<things-ajax
+			auto
+			id="resource-meta"
+			method="GET"
+			resource-url="[[menuMetaUrl]]"
+			last-response="{{metaData}}">
+    </things-ajax>
+
+    <!-- 송신 -->
+    <things-ajax
+      id="send-to-wms-ajax"
+      resource-url="location/if/send_to_wms"
+      method="GET"
+      content-type="application/json">
+    </things-ajax>
+
+    <things-search-form 
+      id="search-form"
+      form-fields="[[searchFormFields]]" 
+      select-fields="[[selectFields]]"
+      sort-fields="[[sortFields]]"
+      action-url="[[menuInfo.resource_url]]" 
+      page="{{page}}"
+      limit="[[limit]]"
+      last-response="{{lastResponse}}">
+    </things-search-form>
+
+    <things-resource-grid 
+      id="grid"
+      grid-height="[[gridHeight]]"
+      auto-filter = "[[autoFilter]]"
+      model="[[gridModel]]" 
+      columns="[[gridColumns]]"
+      config="[[gridConfig]]"
+      buttons="[[buttons]]"
+      current-page="{{page}}"
+      limit="{{limit}}"
+      data="[[items]]"
+      total-count="[[itemCount]]"
+      grid-save-action="[[menuInfo.grid_save_url]]"
+      fixed-column-count="[[menuInfo.fixed_columns]]"
+      export-file-name="[[menuInfo.title]]"
+      export-sheet-name="[[menuInfo.title]]"
+      diy-template-id="[[menuInfo.diy_template_id]]">
+    </things-resource-grid>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'mps-location',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior,
+        Things.MenuGridContentBehavior,
+				Things.DetailPopupBehavior,
+				Things.ApprSubmitPopupBehavior
+      ],
+
+      listeners: {
+        'grid.send-btn-tap': '_sendBtnTapped',
+        'change-mpi-btn-tap': '_onChangeButtonTap'
+      },
+
+      /**
+       * 수신 버튼 click event handler
+       *******************
+       * @param {Object} event
+       */
+      _sendBtnTapped: function(event) {
+        var ajax = this.$['send-to-wms-ajax']
+        ajax.generateRequest();
+      },
+
+      _onChangeButtonTap: function (event) {
+				var title = Things.DataGlobal.t(event.detail.text);
+				var resourceGrid = this.$.grid;
+				var rows = resourceGrid.getGridObject().getCheckedRows();
+
+				if (rows.length === 1) {
+					var rowObject = rows[0].getRowObject();
+					
+					var properties = {
+						title: Things.DataGlobal.t('menu.mps_mpi_change_popup'),
+						fromMpiCode: rowObject.mpi_cd,
+						locationCode: rowObject.loc_cd
+					};
+
+					let view = this.create('mps-mpi-change-popup', properties);
+
+					this.fire('things-open-custom-size-dialog', {
+						view: view,
+						modal: true,
+						dialogSize: 'small',
+						closeCallback: function() {
+							this.$['search-form'].submitMyForm();
+						}.bind(this)
+					});
+				} else if (rows.length === 0) {
+					this.openConfirmMsg({
+						type: 'info',
+						title: Things.DataGlobal.t('title.info'),
+						text: Things.DataGlobal.t('text.select_mpi'),
+						showCancelButton: false
+					});
+				} else {
+					this.openConfirmMsg({
+						type: 'info',
+						title: Things.DataGlobal.t('title.info'),
+						text: Things.DataGlobal.t('text.select_one'),
+						showCancelButton: false
+					});
+				}
+			}
+    })
+  </script>
+</dom-module>

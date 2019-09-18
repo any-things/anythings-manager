@@ -1,0 +1,166 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-i18n-msg/things-i18n-msg.html">
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-msg-box-behavior/things-msg-box-behavior.html">
+
+<!--
+## things-profile-tab-login
+
+	로그인 이력
+-->
+
+<dom-module id="things-profile-tab-login">
+	<template>
+		<style>
+			:host {
+				display: block;
+				@apply --layout-vertical;
+				@apply --layout-flex;
+			}
+		</style>
+		
+		<things-ajax 
+			auto
+			id="menu-meta-ajax"
+			resource-url="{{menuMetaUrl}}"
+			last-response="{{metaData}}">
+		</things-ajax>
+
+		<things-search-form 
+			id="search-form"
+			form-fields="[[customSearchFormFields]]" 
+			select-fields="[[selectFields]]"
+			sort-fields="[[sortFields]]"
+			action-url="login_histories"
+			page="{{currentPage}}"
+			limit="{{limit}}"
+			hidden
+			last-response="{{lastResponse}}">
+		</things-search-form>
+		
+		<things-resource-grid
+			id="grid"
+			class="flex"
+			config="[[gridConfig]]"
+			model="[[gridModel]]"
+			columns="[[gridColumns]]"
+			data="[[lastResponse.items]]"
+			fixed-column-count="0"
+			limit="{{limit}}"
+      total-count="[[lastResponse.total]]"
+			current-page="{{currentPage}}"
+			paginatable
+			buttons="[[gridButtons]]">
+		</things-resource-grid>
+
+	</template>
+
+	<script>
+		Polymer({
+			is: 'things-profile-tab-login',
+
+			behaviors: [
+				Things.MsgBoxBehavior,
+				Things.MenuMetaBehavior
+			],
+
+			properties: {
+				gridConfig: {
+					type: Object,
+					value: function() {
+						return {
+							displayOptions: {
+								fitStyle: 'fill'
+							},
+							options: {
+								checkBar: false
+							}
+						}
+					}
+				},
+
+				gridButtons: {
+					type: Array,
+					value: function() {
+						return [{
+							id: 'three-days-ago-btn',
+							text: 'three-days-ago'
+						},{
+							id: 'three-days-later-btn',
+							text: 'three-days-later'
+						},
+							{
+							id: 'export-btn',
+							text: 'export',
+							icon: 'icons:swap-vert'
+						}];
+					}
+				},
+
+				customSearchFormFields: {
+					type: Array,
+					value: function() {
+						return [{
+							label: Things.DataGlobal.t('label.time'),
+							name: 'created_at',
+							op: 'between',
+							searchForm: true,
+							type: 'date-from-to-picker',
+							userData: {
+								format: 'YYYY-MM-DD',
+								min: moment(new Date(Date.parse(new Date) - 2 * 1000 * 60 * 60 * 24)).format('YYYY-MM-DD'),
+								max: moment(new Date(Date.parse(new Date) + 1 * 1000 * 60 * 60 * 24)).format('YYYY-MM-DD')
+							}
+						}, {
+							name: 'access_user_id',
+							op: 'eq',
+							type: 'hidden',
+							default: Things.DataGlobal.user.id
+						}, {
+							name: 'ignore_domain',
+							type: 'hidden',
+							default: true
+						}]
+					}
+				},
+
+				dateCount: {
+					type: Number,
+					value: 1
+				}
+			},
+
+			listeners: {
+				'three-days-ago-btn-tap': 'threeDaysAgo',
+				'three-days-later-btn-tap': 'threeDaysLater'
+			},
+
+			ready: function(){
+				this.$['search-form'].submitMyForm();
+			},
+
+			threeDaysAgo: function(e) {
+				this.dateCount++;
+				this.$['search-form'].setFormData({'created_at': moment(new Date((Date.parse(new Date) + 1 * 1000 * 60 * 60 * 24) - 3 * this.dateCount * 1000 * 60 * 60 * 24)).format('YYYY-MM-DD') + ',' +
+																 moment(new Date((Date.parse(new Date) + 1 * 1000 * 60 * 60 * 24) - 3 * (this.dateCount - 1) * 1000 * 60 * 60 *24)).format('YYYY-MM-DD')});
+
+				this.$['search-form'].submitMyForm();
+			},
+
+			threeDaysLater: function(e) {
+				if(this.dateCount > 1) {
+					this.dateCount--;
+					this.$['search-form'].setFormData({'created_at': moment(new Date((Date.parse(new Date) + 1 * 1000 * 60 * 60 * 24) - 3 * this.dateCount * 1000 * 60 * 60 * 24)).format('YYYY-MM-DD') + ',' +
+																     moment(new Date((Date.parse(new Date) + 1 * 1000 * 60 * 60 * 24) - 3 * (this.dateCount - 1) * 1000 * 60 * 60 * 24)).format('YYYY-MM-DD')});
+
+					this.$['search-form'].submitMyForm();
+				}
+			}
+		})
+	</script>
+</dom-module>

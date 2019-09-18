@@ -1,0 +1,157 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-input-field/things-textarea.html">
+<link rel="import" href="../../bower_components/things-button/things-button-bar.html">
+
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+
+<!--
+  MPS Job Result Exception View
+ -->
+
+<dom-module id="job-result-exception">
+  <template>
+    <style>
+      :host {
+        @apply(--layout-vertical);
+        @apply(--layout-flex);
+      }
+			.subtitle:before {
+				content:"";
+				@apply(--things-subtitle-icon);
+			}
+
+			.subtitle {
+				@apply(--things-default-padding);
+				padding-bottom:7px;
+				@apply(--things-subtitle);
+        color: #212121;
+			}
+      things-textarea {
+        --things-autogrow-textarea-margin: auto;
+        --things-autogrow-textarea-width: 80%;
+        --things-label: {
+          display: none;
+        }
+      }
+      paper-toolbar {
+        background-color:var(--things-white-background-color);
+        height: 50px;
+      }
+      paper-toolbar::shadow #bottomBar {
+        height: 50px;
+        @apply(--layout-horizontal);
+        @apply(--layout-end-justified);
+        padding: 0 10px;
+      }
+      #order-no {
+        text-align: center;
+      }
+    </style>
+
+    <things-ajax
+      id="exception-ajax"
+      method="POST"
+      content-type="application/json"
+      resource-url="/job_process/hold/:batch_id/:order_id">
+    </things-ajax>
+
+    <div>
+      <span class="subtitle">[[orderNoLabel]]</span>
+      <things-textarea
+        id="order-no"
+        value="[[orderId]]"
+        readonly>
+      </things-textarea>
+    </div>
+
+    <div>
+      <span class="subtitle">[[exceptReasonLabel]]</span>
+      <things-textarea
+        id="except-reason"
+        rows="6">
+      </things-textarea>
+    </div>
+
+    <paper-toolbar>
+      <div class="bottom">
+        <things-button-bar id="button-group" buttons="[[buttons]]"></things-button-bar>
+      </div>
+    </paper-toolbar>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'job-result-exception',
+
+      properties: {
+        /**
+         * 주문 번호 라벨
+         */
+        orderNoLabel: {
+          type: String,
+          value: function() {
+            return Things.DataGlobal.t('label.order_no')
+          }
+        },
+
+        /**
+         * 예외 이유
+         */
+        exceptReasonLabel: {
+          type: String,
+          value: function() {
+            return Things.DataGlobal.t('label.except_reason')
+          }
+        },
+
+        /**
+         * 버튼 리스트
+         */
+        buttons: {
+          type: Array,
+          value: function() {
+            return [{
+              id: 'except-btn',
+              text: 'confirm'
+            }]
+          }
+        },
+
+        /**
+         * 주문 번호
+         */
+        orderId: {
+          type: String
+        },
+
+        /**
+         * 배치 ID
+         */
+        batchId: {
+          type: String
+        }
+      },
+
+      listeners: {
+        'button-group.except-btn-tap': '_exceptionProcess'
+      },
+
+      /**
+       * 예외 처리
+       *
+       * @param {Object} event
+       */
+      _exceptionProcess: function(event) {
+        var ajax = this.$['exception-ajax'];
+        ajax.resourceUrl = `/job_process/hold/${this.batchId}/${this.orderId}`;
+        ajax.body = this.$['except-reason'].value;
+        ajax.generateRequest();
+      }
+    })
+  </script>
+</dom-module>

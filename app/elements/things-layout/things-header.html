@@ -1,0 +1,57 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="things-sidebar-toggle.html">
+
+<!--
+  헤더 엘리먼트
+
+@demo demo/demo-things-header.html
+-->
+
+<dom-module id="things-header">
+  <template>
+  <style>
+    :host {
+      display: block;
+      background-color:var(--paper-blue-grey-800);
+      color:#fff;
+    }
+  </style>
+
+  <div>
+    <!-- menu toggle -->
+    <things-sidebar-toggle drawer-id="[[drawerId]]" brand-image-id="[[brandImageId]]"></things-sidebar-toggle>
+  </div>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'things-header',
+
+      properties: {
+        /**
+         * drawer 아이디
+         * ***********
+         * @type {String}
+         */
+        drawerId: {
+          type: String
+        },
+
+        /**
+         * brand image 아이디
+         * *****
+         * @type {String}
+         */
+        brandImageId: {
+          type: String
+        }
+      }
+    });
+  </script>
+</dom-module>

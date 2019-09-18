@@ -1,0 +1,123 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="./things-profile-tab-login.html">
+<link rel="import" href="./things-profile-tab-user.html">
+<link rel="import" href="./things-profile-tab-user-role.html">
+<link rel="import" href="../../bower_components/things-detail/things-resource-detail-tab-view-behavior.html">
+
+<dom-module id="things-profile-history">
+    <template>
+        <style>
+            :host {
+                display: block;
+                @apply --layout-vertical;
+                @apply --layout-flex;
+            }
+            things-layout-hades {
+                @apply --layout-flex-2;
+            }
+        </style>
+
+        <things-ajax
+            id="menu-ids-ajax"
+            method="GET">
+        </things-ajax>
+
+        <things-layout-hades sections="[[sections]]">
+            <things-profile-tab-login tab-content-1 menu-id="[[loginHistoryMenuId]]"></things-profile-tab-login>
+            <things-profile-tab-user tab-content-2 menu-id="[[userHistoryMenuId]]"></things-profile-tab-user>
+            <things-profile-tab-user-role tab-content-3 menu-id="[[userRoleHistoryMenuId]]"></things-profile-tab-user-role>
+        </things-layout-hades>
+    </template>
+    <script>
+        Polymer({
+            is: 'things-profile-history',
+            behaviors: [
+                Things.ResourceDetailTabViewBahavior
+            ],
+            properties: {
+                sections: {
+                    type: 'Array',
+                    value: function() {
+                        return [{
+                            tabId: 'firstTab',
+                            title: Things.DataGlobal.t('menu.SignInHistory'),
+                            isTab: true
+                        }, {
+                            tabId: 'secondTab',
+                            title: Things.DataGlobal.t('menu.UserHistory'),
+                            isTab: true
+                        }, {
+                            tabId: 'thirdTab',
+                            title: Things.DataGlobal.t('menu.UserRoleHistory'),
+                            isTab: true
+                        }];
+                    }
+                },
+
+                loginHistoryMenuName: {
+                    type: String,
+                    value: 'LoginHistory'
+                },
+
+                userHistoryMenuName: {
+                    type: String,
+                    value: 'UserHistory'
+                },
+
+                userRoleHistoryMenuName: {
+                    type: String,
+                    value: 'UserRoleHistory'
+                }
+            },
+
+            listeners: {
+                'menu-ids-ajax.things-ajax-response': '_menuIdResponsed'
+            },
+
+            ready: function() {
+                this._getMenuIds();
+            },
+
+            _getMenuIds: function() {
+                var menuMetaAjax = this._getMenuIdsAjax();
+                menuMetaAjax.resourceUrl = 'menus';
+                menuMetaAjax.params = { 
+                    select: 'id,name',
+                    query: this._getMenuIdsAjaxQuery()
+                };
+                menuMetaAjax.generateRequest();
+            },
+
+            _menuIdResponsed: function(event) {
+                var menus = event.detail.items;
+                menus.forEach(function(menu) {
+                    if(menu.name == this.loginHistoryMenuName) {
+                        this.loginHistoryMenuId = menu.id;
+                    } else if (menu.name == this.userHistoryMenuName) {
+                        this.userHistoryMenuId = menu.id;
+                    } else if (menu.name == this.userRoleHistoryMenuName) {
+                        this.userRoleHistoryMenuId = menu.id;
+                    }
+                }.bind(this));
+            },
+
+            _getMenuIdsAjaxQuery: function() {
+                var menuNames = [this.loginHistoryMenuName, this.userHistoryMenuName, this.userRoleHistoryMenuName];
+                var query = [{
+                    name: 'name',
+                    operator: 'in',
+                    value: menuNames.join(',')
+                }];
+
+                return JSON.stringify(query);
+            },
+
+            _getMenuIdsAjax: function() {
+                return this.$['menu-ids-ajax'];
+            }
+        });
+    </script>
+</dom-module>

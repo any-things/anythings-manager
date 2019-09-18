@@ -1,0 +1,345 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-menu-grid-content-behavior.html">
+<link rel="import" href="../../bower_components/things-detail/things-menu-detail-grid.html">
+
+<!--
+마스터 관리 / 게이트웨이 존 - 표시기
+-->
+<dom-module id="gw-mpi">
+  <template>
+    <style>
+      :host {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .container {
+        @apply(--layout-flex);
+        display: grid;
+        grid-template-rows: auto;
+        grid-template-columns: 750px auto;
+      }
+      #gateway-grid {
+        grid-row-start: 1;
+        grid-row-end: 2;
+        grid-column-start: 1;
+        grid-column-end: 2;
+      }
+      #mpi-grid {
+        grid-row-start: 1;
+        grid-row-end: 2;
+        grid-column-start: 2;
+        grid-column-end: 3;
+      }
+    </style>
+
+    <things-ajax
+      auto
+      id="resource-meta"
+      method="GET"
+      resource-url="[[menuMetaUrl]]"
+      last-response="{{metaData}}">
+    </things-ajax>
+
+    <things-ajax
+      auto
+      id="search-gw"
+      resource-url="menus"
+      sort-fields='[{"field" : "id", "ascending" : true}]'
+      query-fields="[[gwMenuQueryFields]]"
+      resource-action="index"
+      response-root="items"
+      limit="100000"
+      last-response="{{gwMenuItems}}">
+    </things-ajax>
+
+    <things-ajax
+      auto
+      id="gw-resource-meta"
+      method="GET"
+      resource-url="[[gwMenuMetaUrl]]"
+      last-response="{{gwMetaData}}">
+    </things-ajax>
+
+    <things-ajax
+      auto
+      id="search-mpi"
+      resource-url="menus"
+      sort-fields='[{"field" : "id", "ascending" : true}]'
+      query-fields="[[mpiMenuQueryFields]]"
+      resource-action="index"
+      response-root="items"
+      limit="100000"
+      last-response="{{mpiMenuItems}}">
+    </things-ajax>
+
+    <things-ajax
+      auto
+      id="mpi-resource-meta"
+      method="GET"
+      resource-url="[[mpiMenuMetaUrl]]"
+      last-response="{{mpiMetaData}}">
+    </things-ajax>
+
+    <things-ajax
+      auto
+      id="search-gateway-items"
+      resource-url="gateway"
+      sort-fields='[{"field" : "zone_cd", "ascending" : true}]'
+      response-root="items"
+      resource-action="index"
+      limit="100000"
+      last-response="{{gatewayItems}}">
+    </things-ajax>
+
+    <things-ajax
+      id="search-mpi-items"
+      resource-url="mpi"
+      sort-fields='[{"field" : "gw_cd", "ascending" : true}]'
+      query-fields="[[mpiQueryFields]]"
+      response-root="items"
+      resource-action="index"
+      limit="100000"
+      last-response="{{mpiItems}}">
+    </things-ajax>
+
+    <div class="container">
+      <things-resource-grid
+        id="gateway-grid"
+        model="[[gwGridModel]]"
+        columns="[[gwGridColumns]]"
+        config="[[gridConfig]]"
+        buttons="[[buttons]]"
+        limit="100000"
+        data="[[gatewayItems]]"
+        fixed-column-count="[[menuInfo.fixed_columns]]"
+        grid-save-action="[[menuInfo.grid_save_url]]"
+        export-file-name="[[menuInfo.title]]"
+        export-sheet-name="[[menuInfo.title]]">
+      </things-resource-grid>
+
+      <things-resource-grid
+        id="mpi-grid"
+        model="[[mpiGridModel]]"
+        columns="[[mpiGridColumns]]"
+        config="[[gridConfig]]"
+        buttons="[[buttons]]"
+        limit="100000"
+        data="[[mpiItems]]"
+        fixed-column-count="[[menuInfo.fixed_columns]]"
+        grid-save-action="[[menuInfo.grid_save_url]]"
+        export-file-name="[[menuInfo.title]]"
+        export-sheet-name="[[menuInfo.title]]">
+      </things-resource-grid>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'gw-mpi',
+
+      behaviors: [
+        Things.MenuGridContentBehavior
+      ],
+
+      properties: {
+        gridConfig: {
+          type: Object,
+          value: function() {
+            return {
+              checkBar: false,
+              options: {
+                edit: {
+                  editable: false
+                }
+              }
+            };
+          }
+        },
+
+        gwMenuQueryFields: {
+          type: Array,
+          value: [{
+            name: "routing",
+            operator: "eq",
+            value: "gateway"
+          }]
+        },
+
+        gwMenuItems: {
+          type: Array,
+          observer: '_gwMenuItemsChanged'
+        },
+
+        gwMenuId: {
+          type: String
+        },
+
+        gwMenuMetaUrl: {
+          type: String,
+          computed: '_computeMenuMetaUrl(gwMenuId)'
+        },
+
+        gwMetaData: {
+          type: Object,
+          observer: '_parseGwMetaData'
+        },
+
+        mpiMenuQueryFields: {
+          type: Array,
+          value: [{
+            name: "routing",
+            operator: "eq",
+            value: "mpi"
+          }]
+        },
+
+        mpiMenuItems: {
+          type: Array,
+          observer: '_mpiMenuItemsChanged'
+        },
+
+        mpiMenuId: {
+          type: String
+        },
+
+        mpiMenuMetaUrl: {
+          type: String,
+          computed: '_computeMenuMetaUrl(mpiMenuId)'
+        },
+
+        mpiMetaData: {
+          type: Object,
+          observer: '_parseMpiMetaData'
+        },
+
+        mpiQueryFields: {
+          type: Array,
+          value: [{
+            name: "gw_cd",
+            operator: "eq",
+            value: ""
+          }]
+        }
+      },
+
+      listeners: {
+        'gateway-grid.things-grid-row-data-select': '_findMpi',
+        'gateway-grid.things-grid-data-changed': '_selectFirstGwData',
+        'gateway-grid.things-grid-configure': '_onBeforeGwGridConfigure',
+        'mpi-grid.things-grid-configure': '_onBeforeMpiGridConfigure'
+      },
+
+      /**
+       * 게이트웨이 그리드 구성 전
+       * *******
+       * @param {Object} e
+       */
+      _onBeforeGwGridConfigure: function(e) {
+        var cols = e.detail.columns;
+        cols.forEach(function(col) {
+          if(col.name === 'zone_cd') {
+            var index = cols.indexOf(col);
+            var zcol = cols.splice(index, 1);
+            cols.unshift(zcol[0]);
+          } else if(col.name === 'updated_at' || col.name === 'updater') {
+            var index = cols.indexOf(col);
+            cols.splice(index, 1);
+          }
+        });
+      },
+
+      /**
+       * 표시기 그리드 구성 전
+       * *******
+       * @param {Object} e
+       */
+      _onBeforeMpiGridConfigure: function(e) {
+        var cols = e.detail.columns;
+        cols.forEach(function(col) {
+          if(col.name === 'updated_at' || col.name == 'gw_cd' || col.name === 'updater') {
+            var index = cols.indexOf(col);
+            cols.splice(index, 1);
+          }
+        });
+      },
+
+      /**
+       * 게이트웨이 데이터 변경시 첫번째 항목 자동 선택
+       * *******
+       * @param {Object} e
+       */
+      _selectFirstGwData: function(e) {
+        if(e.detail.length !== 0) {
+          this._findMpi( {detail: {gw_cd: e.detail[0].gw_cd}} );
+        }
+      },
+
+      /**
+       * Gateway 메뉴의 아이디 값을 가져옴
+       * *******
+       * @param {Array} menuItems
+       */
+      _gwMenuItemsChanged: function(menuItems) {
+        this.gwMenuId = menuItems[0].id;
+      },
+
+      /**
+       * menuId로 부터 메뉴 상세 메타 데이터 조회를 위한 URL을 생성
+       * *******
+       * @param {String} menuId 메뉴 아이디
+       * @return {String} 메뉴 상세 메타 데이터 조회를 위한 URL
+       */
+      _computeMenuMetaUrl: function(menuId) {
+        return 'menus/' + menuId + '/menu_meta';
+      },
+
+      /**
+       * 서버로부터 받은 Gateway Meta Data를 파싱
+       * *******
+       * @param {Object} gwMetaData
+       */
+      _parseGwMetaData: function(gwMetaData){
+        this.gwGridModel = this._parseGridModel(gwMetaData.columns);
+        this.gwGridColumns = this._parseGridColumns(gwMetaData.columns);
+      },
+
+      /**
+       * 표시기 메뉴의 아이디 값을 가져옴
+       * *******
+       * @param {Array} menuItems
+       */
+      _mpiMenuItemsChanged: function(menuItems) {
+        this.mpiMenuId = menuItems[0].id;
+      },
+
+      /**
+       * 서버로부터 받은 Mpi Meta Data를 파싱
+       * *******
+       * @param {Object} mpiMetaData
+       */
+      _parseMpiMetaData: function(mpiMetaData){
+        this.mpiGridModel = this._parseGridModel(mpiMetaData.columns);
+        this.mpiGridColumns = this._parseGridColumns(mpiMetaData.columns);
+      },
+
+      /**
+       * 표시기 정보 조회
+       * *******
+       * @param {Object} e
+       */
+      _findMpi: function(e) {
+        var gw_cd = e.detail.gw_cd;
+        this.mpiQueryFields.forEach(function(field) {
+          if(field.name == 'gw_cd') {
+            field.value = gw_cd;
+          }
+        });
+
+        this.$['search-mpi-items'].generateRequest();
+      }
+    });
+  </script>
+</dom-module>

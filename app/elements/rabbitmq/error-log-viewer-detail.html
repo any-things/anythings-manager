@@ -1,0 +1,99 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+
+<dom-module id="error-log-viewer-detail">
+   <template>
+      <style>
+         :host {
+            @apply(--layout-flex);
+            @apply(--layout-vertical);
+            @apply(--things-default-padding);
+         }
+
+         .subtitle:before {
+            content: '';
+            @apply(--things-subtitle-icon);
+         }
+
+         #css-grid-layout {
+            @apply(--layout-flex);
+            display: grid;
+            grid-template:
+               "b a" 1fr / 1fr 1fr;
+            grid-gap: 10px;
+         }
+
+         #msg-body {
+            grid-area: a;
+         }
+
+         #err-trace {
+            grid-area: b;
+         }
+
+         /* 부제목이 있는 콘텐츠 공통 */
+         .contents-with-subtitle {
+            display: grid;
+            grid-template:
+               "a" auto
+               "b" 1fr  / 1fr
+         }
+
+         .contents-with-subtitle>.subtitle {
+            grid-area: a;
+         }
+
+         .contents-with-subtitle>.contents {
+            grid-area: b;
+         }
+         /***********************/
+      </style>
+
+      <things-ajax auto id="error-body-ajax" resource-url="[[resourceUrl]]" method="GET" last-response="{{msgBody}}">
+      </things-ajax>
+
+      <div id=css-grid-layout>
+         <div id="msg-body" class="contents-with-subtitle">
+            <span class="subtitle">[[subtitles.msgBody]]</span>
+            <things-editor-script class="contents" theme="ace/theme/monokai" mode="ace/mode/json" fontsize="12px" tabsize="2" value="[[msgBody.message_body]]"
+               wrapmode=true readonly=true>
+            </things-editor-script>
+         </div>
+         <div id="err-trace" class="contents-with-subtitle">
+            <span class="subtitle">[[subtitles.errTrace]]</span>
+            <things-editor-script class="contents" theme="ace/theme/monokai" mode="ace/mode/java" fontsize="12px" tabsize="2" value="[[msgBody.err_trace]]"
+               wrapmode=true readonly=true>
+            </things-editor-script>
+         </div>
+      </div>
+   </template>
+
+   <script>
+      Polymer({
+         is: 'error-log-viewer-detail',
+
+         behaviors: [
+         ],
+
+         properties: {
+            subtitles: {
+               type: Object,
+               value: function () {
+                  return {
+                     msgBody: Things.DataGlobal.t("title.message_body"),
+                     errTrace: Things.DataGlobal.t("title.error_trace")
+                  };
+               }
+            }
+         },
+
+         listeners: {
+         }
+      });
+   </script>
+</dom-module>
