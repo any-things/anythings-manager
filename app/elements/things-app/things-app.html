@@ -9,6 +9,7 @@
     <style include="shared-styles"></style>
     <style>
       @import "theme.css";
+
       .flex-horizontal-with-ratios {
         @apply --layout-horizontal;
       }
@@ -58,17 +59,17 @@
       }
 
       ::shadow things-resource-combo.things-profile-dialog iron-icon {
-        padding:0 !important;
-        margin-bottom:0 !important
+        padding: 0 !important;
+        margin-bottom: 0 !important
       }
 
       ::shadow things-resource-combo.things-profile-dialog label {
-        width:45px;
-        padding-right:0px;
+        width: 45px;
+        padding-right: 0px;
       }
 
-      #mainSection{
-        background-color:#434854
+      #mainSection {
+        background-color: #434854
       }
 
       #mainSection:-webkit-full-screen {
@@ -93,142 +94,134 @@
 
       #fullscreen-btn {
         @apply --things-header-button;
-        border:none;
-        background:url(/images/icon-fullscreen.png) 50% 50% no-repeat;
+        border: none;
+        background: url(/images/icon-fullscreen.png) 50% 50% no-repeat;
       }
 
       #recent-pages-btn {
         @apply --things-header-button;
-        border:none;
-        background:url(/images/icon-collapse.png)  70% 50% no-repeat;
+        border: none;
+        background: url(/images/icon-collapse.png) 70% 50% no-repeat;
       }
 
-      things-alarm-badge{
-        color:#6a83b8
+      things-alarm-badge {
+        color: #6a83b8
       }
 
       things-alarm-badge::shadow paper-badge {
-        margin-left:20px
+        margin-left: 20px
       }
 
-      things-alarm-badge::shadow paper-badge::shadow div{
-        background-color:#ff5722 !important;
+      things-alarm-badge::shadow paper-badge::shadow div {
+        background-color: #ff5722 !important;
       }
 
-      things-alarm-badge::shadow paper-badge::shadow div span{
-        margin-top:1px
+      things-alarm-badge::shadow paper-badge::shadow div span {
+        margin-top: 1px
       }
 
-      .user-menu{
+      .user-menu {
         @apply --things-user-menu;
       }
-      .user-menu ::shadow iron-icon{
-        top:-2px;
-        color:var(--things-sidebar-text-color)
+
+      .user-menu ::shadow iron-icon {
+        top: -2px;
+        color: var(--things-sidebar-text-color)
       }
 
-      things-profile{
-        background-color:transparent;
-        margin-right:10px;
+      things-profile {
+        background-color: transparent;
+        margin-right: 10px;
       }
 
-      paper-toolbar{
-        height:35px;
+      paper-toolbar {
+        height: 35px;
       }
 
-      paper-toolbar span.title{
-        margin-top:3px;margin-left:0 !important;
-        color:#fff;
-        font-weight:bold;
-        font-size:22px;
-        letter-spacing:-1px
+      paper-toolbar span.title {
+        margin-top: 3px;
+        margin-left: 0 !important;
+        color: #fff;
+        font-weight: bold;
+        font-size: 22px;
+        letter-spacing: -1px
       }
 
-      paper-toolbar span.title span{
-        display:inline-block;
-        margin-right:7px;
-        font-weight:normal;
-        color:#e4e4e4;
-        font-size:22px;
-        text-transform:capitalize;
+      paper-toolbar span.title span {
+        display: inline-block;
+        margin-right: 7px;
+        font-weight: normal;
+        color: #e4e4e4;
+        font-size: 22px;
+        text-transform: capitalize;
       }
 
-      things-header::shadow #sidebar-toggler{
-        background-image:none !important;
+      things-header::shadow #sidebar-toggler {
+        background-image: none !important;
       }
 
-      things-sidebar{
-        background-color:var(--things-sidebar-background-color);
-      }
-      ::shadow .header.things-login:before{
-        display:none !important
-      }
-      ::shadow paper-material.things-login{
-        border-radius:0 !important
+      things-sidebar {
+        background-color: var(--things-sidebar-background-color);
       }
 
-      .header{
-        background-color:#354052;
-        padding-top:10px;padding-right:12px;
-        border-bottom:1px solid rgba(0,0,0,.5);
-        color:#fff;
+      ::shadow .header.things-login:before {
+        display: none !important
       }
-      .header ::shadow iron-icon{
-        fill:#8cc9e7
+
+      ::shadow paper-material.things-login {
+        border-radius: 0 !important
       }
-      .header ::shadow things-profile paper-icon-button{
-        margin-right:0;
-        top:-1px;
+
+      .header {
+        background-color: #354052;
+        padding-top: 10px;
+        padding-right: 12px;
+        border-bottom: 1px solid rgba(0, 0, 0, .5);
+        color: #fff;
+      }
+
+      .header ::shadow iron-icon {
+        fill: #8cc9e7
+      }
+
+      .header ::shadow things-profile paper-icon-button {
+        margin-right: 0;
+        top: -1px;
       }
 
       @media screen and (max-width:760px) {
-        paper-toolbar{
-          background:var(--things-secondary-color);
+        paper-toolbar {
+          background: var(--things-secondary-color);
         }
-        paper-toolbar ::shadow span.title{
-          text-align:center;
-          color:var(--things-secondary-background-color) !important;
+
+        paper-toolbar ::shadow span.title {
+          text-align: center;
+          color: var(--things-secondary-background-color) !important;
         }
-        paper-toolbar ::shadow span.title span{
-          color:#fff !important;
-          font-size:26px !important;
-          font-weight:bold !important;
+
+        paper-toolbar ::shadow span.title span {
+          color: #fff !important;
+          font-size: 26px !important;
+          font-weight: bold !important;
         }
-      }      
+      }
     </style>
 
-    <iron-localstorage
-      id="localStorage"
-      name="{$ appName $}"
-      value="{{storage}}"
+    <iron-localstorage id="localStorage" name="{$ appName $}" value="{{storage}}"
       on-iron-localstorage-load-empty="initializeDefaultStorage">
     </iron-localstorage>
 
     <!-- Domain Application Ajax : For Brand Image, Brand Title, Theme -->
-    <things-ajax
-      auto
-      id="domain-app-ajax"
-      method="GET"
-      resource-url="domain_apps/find_by_name/MES"
+    <things-ajax auto id="domain-app-ajax" method="GET" resource-url="domain_apps/find_by_name/MES"
       last-response="{{domainAppObj}}">
     </things-ajax>
 
     <paper-drawer-panel id="paperDrawerPanel" responsive-width="599px" drawer-width="160px">
       <!-- Layout Sidebar -->
-      <things-sidebar
-        drawer
-        menu-category="STANDARD"
-        drawer-id='paperDrawerPanel'
-        page-content-id='_content_'
-        class="layout vertical"
-        home-routing ="[[globals.defaultScreen]]"
-        current-menu="{{currentMenu}}"
-        current-menu=1
-        play-interval="10000"
-        current-screen="{{currentScreen}}"
-        resource-action="index"
-        brand-name="[[domainAppObj.brand_name]]"
-        menu-group="{{menuGroup}}"
+      <things-sidebar drawer menu-category="STANDARD" drawer-id='paperDrawerPanel' page-content-id='_content_'
+        class="layout vertical" home-routing="[[globals.defaultScreen]]" current-menu="{{currentMenu}}" current-menu=1
+        play-interval="10000" current-screen="{{currentScreen}}" resource-action="index"
+        brand-name="[[domainAppObj.brand_name]]" menu-group="{{menuGroup}}"
         query-fields='[{"name":"category","operator":"noteq","value":"TERMINAL"}]'>
       </things-sidebar>
 
@@ -239,7 +232,7 @@
         </things-header>
 
         <!-- Main Content -->
-        <div class="container flex-horizontal-with-ratios">          
+        <div class="container flex-horizontal-with-ratios">
           <!-- Layout Toolbar를 위한 DIV 추가 -->
           <div class="container flex vertical flex5child" id="mainSection">
             <div style="display: grid; grid-template-columns: 1fr 140px;" hidden="[[recentPageHidden]]">
@@ -247,26 +240,20 @@
 
               <div class="header">
                 <!-- sidebar header toolbar menu start-->
-                <things-profile
-                  system="Things Suite"
-                  role-list-url="roles"
-                  role-request-url="request_auths/account/auth/request"
-                  default-locale="ko-KR">
+                <things-profile system="Things Suite" role-list-url="roles"
+                  role-request-url="request_auths/account/auth/request" default-locale="ko-KR">
                 </things-profile>
-      
+
                 <!-- setting -->
                 <things-setting></things-setting>
-      
+
                 <!-- logout -->
-                <things-logout
-                  id="logout"
-                  logout-path="logout"
-                  icon="icons:power-settings-new"
-                  on-things-logout-succeed = "onThingsLogoutSuccess">
+                <things-logout id="logout" logout-path="logout" icon="icons:power-settings-new"
+                  on-things-logout-succeed="onThingsLogoutSuccess">
                 </things-logout>
               </div>
             </div>
-            
+
             <paper-toolbar hidden="[[recentPageHidden]]">
               <span class="title"><span>[[currentScreen.parent_name]]</span>[[currentScreen.title]]</span>
               <!--things-alarm-badge></things-alarm-badge>
@@ -285,25 +272,13 @@
             <things-dialog-manager id="dialog-manager" locale=[[globals.locale]]></things-dialog-manager>
 
             <iron-pages attr-for-selected="data-route" selected="{{route}}" class="content flex5child" id="_content_">
-              <mps-sso-login
-                data-route="login">
-              </mps-sso-login>
-              <!--things-login
-                use-oi-screen
-                class="login-image"
-                oi-screen-path="/index.html"
-                data-route="login"
-                route="{{route}}"
-                title="Things"
-                login-path="login"
-                content-type="application/x-www-form-urlencoded"
-                success-route="/"
-                username-input-label="ID"
-                password-input-label="Password"
-                submit-label="sign_up"
-                Reset-label="Reset"
-                brand-name="[[domainAppObj.brand_name]]">
-              </things-login-->
+              <base-sso-login data-route="login">
+              </base-sso-login>
+              <things-login use-oi-screen class="login-image" oi-screen-path="/index.html" data-route="login"
+                route="{{route}}" title="Things" login-path="login" content-type="application/x-www-form-urlencoded"
+                success-route="/" username-input-label="ID" password-input-label="Password" submit-label="sign_up"
+                Reset-label="Reset" brand-name="[[domainAppObj.brand_name]]">
+              </things-login>
               <mps-home data-route="/"></mps-home>
             </iron-pages>
           </div>
@@ -333,8 +308,7 @@
     <!-- div for DataLudi Report -->
     <div id="report-container" style="height:0px;" class="loader"></div>
 
-    <things-event-manager
-      app-id="stdapp"
+    <things-event-manager app-id="stdapp"
       events='[{"name": "success", "function": "showToastInfo"}, {"name": "failure", "function": "showToastConfirm"}]'>
     </things-event-manager>
   </template>
