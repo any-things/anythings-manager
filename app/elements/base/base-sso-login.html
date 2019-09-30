@@ -525,7 +525,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * moveToSite가 true이면 세션이 이미 유효한 상태로 간주하고 로그인을 요청하지 않고 해당 사이트로 URL을 리다이렉트
        */
       _showDomainSelector: function (domains, forceSelect, moveToSite) {
-        var domainSelector = document.createElement('mps-sso-domain-selector');
+        var domainSelector = document.createElement('base-sso-domain-selector');
         domainSelector.title = Things.DataGlobal.t('label.site');
 
         this.fire('things-open-custom-size-dialog', {
