@@ -1,0 +1,141 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+
+<dom-module id="anythings-sku-barcd-popup">
+    <template>
+        <style>
+            :host {
+                @apply --layout-vertical;
+                @apply --layout-flex;
+            }
+
+            #barcode-container {
+                margin: auto;
+            }
+
+            #input-container {
+                margin: auto;
+            }
+        </style>
+        <svg id="barcode-container"></svg>
+        <div id="input-container">
+            <things-input-field id="sku-nm-input" label="[[skuNmLabel]]" readonly></things-input-field>
+            <things-input-field id="current-code-input" label="[[currentCodeLabel]]" on-change="_codeValueChanged">
+            </things-input-field>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'anythings-sku-barcd-popup',
+
+            properties: {
+                /**
+                 * @description 상품명 다국어 라벨
+                 */
+                skuNmLabel: {
+                    type: String,
+                    value: function () {
+                        return Things.DataGlobal.t('label.sku_nm')
+                    }
+                },
+
+                /**
+                 * 현재 코드 타입의 다국어 라벨
+                 */
+                currentCodeLabel: {
+                    type: String
+                },
+
+                /**
+                 * @description 상품 정보 오브젝트
+                 */
+                sku: {
+                    type: Object
+                },
+
+                /**
+                 * @description 바코드로 보여줄 대상
+                 * 상품 코드, 상품 바코드, 박스 바코드
+                 */
+                target: {
+                    type: String
+                },
+
+                /**
+                 * @description JsBarcode 스크립트 로드 완료 여부
+                 */
+                isScriptLoaded: {
+                    type: Boolean,
+                    value: false
+                }
+            },
+
+            observers: [
+                '_getBarcodeImg(sku, target, isScriptLoaded)'
+            ],
+
+            ready: function () {
+                this._loadJsBarcode();
+            },
+
+            /**
+             * @description JsBarcode 라이브러리 다이나믹 로드
+             */
+            _loadJsBarcode: function () {
+                if (!('JsBarcode' in window)) {
+                    var scriptTag = document.createElement('script');
+                    scriptTag.addEventListener('load', function () {
+                        this.isScriptLoaded = true;
+                    }.bind(this));
+
+                    scriptTag.setAttribute('src', 'https://cdn.jsdelivr.net/jsbarcode/3.6.0/JsBarcode.all.min.js');
+                    this.appendChild(scriptTag);
+                } else {
+                    this.isScriptLoaded = true;
+                }
+            },
+
+            /**
+             * @description JsBarcode를 통해 바코드 이미지를 화면에 출력
+             */
+            _getBarcodeImg: function (sku, target, isScriptLoaded) {
+                if (sku && target && isScriptLoaded) {
+                    this.currentCodeLabel = Things.DataGlobal.t('label.' + target);
+                    this._setInputValues(sku.sku_nm, sku[target]);
+                    JsBarcode(this.$['barcode-container'], sku[target]);
+                }
+            },
+
+            /**
+             * @description 현재 화면에 나타난 바코드의 정보를 input에 초기화하여 출력함
+             */
+            _setInputValues: function (skuNm, currentCode) {
+                this.$['sku-nm-input'].value = skuNm;
+                this.$['current-code-input'].value = currentCode;
+            },
+
+            /**
+             * @description 바코드 input의 값이 변경되면
+             * 변경된 내용을 화면에 출력함
+             */
+            _codeValueChanged: function (event) {
+                var code = event.currentTarget.value;
+                if ('JsBarcode' in window && code) {
+                    var currentCodeInput = this.$['current-code-input']
+
+                    try {
+                        JsBarcode(this.$['barcode-container'], code);
+                        currentCodeInput.isValid = true;
+                    } catch (error) {
+                        var text = Things.DataGlobal.t('text.invalid_x_data', { x: Things.DataGlobal.t('label.code') });
+                        currentCodeInput.errorMessage = text + ' (' + code + ')';
+                        currentCodeInput.isValid = false;
+                    }
+                }
+            }
+        })
+    </script>
+</dom-module>
