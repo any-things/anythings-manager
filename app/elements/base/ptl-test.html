@@ -1,0 +1,1192 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<!--
+	개발자 > PTL Test
+-->
+<dom-module id="ptl-test">
+   <template>
+      <style>
+         :host {
+            @apply --layout-flex;
+            @apply --layout-vertical;
+
+            --block-width: 500px;
+
+            --small-gap: 5px;
+            --normal-gap: 10px;
+            --default-gap: 15px;
+            --large-gap: 20px;
+         }
+
+         things-resource-grid {
+            @apply --layout-vertical;
+            @apply --layout-flex;
+         }
+
+         paper-toolbar::shadow #bottomBar {
+            @apply --layout-horizontal;
+            @apply --layout-end-justified;
+         }
+
+         .subtitle:before {
+            content: '';
+            @apply --things-subtitle-icon;
+         }
+
+         .subtitle {
+            @apply --things-subtitle;
+         }
+
+         #container {
+            @apply --layout-flex;
+
+            margin: 5px 15px 0px 15px;
+
+            display: grid;
+            grid-template:
+               "sel opt" 1fr
+               "sen rec" 1fr / 1fr 1fr;
+            grid-gap: 15px;
+         }
+
+         #selecting-block {
+            @apply --layout-flex;
+
+            grid-area: sel;
+
+            display: grid;
+            grid-template:
+               "a b c" 1fr / 2fr 2fr 3fr;
+            grid-gap: 15px;
+         }
+         #selecting-block>#region-gw { grid-area: a; }
+         #selecting-block>#zone { grid-area: b; }
+         #selecting-block>#location { grid-area: c; }
+
+         #option-block { grid-area: opt; }
+         #option-block>#options {
+            background: white;
+            border-radius: 5px;
+
+				overflow-y: scroll;
+
+            padding: 0 var(--normal-gap) 0 var(--normal-gap);
+         }
+
+         #sent-msg-block { grid-area: sen; }
+         #received-msg-block { grid-area: rec; }
+
+			paper-button {
+				min-width: 25px;
+			}
+
+         /* 부제목이 있는 콘텐츠 공통 */
+         .contents-with-subtitle {
+            display: grid;
+            grid-template:
+               "a" auto
+               "b" 1fr / 100%
+         }
+
+         .contents-with-subtitle>.subtitle {
+            grid-area: a;
+         }
+
+         .contents-with-subtitle>.contents {
+            grid-area: b;
+         }
+         /***********************/
+
+         .margin-zero { margin: 0; }
+         .padding-zero { padding: 0; }
+
+         .option {
+            display: grid;
+            grid-template: auto / 5fr 3fr;
+            grid-gap: 10px;
+            padding: var(--normal-gap) 0 var(--normal-gap) 0;
+            align-items: center;
+
+            border-bottom: 1px dashed #EEE;
+         }
+
+         .input-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 calc(-1 * var(--normal-gap)) calc(-1 * var(--normal-gap)) calc(-1 * var(--normal-gap));
+         }
+
+         .input-wrapper>* {
+            flex: 1 1 100px;
+            margin: 0 var(--normal-gap) var(--normal-gap) var(--normal-gap);
+         }
+
+         p {
+            word-break: break-all;
+            margin: 0;
+         }
+
+         .description {
+            height: auto;
+            color: #AAA;
+            font-size: 10pt;
+         }
+
+         .things-combo-field {
+            display: grid;
+            grid-template: "a b" auto / minmax(40px, 1fr) auto;
+            grid-gap: 5px;
+
+            --things-label: {
+               display: none;
+            }
+
+            --things-input: {
+               width: auto !important;
+               padding: 3px 5px 2px 5px;
+               -webkit-border-radius: 4px;
+               -moz-border-radius: 4px;
+               border-radius: 4px;
+               border: 1px solid rgba(117, 60, 60, 0.2);
+               font-size: 15px;
+               font-weight: 300;
+            }
+
+            --things-picker-button: {
+               width: 30px;
+               height: 25px;
+               margin-left: 2px;
+               -webkit-border-radius: 3px;
+               -moz-border-radius: 3px;
+               border-radius: 3px;
+            }
+         }
+
+         .things-combo-field>input.input-size:not(#input) {
+            grid-area: a;
+         }
+
+         .things-combo-field>iron-icon {
+            grid-area: b;
+         }
+
+         /* 인풋 필드 */
+
+         .things-field {
+            display: grid;
+            grid-auto-rows: auto;
+
+            --things-label: {
+               display: none !important;
+            }
+
+            --things-input: {
+               width: auto !important;
+               padding: 3px 5px 2px 5px;
+               -webkit-border-radius: 4px;
+               -moz-border-radius: 4px;
+               border-radius: 4px;
+               border: 1px solid rgba(0, 0, 0, .2);
+               font-size: 15px;
+               font-weight: 300;
+            }
+         }
+      </style>
+
+      <!-- Get Menu Meta Ajax -->
+		<things-ajax
+			auto
+			id="resource-meta"
+			resource-url="[[menuMetaUrl]]"
+			resource-action="index"
+			last-response="{{metaData}}">
+		</things-ajax>
+
+		<!-- 호기 정보  -->
+		<things-ajax
+			auto
+			id="first-grid-ajax"
+      limit=1000
+			resource-url="[[resourceUrls.region]]"
+			resource-action="index"
+			last-response="{{firstGridData}}">
+		</things-ajax>
+
+		<!-- 존 정보  -->
+		<things-ajax
+			id="zone-ajax"
+			resource-url="[[resourceUrls.zone]]"
+			resource-action="index"
+			last-response="{{zoneDataRaw}}">
+		</things-ajax>
+
+		<!-- 로케이션 정보  -->
+		<things-ajax
+			id="location-ajax"
+			limit=100000
+			resource-url="[[resourceUrls.location]]"
+			resource-action="index"
+			last-response="{{locations}}">
+		</things-ajax>
+
+		<!-- 점등 또는 소등 요청 -->
+		<things-ajax
+			id="mpi-oper-ajax"
+			resource-url="[[resourceUrls.mpiOper]]"
+			method="POST"
+			last-response="{{sentMessage}}"
+			content-type="application/json">
+		</things-ajax>
+
+      <div id="container">
+         <div id="selecting-block">
+            <div id="region-gw" class="contents-with-subtitle">
+               <span class="subtitle"><paper-button id="reg-gw-swap-btn" class="margin-zero padding-zero" on-click="swapDistributeType">[[firstGridTitle]]</paper-button></span>
+					<things-resource-grid
+						id="region-gw-grid"
+						class="margin-zero padding-zero"
+						config="[[gridConfig]]"
+						model="[[regionGridModel]]"
+						columns="[[regionGridColumns]]"
+						buttons=""
+						paginatable=[[menuInfo.pagination]]
+						show-paginator=[[menuInfo.pagination]]
+						current-page="{{page}}"
+						limit="{{limit}}"
+						data="[[firstGridData.items]]"
+						total-count="[[firstGridData.total]]"
+						fixed-column-count="[[menuInfo.fixed_columns]]"
+						grid-save-action="[[menuInfo.grid_save_url]]">
+               </things-resource-grid>
+            </div>
+            <div id="zone" class="contents-with-subtitle">
+               <span class="subtitle"><paper-button id="work-device-swap-btn" class="margin-zero padding-zero" on-click="swapZoneType">[[secondGridTitle]]</paper-button></span>
+					<things-resource-grid
+						id="zone-grid"
+						class="margin-zero padding-zero"
+						config="[[gridConfig]]"
+						model="[[workZoneGridModel]]"
+						columns="[[workZoneGridColumns]]"
+						buttons=""
+						paginatable=[[menuInfo.pagination]]
+						show-paginator=[[menuInfo.pagination]]
+						current-page="{{page}}"
+						limit="{{limit}}"
+						data="[[zones]]"
+						fixed-column-count="[[menuInfo.fixed_columns]]"
+						grid-save-action="[[menuInfo.grid_save_url]]">
+               </things-resource-grid>
+            </div>
+            <div id="location" class="contents-with-subtitle">
+               <span class="subtitle">[[subtitles.location]]</span>
+					<things-resource-grid
+						id="location-grid"
+						class="margin-zero padding-zero"
+						config="[[gridConfig]]"
+						model="[[locationGridModel]]"
+						columns="[[locationGridColumns]]"
+						buttons=""
+						paginatable=[[menuInfo.pagination]]
+						show-paginator=[[menuInfo.pagination]]
+						current-page="{{page}}"
+						limit="{{limit}}"
+						data="[[locations.items]]"
+						total-count="[[locations.total]]"
+						fixed-column-count="[[menuInfo.fixed_columns]]"
+						grid-save-action="[[menuInfo.grid_save_url]]">
+               </things-resource-grid>
+            </div>
+         </div>
+         <div id="option-block" class="contents-with-subtitle">
+            <span class="subtitle">[[subtitles.option]]</span>
+            <div id="options"></div>
+         </div>
+         <div id="sent-msg-block" class="contents-with-subtitle">
+            <span class="subtitle">[[subtitles.sentMessage]]</span>
+				<things-editor-script
+					theme="ace/theme/monokai"
+					class="contents"
+					mode="ace/mode/json"
+					fontsize="12px"
+					tabsize="2"
+					value="[[sentMsgBody]]"
+					!wrapmode
+					readonly>
+            </things-editor-script>
+         </div>
+         <div id="received-msg-block" class="contents-with-subtitle">
+            <span class="subtitle">[[subtitles.receivedMessage]]</span>
+				<things-editor-script
+					theme="ace/theme/monokai"
+					class="contents"
+					mode="ace/mode/json"
+					fontsize="12px"
+					tabsize="2"
+					value="[[msgBody]]"
+					!wrapmode
+					readonly>
+            </things-editor-script>
+         </div>
+      </div>
+      <paper-toolbar>
+         <div class="bottom">
+            <things-button-bar id="button-group" buttons="[[buttons]]"></things-button-bar>
+         </div>
+      </paper-toolbar>
+   </template>
+
+   <script>
+      Polymer({
+         is: 'ptl-test',
+
+         behaviors: [
+            Things.ResourceMenuContentBehavior
+         ],
+
+         properties: {
+				/********* 그리드 관련 *********/
+            gridConfig: {
+               type: Object,
+               value: function () {
+                  return {
+                     options: {
+								edit: {
+									editable: false,
+									pasteEnabled: false
+								},
+								rowIndicator: {
+									visible: false
+								},
+                        displayOptions: {
+                           fitStyle: 'fill'
+                        }
+                     }
+                  };
+               }
+            },
+
+				regionGridModel: {
+					type: Array,
+					value: function () {
+						return [{
+							fieldName: "id"
+						},{
+							fieldName: "region_cd"
+						}, {
+							fieldName: "region_nm"
+						}];
+					}
+				},
+
+				regionGridColumns: {
+					type: Array,
+					value: function () {
+						return [{
+							name: "id",
+							fieldName: "id",
+							editable: false,
+							visible: false
+						}, {
+							name: "region_cd",
+							fieldName: "region_cd",
+							editable: false,
+							visible: false
+						}, {
+							name: "region_nm",
+							fieldName: "region_nm",
+							width: 100,
+							header: Things.DataGlobal.t("label.region_nm"),
+							styles: {
+								textAlignment: "center"
+							},
+							editable: false
+						}];
+					}
+				},
+
+				gatewayGridModel: {
+					type: Array,
+					value: function () {
+						return [{
+							fieldName: "id"
+						}, {
+							fieldName: "gw_cd"
+						}, {
+							fieldName: "gw_nm"
+						}];
+					}
+				},
+
+				gatewayGridColumns: {
+					type: Array,
+					value: function () {
+						return [{
+							name: "id",
+							fieldName: "id",
+							editable: false,
+							visible: false
+						}, {
+							name: "gw_cd",
+							fieldName: "gw_cd",
+							editable: false,
+							visible: false
+						}, {
+							name: "gw_nm",
+							fieldName: "gw_nm",
+							width: 100,
+							header: Things.DataGlobal.t("label.gw_nm"),
+							styles: {
+								textAlignment: "center"
+							},
+							editable: false
+						}];
+					}
+				},
+
+				workZoneGridModel: {
+					type: Array,
+					value: function () {
+						return [{
+							fieldName: 'zone_cd'
+						}];
+					}
+				},
+
+				workZoneGridColumns: {
+					type: Array,
+					value: function () {
+						return [{
+							name: 'zone_cd',
+							fieldName: 'zone_cd',
+							width: 100,
+							header: Things.DataGlobal.t("label.zone_cd"),
+							styles: {
+								textAlignment: "center"
+							},
+							editable: false
+						}];
+					}
+				},
+
+				deviceZoneGridModel: {
+					type: Array,
+					value: function () {
+						return [{
+							fieldName: 'equip_zone_cd'
+						}];
+					}
+				},
+
+				deviceZoneGridColumns: {
+					type: Array,
+					value: function () {
+						return [{
+							name: 'equip_zone_cd',
+							fieldName: 'equip_zone_cd',
+							width: 100,
+							header: Things.DataGlobal.t("label.equip_zone_cd"),
+							styles: {
+								textAlignment: "center"
+							},
+							editable: false
+						}];
+					}
+				},
+
+				locationGridModel: {
+					type: Array,
+					value: function () {
+						return [{
+							fieldName: "id"
+						}, {
+							fieldName: "loc_cd"
+						}, {
+							fieldName: "mpi_cd"
+						}];
+					}
+				},
+
+				locationGridColumns: {
+					type: Array,
+					value: function () {
+						return [{
+							name: 'id',
+							fieldName: 'id',
+							visible: false
+						}, {
+							name: 'loc_cd',
+							fieldName: 'loc_cd',
+							width: 100,
+							header: Things.DataGlobal.t("label.loc_cd"),
+							styles: {
+								textAlignment: "center"
+							},
+							editable: false
+						}, {
+							name: 'mpi_cd',
+							fieldName: 'mpi_cd',
+							width: 100,
+							header: Things.DataGlobal.t("label.mpi_cd"),
+							styles: {
+								textAlignment: "center"
+							},
+							editable: false
+						}];
+					}
+				},
+				/********************** 그리드 */
+
+				// 다국어
+				subtitles: {
+					type: Object,
+					value: function () {
+						return {
+							region: Things.DataGlobal.t('label.region'),
+							gateway: Things.DataGlobal.t('menu.Gateway'),
+							workZone: Things.DataGlobal.t('label.zone_cd'),
+							deviceZone: Things.DataGlobal.t('label.equip_zone_cd'),
+							location: Things.DataGlobal.t('menu.Location'),
+							option: Things.DataGlobal.t('label.config'),
+							sentMessage: Things.DataGlobal.t('label.req_hex_message'),
+							receivedMessage: Things.DataGlobal.t('label.res_hex_message')
+						};
+					}
+				},
+
+				/********* 내부 로직 관련 *********/
+				// 호기 또는 게이트웨이 선택
+				firstSelect: {
+					type: String,
+					value: function () {
+						return "region";
+					}
+				},
+
+				// 첫번째 그리드 타이틀
+				firstGridTitle: {
+					type: String,
+					computed: "makeTitle(firstSelect)"
+				},
+
+				// 첫번째 그리드 선택된 행
+				firstGridSelectedRow: {
+					type: Object
+				},
+
+				// 작업 존 또는 장비 존 선택
+				secondSelect: {
+					type: String,
+					value: function () {
+						return "work";
+					}
+				},
+
+				// 두번째 그리드 타이틀
+				secondGridTitle: {
+					type: String,
+					computed: "makeTitle(secondSelect)"
+				},
+
+				// 두번째 그리드 선택된 행
+				secondGridSelectedRow: {
+					type: Object
+				},
+
+				// 가공 전 존 데이터
+				zoneDataRaw: {
+					type: Object,
+					observer: "_zoneDataRawChanged"
+				},
+
+				// 대상 MPI 그룹 타입 (호기별, 게이트웨이별, 존별, 로케이션 각각)
+				targetType: {
+					type: String
+				},
+
+				sentMessage: {
+					type: Object,
+					observer: "_sentMessageChanged"
+				},
+
+				// REST 호출할 url들
+				resourceUrls: {
+					type: Object,
+					value: function () {
+						return {
+							region: "region",
+							gateway: "gateway",
+							location: "location",
+							zone: "location",
+							mpiOper: "mpi_test/unit_test"
+						};
+					}
+				},
+				/************************** 내부로직 */
+
+				/************* 옵션 모양 관련 *************/
+            options: {
+               type: Array,
+               value: function () {
+                  return [{
+							name: 'com_cd',
+							description: Things.DataGlobal.t('label.com_cd'),
+							formFields: [{
+								type: "resource-code",
+								properties: {
+									exceptEmpty: true,
+									resourceUrl: "company/domain_companies"
+								}
+							}]
+						}, {
+							name: 'job_type',
+							description: Things.DataGlobal.t('label.job_type'),
+							formFields: [{
+								type: 'code-combo',
+								properties: {
+									exceptEmpty: true,
+									codeName: 'JOB_TYPE',
+									value: 'DAS'
+								}
+							}]
+						}, {
+							name: 'action_type',
+							description: Things.DataGlobal.t('label.job'),
+							formFields: [{
+								type: 'combo',
+								properties: {
+									exceptEmpty: true,
+									items: [{
+										name: 'mpi_cd',
+										description: 'MPI Code',
+									}, {
+										name: 'loc_cd',
+										description: 'Location Code',
+									}, {
+										name: 'pick',
+										description: 'Pick',
+									}, {
+										name: 'stock',
+										description: 'Stock',
+									}, {
+										name: 'full',
+										description: 'Full Box',
+									}, {
+										name: 'end',
+										description: 'End',
+									}, {
+										name: 'display',
+										description: 'Display',
+									}, {
+										name: 'nobox',
+										description: 'Box Mapping Required',
+									}, {
+										name: 'errbox',
+										description: 'No Box Mapping Error',
+									}, {
+										name: 'strshow',
+										description: 'Show String',
+									}],
+									value: 'pick'
+								}
+							}]
+						}, {
+							name: 'btn_color',
+							description: Things.DataGlobal.t('label.mpi_color'),
+							formFields: [{
+								type: 'code-combo',
+								properties: {
+									exceptEmpty: true,
+									codeName: 'MPI_COLOR',
+									value: 'R'
+								}
+							}]
+						}, {
+							name: 'first_qty',
+							description: Things.DataGlobal.t('label.first_qty'),
+							formFields: [{
+								type: 'text',
+								properties: {
+									type: 'string',
+									//allowedPattern: '[0-9]',
+									maxlength: 3
+								}
+							}]
+						}, {
+							name: 'second_qty',
+							description: Things.DataGlobal.t('label.second_qty'),
+							formFields: [{
+								type: 'text',
+								properties: {
+									type: 'string',
+									//allowedPattern: '[0-9]',
+									maxlength: 3
+								}
+							}]
+						}, {
+							name: 'force_flag',
+							description: Things.DataGlobal.t('label.force_off_flag'),
+							formFields: [{
+								type: 'combo',
+								properties: {
+									exceptEmpty: true,
+									items: [{
+										name: true,
+										description: 'True'
+									}, {
+										name: false,
+										description: 'False'
+									}],
+									value: false
+								}
+							}]
+						}];
+               }
+            },
+
+            // 서버에서 받은 설정값을 인풋 폼의 개수에 맞춰 인풋 폼 각각에 나눠서 적용한다.
+            makeFormDataFunctions: {
+               type: Object,
+               value: function () {
+                  return {
+                     "one": function (value) {
+                        return [value];
+                     },
+                     "n": function (value, separator = ',') {
+                        var values = value.split(separator);
+                        return values;
+                     }
+                  };
+               }
+            },
+
+            // 서버로 설정값을 올릴 때, 폼에 들어있는 값들을 모아 하나의 값으로 만든다.
+            getValueFunctions: {
+               type: Object,
+               value: function () {
+                  return {
+                     "one": function () {
+                        return this.firstChild.value || '';
+                     },
+                     "n": function (separator = ',') {
+                        var forms = this.childNodes;
+                        var result = [];
+                        for (let i = 0, len = forms.length; i < len; i++) {
+                           result.push(forms[i].value);
+                        }
+                        return result.join(separator);
+                     }
+                  }
+               }
+            }
+				/********************************* 옵션 모양 */
+         },
+
+         listeners: {
+            "region-gw-grid.things-grid-configured": "createOptions",
+				"region-gw-grid.things-grid-row-data-select": "_onFirstGridSelect",
+				"zone-grid.things-grid-row-data-select": "_onSecondGridSelect",
+				"button-group.on-btn-tap": "mpiOn",
+				"button-group.off-btn-tap": "mpiOff",
+				"button-group.led_on-btn-tap": "ledOn",
+				"button-group.led_off-btn-tap": "ledOff"
+         },
+
+			makeTitle: function (selected) {
+				var title = "";
+				switch (selected) {
+					case "region": {
+						title = this.subtitles.region;
+					} break;
+					case "gateway": {
+						title = this.subtitles.gateway;
+					} break;
+					case "work": {
+						title = this.subtitles.workZone;
+					} break;
+					case "device": {
+						title = this.subtitles.deviceZone;
+					} break;
+				}
+
+				return title;
+			},
+
+			// 호기 선택 시 작업/장비존 표시
+			_onFirstGridSelect: function (event) {
+				this.firstGridSelectedRow = event.detail;
+
+				if (this.firstSelect == 'region') {
+					var rowData = event.detail;
+					var ajax = this.$['zone-ajax'];
+
+					// 선택한 호기의 존 조회
+					ajax.queryFields = [{
+						name: 'region_cd',
+						operator: 'eq',
+						value: rowData.region_cd
+					}];
+
+					// 작업/장비존 구분
+					if(this.secondSelect == 'work') {
+						// 존 코드로 오름차순 정렬
+						ajax.sortFields = [{
+							field: 'zone_cd',
+							ascending: true
+						}];
+					} else if (this.secondSelect == 'device'){
+						// 존 코드로 오름차순 정렬
+						ajax.sortFields = [{
+							field: 'equip_zone_cd',
+							ascending: true
+						}];
+					}
+					ajax.limit = 100000;
+					ajax.resourceUrl = this.resourceUrls.zone;
+					ajax.generateRequest();
+				} else if (this.firstSelect = 'gateway'){
+
+				}
+			},
+
+			// 로케이션 정보를 조회하여 존 코드를 그룹화
+			_zoneDataRawChanged: function (newValue) {
+				var items = newValue.items;
+				var zones;
+
+				if (this.secondSelect == 'work') {
+					zones = items.map(function (item) {
+						return item.zone_cd;
+					});
+				} else if (this.secondSelect == 'device') {
+					zones = items.map(function (item) {
+						return item.equip_zone_cd;
+					});
+				}
+
+				this.zones = zones.filter(function (value, index, self) {
+					return self.indexOf(value) === index;
+				})
+				.map(function (element) {
+					return {
+						zone_cd: element,
+						equip_zone_cd: element
+					};
+				});
+			},
+
+			_sentMessageChanged: function (newValue) {
+				var msgBody = newValue.send_msg;
+				this.sentMsgBody = JSON.stringify(JSON.parse(msgBody), null, 2);
+			},
+
+			_onSecondGridSelect: function (event) {
+				this.secondGridSelectedRow = event.detail;
+				var rowData = event.detail;
+
+				var ajax = this.$['location-ajax'];
+				ajax.selectFields = "id,loc_cd,mpi_cd";
+				ajax.sortFields = [{
+					field: 'loc_cd',
+					ascending: true
+				}];
+
+				if (this.secondSelect == 'work') {
+					ajax.queryFields = [{
+						name: 'zone_cd',
+						operator: 'eq',
+						value: rowData.zone_cd
+					}]
+				} else if (this.secondSelect == 'device') {
+					ajax.queryFields = [{
+						name: 'equip_zone_cd',
+						operator: 'eq',
+						value: rowData.equip_zone_cd
+					}]
+				}
+				ajax.generateRequest();
+			},
+
+			swapDistributeType: function () {
+				var grid = this.$['region-gw-grid'];
+				var ajax = this.$['first-grid-ajax'];
+
+				if(this.firstSelect == "region") {
+					this.firstSelect = "gateway";
+
+					grid._setGridModel(this.gatewayGridModel);
+					grid._setGridColumns(this.gatewayGridColumns);
+
+					ajax.resourceUrl = this.resourceUrls.gateway;
+				} else {
+					this.firstSelect = "region";
+
+					grid._setGridModel(this.regionGridModel);
+					grid._setGridColumns(this.regionGridColumns);
+
+					ajax.resourceUrl = this.resourceUrls.region;
+				}
+			},
+
+			swapZoneType: function () {
+				var grid = this.$['zone-grid'];
+				var ajax = this.$['zone-ajax'];
+
+				ajax.sortFields = [{
+					field: 'zone_cd',
+					ascending: true
+				}];
+
+				ajax.queryFields = [{
+					name: 'region_cd',
+					operator: 'eq',
+					value: this.firstGridSelectedRow.region_cd
+				}];
+
+				if(this.secondSelect == "work") {
+					this.secondSelect = "device";
+
+					grid._setGridModel(this.deviceZoneGridModel);
+					grid._setGridColumns(this.deviceZoneGridColumns);
+
+					ajax.resourceUrl = this.resourceUrls.zone
+					ajax.generateRequest();
+				} else if (this.secondSelect == "device") {
+					this.secondSelect = "work";
+
+					grid._setGridModel(this.workZoneGridModel);
+					grid._setGridColumns(this.workZoneGridColumns);
+
+					ajax.resourceUrl = this.resourceUrls.zone
+					ajax.generateRequest();
+				}
+			},
+
+			// 점등/소등 구분하여 동작
+			mpiOperation: function (operation) {
+				var mpiTest = this;
+				var ajax = this.$['mpi-oper-ajax'];
+				var grids = [
+					this.$['region-gw-grid'],
+					this.$['zone-grid'],
+					this.$['location-grid']
+				];
+
+				var targetIdList;
+				var pk;
+				grids.forEach(function (grid, index) {
+					let rows = grid.grid.getCheckedRows();
+					if (rows && rows.length > 0) {
+						switch (index) {
+							case 0: {
+								if (mpiTest.firstSelect == 'region') {
+									mpiTest.targetType = 'region';
+									pk = 'region_cd';
+								} else if (mpiTest.firstSelect == 'gateway') {
+									mpiTest.targetType = 'gateway';
+									pk = 'gw_cd';
+								}
+							} break;
+							case 1: {
+								if (mpiTest.secondSelect == 'work') {
+									mpiTest.targetType = 'work_zone';
+									pk = 'zone_cd';
+								} else if (mpiTest.secondSelect == 'device') {
+									mpiTest.targetType = 'equip_zone';
+									pk = 'equip_zone_cd';
+								}
+							} break;
+							case 2: {
+								mpiTest.targetType = 'location';
+								pk = 'loc_cd';
+							}
+						}
+						targetIdList = rows.map(function (row) {
+							return row.getRowObject()[pk];
+						});
+					}
+				});
+
+				if (targetIdList && targetIdList.length > 0) {
+					var option = this.getOptionValues();
+					var target = {
+						target_type: this.targetType,
+						target_id_list: targetIdList
+					};
+					var action = {
+						action: operation,
+						action_type: option.action_type,
+						btn_color: option.btn_color,
+						first_qty: option.first_qty,
+						second_qty: option.second_qty
+					};
+					var body = {
+						com_cd: option.com_cd,
+						job_type: option.job_type,
+						target: target,
+						action: action
+					};
+
+					ajax.body = body;
+					ajax.generateRequest();
+				} else {
+					this.openInfoMsg({ type: 'info', title: Things.DataGlobal.t('text.NOTHING_SELECTED') });
+				}
+			},
+
+			// MPI 점등 요청
+			mpiOn: function (event) {
+				this.mpiOperation("IND_ON_REQ");
+			},
+
+			// MPI 소등 요청
+			mpiOff: function (event) {
+				this.mpiOperation("IND_OFF_REQ");
+			},
+
+			// LED 바 점등 요청
+			ledOn: function (event) {
+				this.mpiOperation("LED_ON_REQ");
+			},
+
+			// LED 바 소등 요청
+			ledOff: function (event) {
+				this.mpiOperation("LED_OFF_REQ");
+			},
+
+			/***************** 옵션 전용 *******************/
+         createOptions: function () {
+            var optionBlock = this.$['options'];
+
+            for (var i = 0, len = this.options.length; i < len; i++) {
+               let option = this.createOption(this.options[i])
+               optionBlock.appendChild(option);
+            }
+         },
+
+         createOption: function (option) {
+            var row = this.create('div');
+            row.setAttribute('class', 'option style-scope ' + this.is);
+
+            // create and set description
+            let p = this.create('p', { innerText: option.description });
+            p.setAttribute('class', 'description style-scope ' + this.is);
+            row.appendChild(p);
+
+            // create and set input form
+            let props = {
+               name: option.name,
+               getValue: this.getValueFunctions[option.getValue || 'one'],
+               separator: option.separator
+            };
+            let form = this.createInputForm(option.formFields, props);
+            row.appendChild(form);
+
+            return row;
+         },
+
+         // 입력용 박스 생성
+         createInputForm: function (formFields, properties) {
+            let wrapper = this.create('div', properties);
+            wrapper.setAttribute('class', 'input-wrapper style-scope ' + this.is);
+
+            for (let i = 0, len = formFields.length; i < len; i++) {
+               let form;
+               switch (formFields[i].type) {
+                  case 'number': {
+                     form = this.create('things-number-field', formFields[i].properties);
+                     form.setAttribute('class', 'option-input things-field style-scope ' + this.is);
+                  } break;
+                  case 'combo': {
+                     form = this.create('things-combo', formFields[i].properties);
+                     form.setAttribute('class', 'option-input things-combo-field style-scope ' + this.is);
+                  } break;
+                  case 'code-combo': {
+                     form = this.create('things-combo', formFields[i].properties);
+                     form.setAttribute('class', 'option-input things-combo-field style-scope ' + this.is);
+
+                     // create ajax
+                     let props = {
+                        auto: true,
+                        resourceUrl: 'common_codes/show_by_name',
+                        method: 'GET',
+                        params: {
+                           name: formFields[i].properties.codeName
+                        },
+                        comboElement: form
+                     };
+                     let codeAjax = this.create('things-ajax', props);
+                     // add event listener
+                     this.listen(codeAjax, 'things-ajax-response', '_setComboItems');
+                  } break;
+						case 'resource-code': {
+							form = this.create('things-combo', formFields[i].properties);
+							form.setAttribute('class', 'option-input things-combo-field style-scope ' + this.is);
+
+							// create ajax
+							let props = {
+								auto: true,
+								limit: 10000,
+								resourceUrl: formFields[i].properties.resourceUrl,
+								resourceAction: 'index',
+								comboElement: form,
+								nameField: formFields[i].properties.nameField || 'name',
+								descriptionField: formFields[i].properties.descriptionField || 'description'
+							};
+							let codeAjax = this.create('things-ajax', props);
+							// add event listener
+							this.listen(codeAjax, 'things-ajax-response', '_setResourceCodeItems');
+						} break;
+                  case 'text':
+                  default: {
+                     form = this.create('things-input-field', formFields[i].properties);
+                     form.setAttribute('class', 'option-input things-field style-scope ' + this.is);
+                  } break;
+               }
+               wrapper.appendChild(form);
+            }
+
+            return wrapper;
+         },
+
+         // code-combo 타입 전용) 콤보 박스 아이템 설정
+         _setComboItems: function (e) {
+            e.target.comboElement.items = e.detail.items;
+         },
+
+			// resource-code 타입 전용) 콤보 박스 아이템 설정
+			_setResourceCodeItems: function (e) {
+				e.target.comboElement.items = e.detail.items.map(function (item, index) {
+					return {
+						name: item[e.target.nameField],
+						description: item[e.target.descriptionField]
+					};
+				});
+			},
+
+			// 사용자가 옵션에 적은 값들을 반환
+			getOptionValues: function () {
+				var inputWrappers = this.$['options'].querySelectorAll('.input-wrapper');
+				var values = {};
+
+				for(var i = 0, len = inputWrappers.length; i < len; i++) {
+					let name = inputWrappers[i].name;
+					let value = inputWrappers[i].getValue(inputWrappers[i].separator);
+
+					values[name] = value;
+				}
+
+				return values;
+			}
+			/******************************************옵션 전용*/
+      });
+   </script>
+</dom-module>

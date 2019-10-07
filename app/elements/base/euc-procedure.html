@@ -1,0 +1,440 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<link rel="import" href="./euc-procedure-detail.html">
+
+<!--
+	기타 관리 > EUC
+-->
+
+<dom-module id="euc-procedure">
+  <template>
+    <style>
+      :host {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .container {
+        @apply(--layout-flex);
+        display: grid;
+        grid-template-rows: 30px auto 30px 300px 50px;
+        grid-template-columns: 300px auto;
+      }
+      #grid-subtitle {
+        @apply(--things-default-padding);
+        @apply(--things-subtitle);
+        grid-row-start: 1;
+        grid-row-end: 2;
+      }
+      #procedure-grid {
+        grid-row-start: 2;
+        grid-row-end: 3;
+        grid-column-start: 1;
+        grid-column-end: 3;
+      }
+      #output-list-subtitle {
+        @apply(--things-default-padding);
+        @apply(--things-subtitle);
+        grid-row-start: 3;
+        grid-row-end: 4;
+        grid-column-start: 1;
+        grid-column-end: 2;
+      }
+      #output-list-grid{
+        grid-row-start: 4;
+        grid-row-end: 5;
+        grid-column-start: 1;
+        grid-column-end: 2;
+      }
+      #output-items-subtitle {
+        @apply(--things-default-padding);
+        @apply(--things-subtitle);
+        grid-row-start: 3;
+        grid-row-end: 4;
+        grid-column-start: 2;
+        grid-column-end: 3;
+      }
+      #output-items-grid{
+        grid-row-start: 4;
+        grid-row-end: 6;
+        grid-column-start: 2;
+        grid-column-end: 3;
+      }
+    </style>
+
+		<things-ajax
+			auto
+			id="resource-meta"
+			method="GET"
+			resource-url="[[menuMetaUrl]]"
+			last-response="{{metaData}}">
+    </things-ajax>
+
+		<things-search-form
+			id="search-form"
+			title="[[menuInfo.title]]"
+			form-fields="[[searchFormFields]]"
+			select-fields="[[selectFields]]"
+			sort-fields="[[sortFields]]"
+			action-url="[[menuInfo.resource_url]]"
+			page="{{page}}"
+			limit="{{limit}}"
+			last-response="{{lastResponse}}">
+		</things-search-form>
+
+    <div class="container">
+      <div id="grid-subtitle">[[procedureLabel]]</div>
+      <things-resource-grid
+        id="procedure-grid"
+        config="[[gridConfig]]"
+        model="[[gridModel]]"
+        columns="[[gridColumns]]"
+        data="[[items]]"
+        enable-detail-column
+        fixed-column-count="[[menuInfo.fixed_columns]]"
+        grid-save-action="[[menuInfo.grid_save_url]]"
+        buttons="[[buttons]]">
+      </things-resource-grid>
+
+      <div id="output-list-subtitle">[[listLabel]]</div>
+      <things-resource-grid
+        id="output-list-grid"
+        config="[[outGridConfig]]"
+        model="[[outputListModel]]"
+        columns="[[outputListColumns]]"
+        data="[[outputList]]"
+        fixed-column-count="0"
+        buttons="[[emptyButtons]]">
+      </things-resource-grid>
+      <div id="output-items-subtitle">[[resultLabel]]</div>
+      <things-resource-grid
+        id="output-items-grid"
+        config="[[outGridConfig]]"
+        model="[[outputItemsModel]]"
+        columns="[[outputItemsColumns]]"
+        data="[[outputItems]]"
+        fixed-column-count="0"
+        buttons="[[itemsGridButtons]]">
+      </things-resource-grid>
+    </div>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'euc-procedure',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
+
+      properties: {
+        gridConfig: {
+          type: Object,
+          value: function() {
+            return {
+              checkBar: true
+            };
+          }
+			  },
+
+        outGridConfig: {
+          type: Object,
+          value: function() {
+            return {
+              checkBar: false
+            };
+          }
+			  },
+
+        emptyButtons: {
+          type: Array,
+          value: []
+        },
+
+        itemsGridButtons: {
+					type: Array,
+					value: function() {
+						return [{
+							id: 'export-btn',
+              text: 'export',
+              icon: 'icons:swap-vert'
+						}];
+					}
+				},
+
+        result: {
+          type: Array
+        },
+
+        outputListModel: {
+          type: Array,
+          value: function() {
+            return [{
+              fieldName: "name"
+            }];
+          }
+        },
+
+        outputListColumns: {
+          type: Array,
+          value: function() {
+            return [{
+              name: 'name',
+							fieldName: 'name',
+							width: 200,
+							editable: false,
+							header: {
+								text: Things.DataGlobal.t('label.name')
+							},
+							styles: {
+								textAlignment: 'center'
+							}
+            }];
+          }
+        },
+
+        outputItemsModel: {
+          type: Array
+        },
+
+        outputItemsColumns: {
+          type: Array
+        },
+
+        outputItems: {
+          type: Array
+        }
+      },
+
+      listeners: {
+        'procedure-grid.things-grid-detail-tap': '_openDetailPop',
+        'output-list-grid.things-grid-row-data-select' : '_outputListSelected',
+        'procedure-grid.things-grid-save-success': '_onSave'
+      },
+
+      ready: function() {
+        this._setLabels();
+      },
+
+      _onSave: function(e) {
+        this.$['search-form'].submitMyForm();
+      },
+
+      /**
+       * init labels
+       */
+      _setLabels: function() {
+        this.procedureLabel = Things.DataGlobal.t('label.procedure');
+        this.listLabel = Things.DataGlobal.t('label.list');
+        this.resultLabel = Things.DataGlobal.t('menu.Procedure') + ' ' + Things.DataGlobal.t('label.result');
+      },
+
+      _openDetailPop: function(event) {
+        var popupTitle = event.detail.name;
+        var popupDesc = event.detail.description
+				event.preventDefault();
+				var view = document.createElement('euc-procedure-detail');
+				view.title = Things.DataGlobal.t(popupTitle) + ' ( ' + popupDesc + ' )';
+
+				view.resourceId = event.detail.id;
+        view.resourceUrl = "procedures/:id"
+        view.formFields = this.resourceFormFields;
+
+        for(var i = 1; i < 11; i++)
+          view['param' + i] = event.detail['param' + i];
+
+				var closeCallback = function() {
+          // 팝업에서 호출버튼을 눌렀을 때에만 이 콜백이 호출됨
+          if(!view.invokeBtnFlag)
+            return;
+
+          this.result = view.result;
+          console.log(this.result);
+          this._initiateGrid(this.result);
+				}.bind(this);
+
+				this.fire('things-open-custom-size-dialog', {
+					view: view,
+					modal: true,
+					dialogSize: 'large',
+					closeCallback: closeCallback
+				});
+      },
+
+      /**
+       * 리스트 그리드 초기화
+       */
+      _clearListGrid: function(){
+        this.set('outputList', []);
+      },
+
+      /**
+       * EUC 결과 그리드 초기화
+       */
+      _clearItemsGrid: function(){
+        this.set('outputItems', []);
+        this.set('outputItemsModel', []);
+        this.set('outputItemsColumns', []);
+        this.$['output-items-grid'].getGridObject().clearColumns();
+      },
+
+      /**
+       * result로 받은 값이 유효한 지 체크
+       */
+      _checkResultType: function(result){
+        // result 타입이 Array이면서 Array 안에 오브젝트의 값이 존재할 경우
+        if(typeof result !== 'undefined' && typeof result[0] !== 'undefined' && Array.isArray(result)){
+          if(Object.keys(result[0]).length){
+            return true;
+          }
+        }
+
+        return false;
+      },
+
+      /**
+       * 리스트 그리드에 표현할 데이터
+       */
+      _parseResultList: function(resultObj){
+        // output list 배열을 key-value 형태로 파싱한다
+        var outputListParsed = Object.keys(resultObj).map(function(col) {
+          return {name : col};
+        });
+
+        return outputListParsed;
+      },
+
+      /**
+       * result[0]의 해당하는 키의 데이터가 어떤 데이터인지 분류
+       */
+      _sortResultType: function(resultKey){
+        var item = this.result[0][resultKey];
+        if(Array.isArray(item)){
+          return 'array';
+        } 
+        else if(!item && typeof item === 'object'){
+          return 'null';
+        }
+        else{
+          return typeof item;
+        }
+      },
+
+      /**
+       * 아이템 그리드의 모델
+       */
+      _parseResultModel: function(key, type){
+        if(type === 'array'){
+          var resultData = this.result[0][key];
+
+          var itemsKey = Object.keys(resultData[0]);
+
+          var outputItemsModel = itemsKey.map(function(col){
+            return {fieldName : col};
+          });
+
+          return outputItemsModel;
+        }
+        else if(type === 'number' || type === 'string'){
+          return [{fieldName : key}];
+        }
+        else{//(type === 'boolean' || type === 'object' || type === 'null'){
+          return [{fieldName : key}];
+        }
+      },
+
+      /**
+       * 아이템 그리드의 컬럼
+       */
+      _parseResultColumns: function(key, type){
+        if(type === 'array'){
+          var resultData = this.result[0][key];
+
+          var itemsKey = Object.keys(resultData[0]);
+
+          var outputItemsColumns = itemsKey.map(function(col){
+            return {name: col, fieldName: col, width: '120', header: {text: col}};
+          });
+
+          return outputItemsColumns;
+        }
+        else if(type === 'number' || type === 'string'){
+          return [{name: key, fieldName: key, width: '120', header: {text: key}}];
+        }
+        else{//(type === 'boolean' || type === 'object' || type === 'null'){
+          return [{name: key, fieldName: key, width: '120', header: {text: key}}];
+        }
+      },
+
+      /**
+       * 아이템 그리드의 아이템
+       */
+      _parseResultItems: function(key, type){
+        if(type === 'array'){
+          return this.result[0][key];
+        }else{
+          var items = [];
+          var item = {};
+          item[key] = this.result[0][key];
+          items.push(item);
+          return items;
+        }
+      },
+
+      /**
+       * result를 받았을 때 시작 지점 
+       */
+      _initiateGrid: function(result){
+        // 그리드 초기화
+        this._clearListGrid();
+        this._clearItemsGrid();
+        // result 값이 유효한 경우에만 해당 로직 실행
+        if(this._checkResultType(result)){
+          // result 값이 배열이지만 비어있는 경우는 빈 데이터를 받은 것이므로 그리드만 클리어한다.
+          if(result.length){
+            this.set('outputList', this._parseResultList(result[0]));
+            // 처음에는 첫번 째 리스트에 있는 행의 데이터가 출력되어야 한다
+            this._outputListSelected({ detail: {name:this.outputList[0].name} });
+          }
+        }
+      },
+
+      /**
+       * 리스트 그리드의 행을 클릭했을 때 발생하는 이벤트
+       */
+      _outputListSelected: function(event){
+        var key = event.detail.name;
+        var type = this._sortResultType(key);
+        this.set('outputItemsModel', this._parseResultModel(key, type));
+        this.set('outputItemsColumns', this._parseResultColumns(key, type));
+        this.$['output-items-grid']._setGridModel(this.outputItemsModel);
+        this.$['output-items-grid']._setGridColumns(this.outputItemsColumns);
+        this.set('outputItems', this._parseResultItems(key, type));
+      }
+
+      /* Test Data...
+        result = [{
+          P_OUT1 : 0,
+          P_OUT2 : "hello",
+          P_OUT3 : null,
+          P_OUT4 : [{
+            PP_OUT1 : "aaa",
+            PP_OUT2 : "bbb",
+            PP_OUT3 : "ccc",
+            PP_OUT4 : 444  
+          }];
+        }]
+      */
+    })
+  </script>
+</dom-module>

@@ -1,0 +1,251 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+<link rel="import" href="../../bower_components/things-i18n-msg/things-i18n-msg.html">
+
+<link rel="import" href="./deployment-popup.html">
+
+<!--
+	게이트웨이 배포 관리 화면
+-->
+
+<dom-module id="firmware-deployment">
+	<template>
+		<style>
+			:host {
+				display: block;
+				@apply(--layout-vertical);
+				@apply(--layout-flex);
+			}
+
+			things-resource-grid {
+				@apply(--layout-flex);
+			}
+		</style>
+
+		<things-i18n-msg auto msgid="label.gw_cd" msg="{{labelGwCd}}" hidden></things-i18n-msg>
+		<things-i18n-msg auto msgid="label.mpi_cd" msg="{{labelMpiCd}}" hidden></things-i18n-msg>
+
+		<things-ajax
+			auto
+			id="resource-meta"
+			method="GET"
+			resource-url="[[menuMetaUrl]]"
+			last-response="{{metaData}}">
+		</things-ajax>
+
+		<things-ajax
+			id="reserve-list-ajax"
+			method="POST"
+			resource-url="deployment/reserve_list"
+			resource-action="update_multiple">
+		</things-ajax>
+
+		<things-ajax
+			id="deploy-list-ajax"
+			method="POST"
+			resource-url="deployment/deploy_list"
+			resource-action="update_multiple">
+		</things-ajax>
+
+		<things-search-form
+			id="search-form"
+			title="[[menuInfo.title]]"
+			form-fields="[[searchFormFields]]"
+			select-fields="[[selectFields]]"
+			sort-fields="[[sortFields]]"
+			action-url="[[menuInfo.resource_url]]"
+			page="{{page}}"
+			limit="{{limit}}"
+			last-response="{{lastResponse}}">
+		</things-search-form>
+
+		<things-resource-grid
+			id="grid"
+			config="[[gridConfig]]"
+			model="[[gridModel]]"
+			columns="[[gridColumns]]"
+			data="[[items]]"
+			total-count="[[itemCount]]"
+			current-page="{{page}}"
+			limit="{{limit}}"
+			fixed-column-count="[[menuInfo.fixed_columns]]"
+			grid-save-action="[[menuInfo.grid_save_url]]"
+			buttons="[[buttons]]"
+			export-file-name="[[menuInfo.title]]"
+			export-sheet-name="[[menuInfo.title]]">
+		</things-resource-grid>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'firmware-deployment',
+
+			behaviors: [
+				Things.ResourceMenuContentBehavior
+			],
+
+			properties: {
+			},
+
+			listeners : {
+				'reserve-btn-tap': 'reserve',
+				'deploy-now-btn-tap': 'deployNow',
+				'new-btn-tap': 'newPopup',
+				'to-gateway-btn-tap': 'newPopup',
+				'to-indicator-btn-tap': 'newPopup',
+				'grid.things-grid-detail-tap': 'downloadFile',
+				'reserve-list-ajax.things-ajax-response' : 'refreshData',
+				'deploy-list-ajax.things-ajax-response' : 'refreshData'
+			},
+
+			/**
+			 * 배포 Job 예약
+			 ***********
+			 * @param {Object} e 버튼 탭 이벤트
+			 */
+			reserve: function(e) {
+				this._checkTransaction(Things.DataGlobal.t(e.detail.text), 'reserve-list-ajax');
+			},
+
+			/**
+			 * 즉시 배포
+			 ***********
+			 * @param {Object} e 버튼 탭 이벤트
+			 */
+			deployNow: function(e) {
+				this._checkTransaction(Things.DataGlobal.t(e.detail.text), 'deploy-list-ajax');
+			},
+
+			/**
+			 * 트랜잭션 체크
+			 *******************
+			 * @param {String} title 트랜잭션 명
+			 * @param {String} ajaxId Ajax ID
+			 */
+			_checkTransaction: function(title, ajaxId) {
+				let targetList = this._selectedItemList();
+				if(targetList != null && targetList.length > 0) {
+					if(this._validateTran(targetList)) {
+						var ajax = this.$[ajaxId];
+						ajax.body = targetList.map(function(target) { return target.id; });
+						this._doTransaction(title, ajax);
+					}
+				}
+			},
+
+			/**
+			 * 트랜잭션 전 Validation
+			 ************************
+			 * @param {Array} targetList
+			 */
+			_validateTran: function(targetList) {
+				var invalidateList = targetList.filter(function (target) {
+					return target.status != 'WAIT';
+				}.bind(this));
+
+				var invalid = invalidateList && invalidateList.length > 0;
+				if(invalid) {
+					// 게이트웨이 (0)는 예약대기 상태가 아닙니다.
+					var text = Things.DataGlobal.t('text.a_is_not_b_status', {
+							a : Things.DataGlobal.t('menu.Gateway') + '(' + invalidateList[0].target_id + ')',
+							b : Things.DataGlobal.t('label.reservation')
+					});
+					this.openConfirmMsg({
+						type: 'error',
+						title: Things.DataGlobal.t('label.validator'),
+						text: text
+					});
+				}
+				return !invalid;
+			},
+
+			/**
+			 * 트랜잭션 실행
+			 ***************
+			 * @param {String} title
+			 * @param {Object} ajax
+			 */
+			_doTransaction: function(title, ajax) {
+				// Ajax 호출
+				var text = Things.DataGlobal.t('text.Sure to X', { x : title });
+				this.openConfirmMsg({
+					type: 'info', title: title, text: text, showCancelButton: true
+				}, function () {
+					ajax.generateRequest();
+				});
+			},
+
+			/**
+			 * 선택된 항목의 ID 리스트 조회
+			 ***************
+			 * @return
+			 */
+			_selectedItemList: function() {
+				let rows = this.$['grid'].grid.getCheckedRows();
+				if (rows && rows.length > 0) {
+					return rows.map(function (row) {
+						return row.getRowObject();
+					}.bind(this));
+				} else {
+					return null;
+				}
+			},
+
+			/**
+			 * 배포 창을 띄운다.
+			 ***********
+			 * @param {Object} e 버튼 탭 이벤트
+			 */
+			newPopup: function(e) {
+				event.preventDefault();
+
+				var view = document.createElement('deployment-popup');
+				var popupTitle = e.detail.text;
+				view.title = Things.DataGlobal.t(popupTitle);
+				view.resourceName = 'Gateway';
+				view.resourceUrl = 'gateway';
+				view.resourceType = 'Entity';
+				view.resourceIdField = 'gw_cd';
+				view.label = this.labelGwCd;
+				view.targetType = (popupTitle == 'button.to-gateway') ? 'GW' : 'MPI';
+
+				var closeCallback = function() {
+					this.refreshData();
+				}.bind(this);
+
+				// 다이얼로그 오픈
+				this.fire('things-open-custom-size-dialog', {
+					view: view,
+					modal: true,
+					dialogSize: 'medium',
+					closeCallback: closeCallback
+				});
+			},
+
+			/**
+			 * 그리드 셀 선택이 변경되었을 경우 파일 다운로드
+			 ********
+			 * @param {Object} e
+			 */
+			downloadFile: function(e) {
+				var baseUrl = this.get('globals.baseUrl');
+				this.openConfirmMsg({
+					type : 'info',
+					title : Things.DataGlobal.t('text.Want to download file'),
+					text : Things.DataGlobal.t('text.You can download file'),
+					showCancelButton: true
+				}, function() {
+					window.location = baseUrl + '/deployment/download_file/' + e.detail.id;
+				});
+			}
+		});
+	</script>
+</dom-module>
