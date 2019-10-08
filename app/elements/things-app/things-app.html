@@ -274,17 +274,11 @@
             <iron-pages attr-for-selected="data-route" selected="{{route}}" class="content flex5child" id="_content_">
               <base-sso-login data-route="login">
               </base-sso-login>
-              <!-- <things-login use-oi-screen class="login-image" oi-screen-path="/index.html" data-route="login"
-                route="{{route}}" title="Things" login-path="login" content-type="application/x-www-form-urlencoded"
-                success-route="/" username-input-label="ID" password-input-label="Password" submit-label="sign_up"
-                Reset-label="Reset" brand-name="[[domainAppObj.brand_name]]">
-              </things-login> -->
               <base-home data-route="/"></base-home>
             </iron-pages>
           </div>
 
           <template is="dom-if" if="[[showRecentPages]]">
-            <!-- <things-recent-page id="recent-page" class="flexchild"></things-recent-page> -->
             <iron-localstorage name="setting.useRecentPages" value="{{useRecentPages}}"></iron-localstorage>
           </template>
         </div>
@@ -292,12 +286,6 @@
         <things-spinner id="spinner" loading=false></things-spinner>
       </paper-scroll-header-panel>
     </paper-drawer-panel>
-
-    <!--things-ws-subscriber
-      auto
-      url-key="wsUrl"
-      subject="/elidom/stomp/topic/notice">
-    </things-ws-subscriber-->
 
     <paper-toast id="confirmToast" class="Toast" duration="8000">
       <span class="Toast-button" role="button" tabindex="0" on-tap="onConfirmToastTap">OK</span>

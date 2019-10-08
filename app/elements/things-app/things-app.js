@@ -145,7 +145,7 @@ Polymer({
     appTheme.setAttribute('id', 'theme');
 
     if (!this.globals.user || !this.globals.user.domain || !this.globals.user.domain.theme) {
-      appTheme.setAttribute('include', 'things-mps-theme');
+      appTheme.setAttribute('include', 'anythings-theme');
     } else {
       appTheme.setAttribute('include', this.globals.user.domain.theme);
     }
@@ -204,7 +204,7 @@ Polymer({
     appTheme.setAttribute('id', 'theme');
 
     if (!theme) {
-      appTheme.setAttribute('include', 'things-mps-theme');
+      appTheme.setAttribute('include', 'anythings-theme');
     } else { 
       appTheme.setAttribute('include', theme);
     }
