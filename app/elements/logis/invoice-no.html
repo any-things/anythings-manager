@@ -1,0 +1,94 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+<link rel="import" href="./invoice-no-create-popup.html">
+
+<dom-module id="invoice-no">
+   <template>
+      <style>
+         :host {
+            @apply --layout-flex;
+            @apply --layout-vertical;
+         }
+
+         things-resource-grid {
+            @apply --layout-vertical;
+            @apply --layout-flex;
+         }
+      </style>
+
+      <!-- Get Menu Meta Ajax -->
+      <things-ajax auto id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index" last-response="{{metaData}}">
+      </things-ajax>
+
+      <!-- Search form -->
+      <things-search-form id="search-form" title="[[menuInfo.title]]" form-fields="[[searchFormFields]]" select-fields="[[selectFields]]"
+         sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]" page="{{page}}" limit="{{limit}}"
+         last-response="{{lastResponse}}">
+      </things-search-form>
+
+      <things-resource-grid id="grid" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]" buttons="[[buttons]]"
+         paginatable=[[menuInfo.pagination]] show-paginator=[[menuInfo.pagination]] current-page="{{page}}" limit="{{limit}}" data="[[items]]"
+         total-count="[[itemCount]]" fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]">
+      </things-resource-grid>
+   </template>
+
+   <script>
+      Polymer({
+         is: 'invoice-no',
+
+         behaviors: [
+            Things.ResourceMenuContentBehavior
+         ],
+
+         properties: {
+            gridConfig: {
+               type: Object,
+               value: function () {
+                  return {
+                     options: {
+                        checkBar: {
+                           visible: false
+                        },
+                        displayOptions: {
+                           fitStyle: 'fill'
+                        }
+                     }
+                  }
+               }
+            }
+         },
+
+         listeners: {
+            "grid.add_invoice-btn-tap": "requestSetInvoiceBandwidth"
+         },
+
+         requestSetInvoiceBandwidth: function () {
+            var screen = this;
+            searchForm = this.$['search-form'];
+            var view = this.create('invoice-no-create-popup', {
+               title: Things.DataGlobal.t("menu.InvoiceNo"),
+               menuInfo: this.menuInfo,
+               metaData: this.metaData,
+               searchForm: searchForm,
+               close: function () {
+                  screen.fire('things-dialog-close');
+               },
+            });
+
+            this.fire('things-open-custom-size-dialog', {
+               view: view,
+               dialogSize: "small",
+               modal: true
+            });
+         }
+      });
+   </script>
+</dom-module>

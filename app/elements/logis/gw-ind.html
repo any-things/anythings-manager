@@ -1,0 +1,293 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-menu-grid-content-behavior.html">
+<link rel="import" href="../../bower_components/things-detail/things-menu-detail-grid.html">
+
+<!--
+기준 정보 / 라우터 스테이션 - 지시기
+-->
+<dom-module id="gw-ind">
+  <template>
+    <style>
+      :host {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+
+      .container {
+        @apply(--layout-flex);
+        display: grid;
+        grid-template-rows: auto;
+        grid-template-columns: 750px auto;
+      }
+
+      #gateway-grid {
+        grid-row-start: 1;
+        grid-row-end: 2;
+        grid-column-start: 1;
+        grid-column-end: 2;
+      }
+
+      #ind-grid {
+        grid-row-start: 1;
+        grid-row-end: 2;
+        grid-column-start: 2;
+        grid-column-end: 3;
+      }
+    </style>
+
+    <things-ajax auto id="resource-meta" method="GET" resource-url="[[menuMetaUrl]]" last-response="{{metaData}}">
+    </things-ajax>
+
+    <things-ajax auto id="search-gw" resource-url="menus" sort-fields='[{"field" : "id", "ascending" : true}]'
+      query-fields="[[gwMenuQueryFields]]" resource-action="index" response-root="items" limit="100000"
+      last-response="{{gwMenuItems}}">
+    </things-ajax>
+
+    <things-ajax auto id="gw-resource-meta" method="GET" resource-url="[[gwMenuMetaUrl]]"
+      last-response="{{gwMetaData}}">
+    </things-ajax>
+
+    <things-ajax auto id="search-ind" resource-url="menus" sort-fields='[{"field" : "id", "ascending" : true}]'
+      query-fields="[[indMenuQueryFields]]" resource-action="index" response-root="items" limit="100000"
+      last-response="{{indMenuItems}}">
+    </things-ajax>
+
+    <things-ajax auto id="ind-resource-meta" method="GET" resource-url="[[indMenuMetaUrl]]"
+      last-response="{{indMetaData}}">
+    </things-ajax>
+
+    <things-ajax auto id="search-gateway-items" resource-url="gateways"
+      sort-fields='[{"field" : "station_cd", "ascending" : true}]' response-root="items" resource-action="index"
+      limit="100000" last-response="{{gatewayItems}}">
+    </things-ajax>
+
+    <things-ajax id="search-ind-items" resource-url="ind" sort-fields='[{"field" : "gw_cd", "ascending" : true}]'
+      query-fields="[[indQueryFields]]" response-root="items" resource-action="index" limit="100000"
+      last-response="{{indItems}}">
+    </things-ajax>
+
+    <div class="container">
+      <things-resource-grid id="gateway-grid" model="[[gwGridModel]]" columns="[[gwGridColumns]]"
+        config="[[gridConfig]]" buttons="[[buttons]]" limit="100000" data="[[gatewayItems]]"
+        fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]"
+        export-file-name="[[menuInfo.title]]" export-sheet-name="[[menuInfo.title]]">
+      </things-resource-grid>
+
+      <things-resource-grid id="ind-grid" model="[[indGridModel]]" columns="[[indGridColumns]]" config="[[gridConfig]]"
+        buttons="[[buttons]]" limit="100000" data="[[indItems]]" fixed-column-count="[[menuInfo.fixed_columns]]"
+        grid-save-action="[[menuInfo.grid_save_url]]" export-file-name="[[menuInfo.title]]"
+        export-sheet-name="[[menuInfo.title]]">
+      </things-resource-grid>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'gw-ind',
+
+      behaviors: [
+        Things.MenuGridContentBehavior
+      ],
+
+      properties: {
+        gridConfig: {
+          type: Object,
+          value: function () {
+            return {
+              checkBar: false,
+              options: {
+                edit: {
+                  editable: false
+                }
+              }
+            };
+          }
+        },
+
+        gwMenuQueryFields: {
+          type: Array,
+          value: [{
+            name: "routing",
+            operator: "eq",
+            value: "gateway"
+          }]
+        },
+
+        gwMenuItems: {
+          type: Array,
+          observer: '_gwMenuItemsChanged'
+        },
+
+        gwMenuId: {
+          type: String
+        },
+
+        gwMenuMetaUrl: {
+          type: String,
+          computed: '_computeMenuMetaUrl(gwMenuId)'
+        },
+
+        gwMetaData: {
+          type: Object,
+          observer: '_parseGwMetaData'
+        },
+
+        indMenuQueryFields: {
+          type: Array,
+          value: [{
+            name: "routing",
+            operator: "eq",
+            value: "ind"
+          }]
+        },
+
+        indMenuItems: {
+          type: Array,
+          observer: '_indMenuItemsChanged'
+        },
+
+        indMenuId: {
+          type: String
+        },
+
+        indMenuMetaUrl: {
+          type: String,
+          computed: '_computeMenuMetaUrl(indMenuId)'
+        },
+
+        indMetaData: {
+          type: Object,
+          observer: '_parseIndMetaData'
+        },
+
+        indQueryFields: {
+          type: Array,
+          value: [{
+            name: "gw_cd",
+            operator: "eq",
+            value: ""
+          }]
+        }
+      },
+
+      listeners: {
+        'gateway-grid.things-grid-row-data-select': '_findInd',
+        'gateway-grid.things-grid-data-changed': '_selectFirstGwData',
+        'gateway-grid.things-grid-configure': '_onBeforeGwGridConfigure',
+        'ind-grid.things-grid-configure': '_onBeforeIndGridConfigure'
+      },
+
+      /**
+       * 게이트웨이 그리드 구성 전
+       * *******
+       * @param {Object} e
+       */
+      _onBeforeGwGridConfigure: function (e) {
+        var cols = e.detail.columns;
+        cols.forEach(function (col) {
+          if (col.name === 'station_cd') {
+            var index = cols.indexOf(col);
+            var zcol = cols.splice(index, 1);
+            cols.unshift(zcol[0]);
+          } else if (col.name === 'updated_at' || col.name === 'updater') {
+            var index = cols.indexOf(col);
+            cols.splice(index, 1);
+          }
+        });
+      },
+
+      /**
+       * 지시기 그리드 구성 전
+       * *******
+       * @param {Object} e
+       */
+      _onBeforeIndGridConfigure: function (e) {
+        var cols = e.detail.columns;
+        cols.forEach(function (col) {
+          if (col.name === 'updated_at' || col.name == 'gw_cd' || col.name === 'updater') {
+            var index = cols.indexOf(col);
+            cols.splice(index, 1);
+          }
+        });
+      },
+
+      /**
+       * 게이트웨이 데이터 변경시 첫번째 항목 자동 선택
+       * *******
+       * @param {Object} e
+       */
+      _selectFirstGwData: function (e) {
+        if (e.detail.length !== 0) {
+          this._findInd({ detail: { gw_cd: e.detail[0].gw_cd } });
+        }
+      },
+
+      /**
+       * Gateway 메뉴의 아이디 값을 가져옴
+       * *******
+       * @param {Array} menuItems
+       */
+      _gwMenuItemsChanged: function (menuItems) {
+        this.gwMenuId = menuItems[0].id;
+      },
+
+      /**
+       * menuId로 부터 메뉴 상세 메타 데이터 조회를 위한 URL을 생성
+       * *******
+       * @param {String} menuId 메뉴 아이디
+       * @return {String} 메뉴 상세 메타 데이터 조회를 위한 URL
+       */
+      _computeMenuMetaUrl: function (menuId) {
+        return 'menus/' + menuId + '/menu_meta';
+      },
+
+      /**
+       * 서버로부터 받은 Gateway Meta Data를 파싱
+       * *******
+       * @param {Object} gwMetaData
+       */
+      _parseGwMetaData: function (gwMetaData) {
+        this.gwGridModel = this._parseGridModel(gwMetaData.columns);
+        this.gwGridColumns = this._parseGridColumns(gwMetaData.columns);
+      },
+
+      /**
+       * 지시기 메뉴의 아이디 값을 가져옴
+       * *******
+       * @param {Array} menuItems
+       */
+      _indMenuItemsChanged: function (menuItems) {
+        this.indMenuId = menuItems[0].id;
+      },
+
+      /**
+       * 서버로부터 받은 IND Meta Data를 파싱
+       * *******
+       * @param {Object} indMetaData
+       */
+      _parseIndMetaData: function (indMetaData) {
+        this.indGridModel = this._parseGridModel(indMetaData.columns);
+        this.indGridColumns = this._parseGridColumns(indMetaData.columns);
+      },
+
+      /**
+       * 지시기 정보 조회
+       * *******
+       * @param {Object} e
+       */
+      _findInd: function (e) {
+        var gw_cd = e.detail.gw_cd;
+        this.indQueryFields.forEach(function (field) {
+          if (field.name == 'gw_cd') {
+            field.value = gw_cd;
+          }
+        });
+
+        this.$['search-ind-items'].generateRequest();
+      }
+    });
+  </script>
+</dom-module>
