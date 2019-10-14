@@ -5,7 +5,7 @@ window.Things.THINGS_XMES_THEME_STYLES = {
         "paddingTop": 6,
         "paddingBottom": 7,
         "borderRight": null,
-        "fontName": "cj-font"
+        "fontName": "Noto Sans KR"
     },
     "grid": {
         "border": null

@@ -24,7 +24,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 height: 100%;
                 display: grid;
                 grid-template-rows: 5% 25% 25% 25% auto;
-                grid-template-columns: 15% 60% 20% 5%;
+                grid-template-columns: 10% 65% 20% 5%;
                 border-radius: 4px;
                 grid-column-gap: 1em;
                 grid-row-gap: 1em;
@@ -64,8 +64,9 @@ Copyright © HatioLab Inc. All rights reserved.
                 grid-row-end: 1;
                 grid-column-start: 2;
                 grid-column-end: 2;
-                font-size: 17px;
-                padding-top: 1.4em;
+                font-size: 15px;
+                padding-top: 1.2em;
+                text-align: center;
             }
 
             #sum-subtitle {
@@ -75,8 +76,9 @@ Copyright © HatioLab Inc. All rights reserved.
                 grid-row-end: 1;
                 grid-column-start: 3;
                 grid-column-end: 3;
-                font-size: 17px;
-                padding-top: 1.4em;
+                font-size: 15px;
+                padding-top: 1.2em;
+                text-align: center;
             }
 
             #july-text {
@@ -109,7 +111,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 grid-row-end: 2;
                 grid-column-start: 2;
                 grid-column-end: 2;
-                border: 2px solid black;
+                border: 1px solid #d8d9db;
             }
 
             #august-chart-container {
@@ -118,7 +120,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 grid-row-end: 3;
                 grid-column-start: 2;
                 grid-column-end: 2;
-                border: 2px solid black;
+                border: 1px solid #d8d9db;
             }
 
             #september-chart-container {
@@ -127,7 +129,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 grid-row-end: 4;
                 grid-column-start: 2;
                 grid-column-end: 2;
-                border: 2px solid black;
+                border: 1px solid #d8d9db;
             }
 
             #july-sum {
@@ -136,7 +138,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 grid-row-end: 2;
                 grid-column-start: 3;
                 grid-column-end: 3;
-                border: 2px solid black;
+                border: 1px solid #d8d9db;
             }
 
             #august-sum {
@@ -145,7 +147,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 grid-row-end: 3;
                 grid-column-start: 3;
                 grid-column-end: 3;
-                border: 2px solid black;
+                border: 1px solid #d8d9db;
             }
 
             #september-sum {
@@ -154,7 +156,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 grid-row-end: 4;
                 grid-column-start: 3;
                 grid-column-end: 3;
-                border: 2px solid black;
+                border: 1px solid #d8d9db;
             }
 
             div.bottom-section {
@@ -163,27 +165,35 @@ Copyright © HatioLab Inc. All rights reserved.
                 grid-column-start: 3;
                 grid-column-end: 3;
                 text-align: right;
-                color: silver;
+                color: #656565;
+                font-size: 13px;
             }
 
             span.month {
-                font-size: 45px;
-                color: silver;
+                font-size: 21px;
+                color: #3c3c3c;
                 text-align: center;
-                padding-top: 1.7em;
+                background-color: #facf67;
+                width: 62px;
+                height: 39px;
+                line-height: 41px;
+                border-radius: 8px;
+                margin-left: 53px;
+
             }
 
             span.sum-text {
                 font-size: 23px;
                 color: silver;
-                padding-top: 1em;
-                padding-left: 2em;
+                padding-top: 1.2em;
+                text-align: center;
             }
 
             span.percent {
                 font-size: 23px;
-                color: silver;
+                color: #3c3c3c;
                 text-align: center;
+                font-weight: bold;
             }
 
             div.arrow-up {
@@ -191,7 +201,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 width: 1em;
                 height: 1em;
                 display: inline;
-                padding-left: 1em;
+                padding-left: 0.5em;
             }
 
             div.arrow-down {
@@ -199,7 +209,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 width: 1em;
                 height: 1em;
                 display: inline;
-                padding-left: 1em;
+                padding-left: 0.5em;
             }
 
             span.chart-info {

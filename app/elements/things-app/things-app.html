@@ -42,7 +42,7 @@
         @apply --things-small-icon;
         float: right;
         margin-top: 1px;
-        margin-right: -37px;
+        margin-right: -40px;
       }
 
       div.flex-horizontal-with-ratios {
@@ -55,7 +55,7 @@
       }
 
       iron-pages * {
-        @apply --layout-flex
+        @apply --layout-flexå
       }
 
       ::shadow things-resource-combo.things-profile-dialog iron-icon {
@@ -69,7 +69,7 @@
       }
 
       #mainSection {
-        background-color: #434854
+        background-color: #fff
       }
 
       #mainSection:-webkit-full-screen {
@@ -132,6 +132,7 @@
       things-profile {
         background-color: transparent;
         margin-right: 10px;
+        margin-top: 3px;
       }
 
       paper-toolbar {
@@ -141,7 +142,7 @@
       paper-toolbar span.title {
         margin-top: 3px;
         margin-left: 0 !important;
-        color: #fff;
+        color: #585858;
         font-weight: bold;
         font-size: 22px;
         letter-spacing: -1px
@@ -151,8 +152,8 @@
         display: inline-block;
         margin-right: 7px;
         font-weight: normal;
-        color: #e4e4e4;
-        font-size: 22px;
+        color: #7b7b7b;
+        font-size: 16px;
         text-transform: capitalize;
       }
 
@@ -173,21 +174,29 @@
       }
 
       .header {
-        background-color: #354052;
-        padding-top: 10px;
+        background-color: #252222;
+        padding-top: 12px;
         padding-right: 12px;
         border-bottom: 1px solid rgba(0, 0, 0, .5);
         color: #fff;
+        padding-right:22px;
       }
 
       .header ::shadow iron-icon {
-        fill: #8cc9e7
+        fill: #f7af01;
+        margin-top: 5px ;
+        width:18px;
+        height:18px;
+        padding-left:6px;
       }
 
       .header ::shadow things-profile paper-icon-button {
         margin-right: 0;
         top: -1px;
       }
+
+
+
 
       @media screen and (max-width:760px) {
         paper-toolbar {
@@ -204,7 +213,12 @@
           font-size: 26px !important;
           font-weight: bold !important;
         }
+
+
+
+        }
       }
+
     </style>
 
     <iron-localstorage id="localStorage" name="{$ appName $}" value="{{storage}}"
@@ -229,6 +243,7 @@
       <paper-scroll-header-panel id="headerPanelMain" class="flex" main condenses keep-condensed-header>
         <!-- Layout Header -->
         <things-header id="thingsHeader" drawer-id="paperDrawerPanel" brand-image-id="">
+
         </things-header>
 
         <!-- Main Content -->

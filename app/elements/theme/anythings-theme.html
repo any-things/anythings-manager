@@ -17,10 +17,10 @@ Copyright © HatioLab Inc. All rights reserved.
                 background-color: rgba(0, 0, 0, .3);
             }
             --paper-button: {
-                font-family: 'cj-font';
+                font-family: 'Noto Sans KR';
             }
             --paper-item: {
-                font-family: 'cj-font';
+                font-family: 'Noto Sans KR';
             }
             --paper-input-container-underline-focus: {
                 background-color: var(--things-secondary-background-color);
@@ -90,26 +90,26 @@ Copyright © HatioLab Inc. All rights reserved.
                 display: inline-block;
                 font-size: 13px;
                 font-weight: bold;
-                color: var(--things-white-background-color);
+                color: var(--things-dark-text-color);
             }
 
             /* color style */
             --things-primary-background-color: #1f4c70;
-            --things-secondary-background-color: #49a8df;
+            --things-secondary-background-color: #f7af01;
             --things-primary-color: #1f4c70;
-            --things-secondary-color: #49a8df;
+            --things-secondary-color: #f7af01;
             --things-focus-background-color: #4caf50;
-            --things-whitegrey-background-color:#0288ca;
+            --things-whitegrey-background-color:#3c3c3c;
             --things-lightgrey-background-color:rgba(0, 0, 0, .1);
             --things-white-background-color:#fff;
             --things-error-color:var(--paper-deep-orange-700);
             --things-primary-text-color: #62707c;
             --things-dark-text-color: #585858;
-            --things-sidebar-text-color:#b3d2f6;
+            --things-sidebar-text-color:#fff;
             --things-button-text-color:#1d1e21;
             --things-dark-desc-text-color:#8b9eaf;
-            --things-sidebar-background-color:#2a3646;
-            
+            --things-sidebar-background-color:#312e2e;
+
 
 
             /* sidebar style */
@@ -330,35 +330,30 @@ Copyright © HatioLab Inc. All rights reserved.
                 border-left: 1px solid rgba(0, 0, 0, .1);
             }
             --things-button: {
-                background: #d0d7db; /* Old browsers */
-                background: linear-gradient(to bottom, #d0d7db 0%,#92a1a8 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-                border-top:1px solid #fff;border-bottom:3px solid #66767d;
+                background: #3c3c3c; /* Old browsers */
+                /* background: linear-gradient(to bottom, #d0d7db 0%,#92a1a8 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
                 @apply(--things-default-border-radius);
                 min-width: initial;
-                max-height:31px;
-                padding: 9px 20px 7px 20px;
+                max-height:35px;
+                padding: 9px 22px;
                 font-size: 14px;
-                font-family: 'cj-font';
-                color: var(--things-button-text-color);
-                text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.6);
+                font-family: 'Noto Sans KR';
+                color: #fff;
+                font-weight: bold;
+                box-shadow: none;
+                /* text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.6); */
             }
             --things-button-hover: {
                 @apply(--things-button);
-                background: #8ecb5c;
-                background: linear-gradient(to bottom, #8ecb5c 0%, #368913 100%);
-                border-top:1px solid #ccff99;border-bottom:3px solid #0b5f00;
+                background: #615a5a;
                 color: #fff;
                 font-weight:bold;
-                text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.6);
             }
             --things-button-active: {
                 @apply(--things-button);
-                background: #8ecb5c;
-                background: linear-gradient(to bottom, #368913 0%, #8ecb5c 100%);
-                border-top:3px solid #0b5f00;border-bottom:0;
+                background: #615a5a;
                 color: #fff;
                 font-weight:bold;
-                text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.6);
             }
 
 
@@ -423,6 +418,10 @@ Copyright © HatioLab Inc. All rights reserved.
               background-size:cover;
               background-repeat: no-repeat;
             }
+
+
+
+
         }
     </style>
   </template>

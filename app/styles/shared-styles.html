@@ -68,7 +68,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         margin:5px 15px 0 15px;
         @apply --things-default-border-radius;
       }
-      ::shadow paper-material.things-search-form label.things-input-field, ::shadow paper-material.things-search-form label.things-combo, ::shadow paper-material.things-search-form label.things-number-field, 
+      ::shadow paper-material.things-search-form label.things-input-field, ::shadow paper-material.things-search-form label.things-combo, ::shadow paper-material.things-search-form label.things-number-field,
       ::shadow paper-material.things-search-form label.things-resource-selector,::shadow paper-material.things-search-form label.things-tristate-radio,
       ::shadow paper-material.things-search-form label.things-resource-format-selector {
         color:#fff
@@ -87,9 +87,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ::shadow paper-fab.things-search-form{
         margin-right:-15px;
       }
-      ::shadow paper-fab iron-icon{
-        width:27px;height:27px
+
+      ::shadow paper-fab {
+        margin-right: 0px !important;
       }
+
+      ::shadow paper-fab iron-icon{
+        width:25px;height:25px;
+      }
+
+
+
       ::shadow things-button-bar paper-button.things-button:hover{
         @apply --things-button-hover;
       }
@@ -103,8 +111,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         color:var(--things-secondary-color);
       }
       ::shadow paper-material.things-search-form things-tristate-radio{
-        color:#9cdeff
+        color:#a0a0a0;
+        margin-top: 4px;
       }
+      ::shadow paper-material.things-search-form things-tristate-radio input{
+        margin-right:7px;
+      }
+
       ::shadow span.subtitle+things-resource-grid,::shadow span.subtitle+div things-resource-grid{
         padding-top:0 !important
       }
@@ -149,6 +162,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ::shadow paper-material.things-search-form  paper-item.things-combo{
         border-bottom: 1px solid rgba(0, 0, 0, .1) !important;
       }
+
+
     </style>
   </template>
 </dom-module>

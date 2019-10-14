@@ -56,13 +56,11 @@
     ::-webkit-scrollbar-track {background-color:transparent;}
     ::-webkit-scrollbar-thumb {background-color:rgba(0,0,0,.2);}
     ::-webkit-scrollbar-thumb:hover {background-color:#49a8df;}
-    @font-face {
-      font-family: 'cj-font';
-      src: url('./fonts/cj_onlyone_new_body_light_2350.woff');
-    }
+    @import url(//fonts.googleapis.com/earlyaccess/notosanskr.css);
+
     body{
       /* font-family:'Noto','Helvetica',Verdana, Tahoma, sans-serif !important; */
-      font-family:'cj-font','Noto','Helvetica',Verdana, Tahoma, sans-serif !important;
+      font-family: 'Noto Sans KR','Helvetica',Verdana, Tahoma, sans-serif !important;
     }
   </style>
 </head>
@@ -71,7 +69,7 @@
   <!-- build:remove -->
   <span id="browser-sync-binding"></span>
   <!-- endbuild -->
-  
+
   <!-- Elements wait on the page and are upgraded when elements/elements.html loads. -->
   <template id="domBind" is="dom-bind">
     <things-setting hidden></things-setting>

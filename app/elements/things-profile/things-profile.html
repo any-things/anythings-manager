@@ -40,6 +40,8 @@ Copyright © HatioLab Inc. All rights reserved.
 
 			#user-name {
 				cursor: pointer;
+				margin-left: 5px;
+				font-size: 14px;
 			}
 		</style>
 
@@ -48,18 +50,18 @@ Copyright © HatioLab Inc. All rights reserved.
 
 		<div>
 			<div hidden="[[!isMobile]]">[[labelMenu]]</div>
-			
-			<paper-icon-button 
+
+			<paper-icon-button
 				id="account"
 				icon="icons:account-circle"
 				title="[[labelProfile]]"
 				on-tap="open">
 			</paper-icon-button>
-			
+
 			<span id="user-name" on-tap="openUserLog" hidden="[[isMobile]]">{{globals.user.name}}</span>
 		</div>
-		
-		<things-profile-dialog 
+
+		<things-profile-dialog
 			id="dialog"
 			system="[[system]]"
 			role-list-url="[[roleListUrl]]"
@@ -119,7 +121,7 @@ Copyright © HatioLab Inc. All rights reserved.
 					type: String
 				},
 				/**
-				 * 로케일 설정을 숨기기 위한 옵션 
+				 * 로케일 설정을 숨기기 위한 옵션
 				 */
 				localeHidden: {
 					type: Boolean,
@@ -144,7 +146,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				var profileDialog = this.$['dialog'];
 				profileDialog.getSiteList();
 				profileDialog.open();
-				
+
 			},
 
 			openUserLog: function() {

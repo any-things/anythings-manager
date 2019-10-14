@@ -28,15 +28,16 @@ Custom property | Description | Default
         display: flex;
         overflow: hidden;
         outline: none;
-        --default-tab-background-color: #354052;
-        --default-tab-selected-color: #414f67;
-        --default-tab-hover-color: #22a6dc;
+
+        --default-tab-background-color: #252222;
+        --default-tab-selected-color: #3c3c3c;
+        --default-tab-hover-color: #2d2d2d;
         --tab-selected-text:#fff;
       }
       .tab-left {
         border-left:1px solid #000;
         width:9px;
-        background-color: #354052; 
+        background-color: #252222;
         z-index:1;
       }
       .tab-right {
@@ -50,16 +51,16 @@ Custom property | Description | Default
         white-space: nowrap;
         overflow: hidden;
         align-items: center;
-        color:rgba(255,255,255,.8);
+        color:rgba(255,255,255,.5);
       }
       .tab-title {
         text-overflow: ellipsis;
         overflow: hidden;
-        margin-top:18px;
+        margin-top:8px;
         flex: 1;
       }
       :host:hover *{
-        background-color:#22a6dc !important;
+        background-color:#2d2d2d !important;
         cursor:pointer;
       }
       :host(.selected) {
@@ -67,13 +68,12 @@ Custom property | Description | Default
       }
       :host(.selected) .tab-content {
         background: var(--default-tab-selected-color) !important;
-        border-bottom:2px solid #22a6dc;
+        border-bottom:2px solid #f7af01;
         color: #fff;
-        font-weight:bold;
       }
       :host(.selected) .tab-left {
         background: var(--default-tab-selected-color) !important;
-        border-bottom:2px solid #22a6dc;
+        border-bottom:2px solid #f7af01
       }
       :host(.selected) .tab-right,:host(.selected) .tab-title,:host(.selected) .tab-close {
         background: var(--default-tab-selected-color) !important;
@@ -83,7 +83,8 @@ Custom property | Description | Default
       }
       .tab-close {
         position:relative;
-        top:10px;left:-3px;
+        top:3px;
+        left:-5px;
         width: 18px;
         box-sizing: border-box;
         border-radius: 18px;
