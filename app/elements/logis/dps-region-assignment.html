@@ -1,0 +1,162 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<dom-module id="dps-region-assignment">
+   <template>
+      <style>
+         :host {
+            @apply --layout-flex;
+            @apply --layout-vertical;
+         }
+
+         things-resource-grid {
+            @apply --layout-vertical;
+            @apply --layout-flex;
+         }
+      </style>
+
+      <!-- Get Menu Meta Ajax -->
+      <things-ajax auto id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index" last-response="{{metaData}}">
+      </things-ajax>
+
+      <things-ajax
+         auto 
+         query-support
+         id="assignable-dps-region-ajax"
+         method="GET"
+         resource-url="[[menuInfo.resource_url]]"
+         params="[[params]]"
+         last-response="{{lastResponse}}">
+      </things-ajax>
+
+      <things-ajax
+         id="instruct-job-ajax"
+         method="POST"
+         content-type="application/json"
+         resource-url="job_batch/:id/instruct_job"
+         resource-id="[[batchId]]">
+      </things-ajax>
+
+      <things-resource-grid 
+         id="grid" 
+         config="[[gridConfig]]" 
+         model="[[gridModel]]" 
+         columns="[[gridColumns]]" 
+         buttons="[[buttons]]"
+         data="[[lastResponse.items]]" 
+         total-count="[[lastResponse.total]]" 
+         fixed-column-count="[[menuInfo.fixed_columns]]" 
+         grid-save-action="[[menuInfo.grid_save_url]]">
+      </things-resource-grid>
+   </template>
+
+   <script>
+      Polymer({
+         is: 'dps-region-assignment',
+
+         behaviors: [
+            Things.MsgBoxBehavior,
+            Things.NamedMetaBehavior
+         ],
+
+         properties: {
+            gridConfig: {
+               type: Object,
+               value: function () {
+                  return {
+                     options: {
+                        displayOptions: {
+                           fitStyle: 'fill'
+                        }
+                     }
+                  }
+               }
+            },
+
+            params: {
+               type: Object,
+               computed: '_paramMaker(selectFields, sortFields, queryFields)'
+            },
+
+            selectFields: {
+               type: String,
+               value: function () {
+                  return "region_cd,region_nm";
+               }
+            },
+
+            sortFields: {
+               type: Array,
+               value: function () {
+                  return [{ 
+                     field: "region_cd", 
+                     ascending: true
+                  }];
+               }
+            },
+
+            queryFields: {
+               type: Array,
+               value: function () {
+                  return [{ 
+                     name: "job_type", 
+                     operator: "eq", 
+                     value: "DPS"
+                  }, { 
+                     name: "virtual_flag", 
+                     operator: "eq", 
+                     value: "false" 
+                  }, {
+                     name: "batch_id",
+                     operator: "is_null"
+                  }];
+               }
+            }
+         },
+
+         listeners: {
+            "grid.job_instruct-btn-tap": "_onJobInstructBtnTap",
+            "instruct-job-ajax.things-ajax-response": "_onInstructResponse",
+            "instruct-job-ajax.things-ajax-error": "_onInstructResponse"
+         },
+
+         _paramMaker: function (select, sort, query) {
+            return {
+               select: select,
+               sort: JSON.stringify(sort),
+               query: JSON.stringify(query)
+            };
+         },
+         
+         _onJobInstructBtnTap: function (event) {
+            var ajax = this.$['instruct-job-ajax'];
+            var grid = this.$['grid'].grid;
+            ajax.body = grid.getCheckedRows().map(function (row) {
+               return row.getRowObject();
+            });
+
+            event.target.disabled = true;
+            grid.setOptions({
+               checkBar: {
+                  checkableCallback: function() { return false; },
+                  draggable: false
+               }
+            });
+
+            ajax.generateRequest();
+         },
+
+         _onInstructResponse: function () {
+            this.fire('things-dialog-close');
+         }
+      });
+   </script>
+</dom-module>
