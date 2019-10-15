@@ -19,18 +19,29 @@ Copyright © HatioLab Inc. All rights reserved.
     <style>
       :host {
         display: block;
+        background-color:var(--things-sidebar-background-color);
         top: 50px;
       }
       paper-button {
         /*background:url(/images/icon-brand.png) no-repeat transparent;*/
         @apply(--things-brand-btn);
-        background-size:45px 45px !important;
+        background-size:25px 25px !important;
+      }
+      .brand-name {
+        height:39px;
+        padding: 14px 0 0 10px;
+        color:#fff;
+        font-size:26px;
+        position:fixed;
+        top: -5px;
+        z-index: 1;
+        left:32px;
       }
     </style>
 
     <!-- menu toggle -->
     <paper-button id="sidebar-toggler" style$="background:url({{imageUrl}}) no-repeat transparent;"></paper-button>
-
+      <div class="brand-name">[[brandName]]</div>
     <paper-tooltip for="sidebar-toggler">
       <things-i18n-msg msgid="button.toggle_sidebar" auto>Toggle Sidebar</things-i18n-msg>
     </paper-tooltip>

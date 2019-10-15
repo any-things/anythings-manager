@@ -103,7 +103,13 @@
         border: none;
         background: url(/images/icon-collapse.png) 70% 50% no-repeat;
       }
+      .recent-pages-wrap {
+        display: grid; grid-template-columns:0px 1fr;
+      }
 
+      .recent-pages-wrap[active]{
+        display: grid; grid-template-columns:160px 1fr;
+      }
       things-alarm-badge {
         color: #6a83b8
       }
@@ -223,43 +229,42 @@
       last-response="{{domainAppObj}}">
     </things-ajax>
 
-    <paper-drawer-panel id="paperDrawerPanel" responsive-width="599px" drawer-width="160px">
+    <paper-drawer-panel id="paperDrawerPanel" responsive-width="599px" drawer-width="160px" narrow="{{isNarrow}}">
       <!-- Layout Sidebar -->
       <things-sidebar drawer menu-category="STANDARD" drawer-id='paperDrawerPanel' page-content-id='_content_'
         class="layout vertical" home-routing="[[globals.defaultScreen]]" current-menu="{{currentMenu}}" current-menu=1
         play-interval="10000" current-screen="{{currentScreen}}" resource-action="index"
         brand-name="[[domainAppObj.brand_name]]" menu-group="{{menuGroup}}"
         query-fields='[{"name":"category","operator":"noteq","value":"TERMINAL"}]'>
+        <!--  class="user-menu header" -->
+         <div class="header">
+          <!-- sidebar header toolbar menu start-->
+          <things-profile system="Things Suite" role-list-url="roles"
+            role-request-url="request_auths/account/auth/request" default-locale="ko-KR">
+          </things-profile>
+
+          <!-- setting -->
+          <things-setting></things-setting>
+
+          <!-- logout -->
+          <things-logout id="logout" logout-path="logout" icon="icons:power-settings-new"
+            on-things-logout-succeed="onThingsLogoutSuccess">
+          </things-logout>
+        </div>
       </things-sidebar>
 
       <!-- Main Area -->
       <paper-scroll-header-panel id="headerPanelMain" class="flex" main condenses keep-condensed-header>
         <!-- Layout Header -->
-        <things-header id="thingsHeader" drawer-id="paperDrawerPanel" brand-image-id="">
-
-        </things-header>
+        <!-- <things-header id="thingsHeader" drawer-id="paperDrawerPanel" brand-image-id=""></things-header> -->
 
         <!-- Main Content -->
         <div class="container flex-horizontal-with-ratios">
-          <!-- Layout Toolbar를 위한 DIV 추가 -->
           <div class="container flex vertical flex5child" id="mainSection">
-            <div style="display: grid; grid-template-columns: 1fr 140px;" hidden="[[recentPageHidden]]">
+            <div id="div-recent-page-wrap" active$="[[isNarrow]]" class="recent-pages-wrap" hidden="[[recentPageHidden]]">
+              <!-- Layout Toolbar를 위한 DIV 추가 -->
+              <things-sidebar-toggle drawer-id='paperDrawerPanel' brand-name=[[domainAppObj.brand_name]]></things-sidebar-toggle>
               <things-recent-page id="recent-page"></things-recent-page>
-
-              <div class="header">
-                <!-- sidebar header toolbar menu start-->
-                <things-profile system="Things Suite" role-list-url="roles"
-                  role-request-url="request_auths/account/auth/request" default-locale="ko-KR">
-                </things-profile>
-
-                <!-- setting -->
-                <things-setting></things-setting>
-
-                <!-- logout -->
-                <things-logout id="logout" logout-path="logout" icon="icons:power-settings-new"
-                  on-things-logout-succeed="onThingsLogoutSuccess">
-                </things-logout>
-              </div>
             </div>
 
             <paper-toolbar hidden="[[recentPageHidden]]">
