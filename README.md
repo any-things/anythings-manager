@@ -1,2 +1,2 @@
 # anythings-manager
-Anythings Manager UI
+Operato Manager UI
