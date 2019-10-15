@@ -1,0 +1,258 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+
+<link rel="import" href="../../bower_components/things-i18n-msg/things-i18n-msg.html">
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-input-field/things-input-field.html">
+<link rel="import" href="../../bower_components/things-resource-combo/things-code-combo.html">
+<link rel="import" href="../../bower_components/things-tristate-radio/things-tristate-radio.html">
+<link rel="import" href="../../bower_components/things-button/things-button-bar.html">
+
+<!--
+## stock-taking-popup
+
+	재고 실사 추가 팝업
+-->
+
+<dom-module id="stock-taking-popup">
+	<template>
+		<style>
+			:host {
+				display: block;
+				box-sizing: border-box;
+				@apply(--things-default-padding);
+				@apply(--layout-vertical);
+				@apply(--layout-flex);
+			}
+
+			.container {
+				@apply(--layout-vertical);
+				@apply(--layout-flex);
+			}
+
+			paper-toolbar {
+				background-color: var(--things-white-background-color);
+				height: 50px;
+				@apply(--things-tight-padding);
+			}
+
+			paper-toolbar::shadow #bottomBar {
+				height: 50px;
+				@apply(--layout-horizontal);
+				@apply(--layout-end-justified);
+				padding: 0 10px;
+			}
+		</style>
+
+		<things-i18n-msg auto msgid="label.dc_cd" msg="{{labelDcCd}}" hidden></things-i18n-msg>
+
+		<things-ajax id="create-stock-taking-ajax" resource-url="/stock_taking/start" resource-action="create">
+		</things-ajax>
+
+		<things-ajax auto id="region-ajax" resource-action="index" resource-url="region" query-fields="[[queryFields]]"
+			last-response="{{regions}}">
+		</things-ajax>
+
+		<things-i18n-msg auto msgid="label.region" msg="{{labelRegion}}" hidden></things-i18n-msg>
+		<things-i18n-msg auto msgid="button.select" msg="{{labelSelect}}" hidden></things-i18n-msg>
+
+		<span class="subtitle">[[labelRegion]] [[labelSelect]]</span>
+
+		<things-resource-grid id="grid" class="container" config="[[gridConfig]]" model="[[gridModel]]"
+			columns="[[gridColumns]]" data="[[regions.items]]" selected-row-data="{{resource}}" fixed-column-count="0"
+			buttons="[[gridButtons]]">
+		</things-resource-grid>
+
+		<paper-toolbar id="toolbar" justify='end'>
+			<div class="bottom">
+				<things-button-bar id="button-group" buttons="[[buttons]]"></things-button-bar>
+			</div>
+		</paper-toolbar>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'stock-taking-popup',
+
+			behaviors: [
+				Things.MsgBoxBehavior
+			],
+
+			properties: {
+				/**
+				 * Grid Config
+				 */
+				gridConfig: {
+					type: Object,
+					value: function () {
+						return {
+							options: {
+								checkBar: {
+									exclusive: false
+								}
+							}
+						}
+					}
+				},
+
+				/**
+						 * Grid Model
+						 */
+				gridModel: {
+					type: Array,
+					value: function () {
+						return [{
+							fieldName: 'id'
+						}, {
+							fieldName: 'region_cd'
+						}, {
+							fieldName: 'region_nm'
+						}, {
+							fieldName: 'region_type'
+						}];
+					}
+				},
+
+				/**
+						 * Grid Columns
+						 */
+				gridColumns: {
+					type: Array,
+					value: function () {
+						return [{
+							name: 'region_cd',
+							fieldName: 'region_cd',
+							width: 100,
+							header: {
+								text: Things.DataGlobal.t('label.region_cd')
+							}
+						}, {
+							name: 'region_nm',
+							fieldName: 'region_nm',
+							width: 125,
+							header: {
+								text: Things.DataGlobal.t('label.region_nm')
+							}
+						}, {
+							name: 'region_type',
+							fieldName: 'region_type',
+							width: 90,
+							header: {
+								text: Things.DataGlobal.t('label.region_type')
+							}
+						}];
+					}
+				},
+
+				/**
+				 * buttons of this screen
+				 *******
+				 * @type {Array}
+				 */
+				buttons: {
+					type: Array,
+					value: function () {
+						return [{
+							id: 'create-btn',
+							text: 'create'
+						}];
+					}
+				},
+
+				gridButtons: {
+					type: Array,
+					value: function () {
+						return [];
+					}
+				},
+
+				/**
+				 * query fields
+				 *******
+				 * @type {Array}
+				 */
+				queryFields: {
+					type: Array,
+					value: function () {
+						return [{
+							name: 'virtual_flag',
+							operator: 'is_false'
+						}];
+					}
+				}
+			},
+
+			listeners: {
+				'create-btn-tap': 'createStockTaking',
+				'create-stock-taking-ajax.things-ajax-response': '_afterStockTakingCreated'
+			},
+
+			/**
+			 * 재고 실사
+			 *******
+			 */
+			createStockTaking: function () {
+				var list = this.validateGrid();
+				if (list && list.length > 0) {
+					var ajax = this.$['create-stock-taking-ajax'];
+					ajax.body = list;
+					ajax.generateRequest();
+				}
+			},
+
+			/**
+			 * validate grid
+			 *******
+			 */
+			validateGrid: function () {
+				// 그리드에 선택된 정보가 하나 이상 있는지 체크
+				var list = this.gridCheckedRow();
+
+				if (!list || list.length == 0) {
+					var title = Things.DataGlobal.t('title.region_select');
+					var text = Things.DataGlobal.t('text.region_is_not_selected');
+					this.openInfoMsg({ type: 'error', title: title, text: text });
+					return null;
+				} else {
+					return list;
+				}
+			},
+
+			/**
+			 * 그리드에서 체크된 Row의 데이터를 리턴
+			 */
+			gridCheckedRow: function () {
+				var resourceGrid = this.$.grid;
+				var rows = resourceGrid.getGridObject().getCheckedRows();
+
+				if (rows && rows.length > 0) {
+					var ds = resourceGrid.getGridDataSet();
+					var dataList = [];
+					for (i = 0; i < rows.length; i++) {
+						var data = ds.getRowObject(rows[i].dataIndex());
+						dataList.push(data.region_cd);
+					}
+
+					return dataList;
+
+				} else {
+					return null;
+				}
+			},
+
+			/**
+			 * after Stock Taking Created
+			 *******
+			 * @param {Object} event
+			 */
+			_afterStockTakingCreated: function (event) {
+				var dialogCloseEvent = new CustomEvent('things-dialog-close');
+				document.dispatchEvent(dialogCloseEvent);
+			}
+		})
+	</script>
+</dom-module>

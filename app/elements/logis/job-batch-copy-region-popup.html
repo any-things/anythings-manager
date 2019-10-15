@@ -1,0 +1,458 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<!--
+## job-batch-copy-region-popup
+	DAS 주문 가공 호기 복사 팝업
+-->
+
+<dom-module id="job-batch-copy-region-popup">
+	<template>
+		<style>
+			:host {
+                @apply --layout-flex;
+                @apply --layout-vertical;
+                @apply --things-default-padding;
+
+                --grid-gap: 10px;
+            }
+
+            .subtitle:before {
+                content: '';
+                @apply --things-subtitle-icon;
+            }
+
+            #contents {
+                @apply --layout-flex;
+                display: grid;
+                grid-template: 
+                    "a a" auto 
+                    "d e" 15px
+                    "b c" minmax(120px, 1fr) / calc(50% - calc(var(--grid-gap) / 2)) calc(50% - calc(var(--grid-gap) / 2));
+                grid-gap: var(--grid-gap);
+            }
+
+            #contents>#resource-form { grid-area: a; }
+            #contents>#assigned-grid { grid-area: b; }
+            #contents>#assignable-grid { grid-area: c; }
+            #contents>#assigned-sub { grid-area: d; }
+            #contents>#assignable-sub { grid-area: e; }
+
+            things-resource-grid {
+                padding: 0px;
+            }
+        </style>
+
+        <things-ajax
+            id="region-copy-ajax"
+            method="POST"
+            content-type="application/json">
+        </things-ajax>
+
+        <things-ajax
+            id="grid-data-ajax" 
+            method="GET" 
+            content-type="application/json"
+            last-response="{{gridData}}">
+        </things-ajax>
+
+        <div id="contents">
+            <things-resource-form
+                id="resource-form"
+                form-fields="[[searchFormFields]]"
+                column-count=3
+                buttons="">
+            </things-resource-form>
+
+            <span id="assigned-sub" class="subtitle">[[subtitles.assigned]]</span>
+            <things-resource-grid 
+                id="assigned-grid"
+                config="[[assignedGridConfig]]" 
+                model="[[assignedGridModel]]" 
+                columns="[[assignedGridColumns]]"
+                data="[[gridData.assign]]"
+                fixed-column-count="0">
+            </things-resource-grid>
+        
+            <span id="assignable-sub" class="subtitle">[[subtitles.assignable]]</span>
+            <things-resource-grid 
+                id="assignable-grid"
+                config="[[assignableGridConfig]]" 
+                model="[[assignableGridModel]]" 
+                columns="[[assignableGridColumns]]"
+                data="[[gridData.empty]]"
+                buttons="[[buttons]]"
+                fixed-column-count="0">
+            </things-resource-grid>
+        </div>
+	</template>
+
+	<script>
+		Polymer({
+            is: 'job-batch-copy-region-popup',
+            
+            behaviors: [
+                Things.MsgBoxBehavior
+            ],
+
+			properties: {
+                // 라벨용
+                subtitles: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            assigned: Things.DataGlobal.t("title.assigned"),
+                            assignable: Things.DataGlobal.t("title.assignable")
+                        } 
+                    }
+                },
+                buttons: {
+                    type: Array,
+                    value: [{
+                        id: 'copy',
+                        text: 'copy'
+                    }]
+                },
+                assignedGridConfig: {
+                    type: Object,
+                    value: function () {
+                        return {
+                            displayOptions: {
+                                fitStyle: 'fill'
+                            },
+                            checkBar: {
+                                visible: false
+                            }
+                        }
+                    }
+                },
+                assignableGridConfig: {
+                    type: Object,
+                    value: function () {
+                        return {
+                            displayOptions: {
+                                fitStyle: 'fill'
+                            }
+                        };
+                    }
+                },
+                assignedGridModel: {
+                    type: Array,
+                    value: function () {
+                        return [{
+                            fieldName: "domain_id"
+                        }, {
+                            fieldName: "id"
+                        }, {
+                            fieldName: "region_cd"
+                        }, {
+                            fieldName: "region_nm"
+                        }, {
+                            fieldName: "relay_seq"
+                        }, {
+                            fieldName: "job_type"
+                        }, {
+                            fieldName: "assign_loc_type"
+                        }, {
+                            fieldName: "region_type"
+                        }, {
+                            fieldName: "virtual_flag"
+                        }, {
+                            fieldName: "batch_id"
+                        }];
+                    }
+                },
+                assignableGridModel: {
+                    type: Array,
+                    value: function () {
+                        return [{
+                            fieldName: "domain_id"
+                        }, {
+                            fieldName: "id"
+                        }, {
+                            fieldName: "region_cd"
+                        }, {
+                            fieldName: "region_nm"
+                        }, {
+                            fieldName: "relay_seq"
+                        }, {
+                            fieldName: "job_type"
+                        }, {
+                            fieldName: "assign_loc_type"
+                        }, {
+                            fieldName: "region_type"
+                        }, {
+                            fieldName: "virtual_flag"
+                        }, {
+                            fieldName: "clone_group_id"
+                        }];
+                    }
+                },
+                assignedGridColumns: {
+                    type: Array,
+                    value: function () {
+                        return [{
+                            fieldName: "domain_id",
+                            name: "domain_id",
+                            header: Things.DataGlobal.t("label.domain_id"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "id",
+                            name: "id",
+                            header: Things.DataGlobal.t("label.id"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "region_cd",
+                            name: "region_cd",
+                            header: Things.DataGlobal.t("label.region_cd"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false
+                        }, {
+                            fieldName: "region_nm",
+                            name: "region_nm",
+                            header: Things.DataGlobal.t("label.region_nm"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false
+                        }, {
+                            fieldName: "relay_seq",
+                            name: "region_seq",
+                            header: Things.DataGlobal.t("label.region_seq"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "job_type",
+                            name: "job_type",
+                            header: Things.DataGlobal.t("label.job_type"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "assign_loc_type",
+                            name: "assign_loc_type",
+                            header: Things.DataGlobal.t("label.assign_loc_type"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "region_type",
+                            name: "region_type",
+                            header: Things.DataGlobal.t("label.region_type"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "virtual_flag",
+                            name: "virtual_flag",
+                            header: Things.DataGlobal.t("label.virtual_flag"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "batch_id",
+                            name: "batch_id",
+                            header: Things.DataGlobal.t("label.batch_id"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }];
+                    }
+                },
+                assignableGridColumns: {
+                    type: Array,
+                    value: function () {
+                        return [{
+                            fieldName: "domain_id",
+                            name: "domain_id",
+                            header: Things.DataGlobal.t("label.domain_id"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "id",
+                            name: "id",
+                            header: Things.DataGlobal.t("label.id"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "region_cd",
+                            name: "region_cd",
+                            header: Things.DataGlobal.t("label.region_cd"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false
+                        }, {
+                            fieldName: "region_nm",
+                            name: "region_nm",
+                            header: Things.DataGlobal.t("label.region_nm"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false
+                        }, {
+                            fieldName: "relay_seq",
+                            name: "region_seq",
+                            header: Things.DataGlobal.t("label.region_seq"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "job_type",
+                            name: "job_type",
+                            header: Things.DataGlobal.t("label.job_type"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "assign_loc_type",
+                            name: "assign_loc_type",
+                            header: Things.DataGlobal.t("label.assign_loc_type"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "region_type",
+                            name: "region_type",
+                            header: Things.DataGlobal.t("label.region_type"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "virtual_flag",
+                            name: "virtual_flag",
+                            header: Things.DataGlobal.t("label.virtual_flag"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }, {
+                            fieldName: "clone_group_id",
+                            name: "clone_group_id",
+                            header: Things.DataGlobal.t("label.clone_group_id"),
+                            styles: {
+                                textAlignment: "center"
+                            },
+                            editable: false,
+                            visible: false
+                        }];
+                    }
+                }
+			},
+
+            listeners: {
+                'assignable-grid.copy-tap': '_copyBtnTapped',
+                'resource-form.things-form-configure': '_infoFormConfigure',
+                'resource-form.things-form-configured': '_infoFormConfigured',
+                'region-copy-ajax.things-ajax-request': '_copyRequested',
+                'region-copy-ajax.things-ajax-response': '_copyResponsed'
+            },
+
+            _infoFormConfigure: function (event) {
+                event.detail = event.detail.map(function(element) {
+                    delete element.op;
+                    delete element.searchForm;
+                    delete tabindex;
+                    switch(element.type) {
+                        case "date-picker":
+                        case "text":
+                        case undefined:                        
+                            element.type = undefined;
+                            element.userData = {
+                                readonly: true
+                            };
+                        break;
+                    }
+                    return element;
+                });
+            },
+
+            /**
+			 * 정보 폼 구성 완료 시 ...
+			 ***************
+			 * @param {Object} event
+			 */
+            _infoFormConfigured: function (event) {
+                this.$['resource-form'].setFormData(this.formData);
+                this.$["resource-form"].querySelectorAll("things-combo").forEach(function (element) {
+                    element.readonly=true;
+                }); // combobox 수정불가 옵션
+                this.$['grid-data-ajax'].resourceUrl = "job_batch/" + this.formData.id + "/clone_region";
+                this.$['grid-data-ajax'].generateRequest();
+            },
+
+            _copyBtnTapped: function(event) {
+                // 체크행들 데이터 가져오기
+                var checkedRows = this.$['assignable-grid'].grid.getCheckedRows().map(function (row) {
+                    return row.getRowObject();
+                });
+                if (checkedRows.length === 0) return;
+                // 데이터 POST
+                var regionCopyAjax = this.$['region-copy-ajax'];
+                regionCopyAjax.resourceUrl = 'job_batch/' + this.formData.id + '/clone_region';
+                regionCopyAjax.body = checkedRows;
+                regionCopyAjax.generateRequest();
+            },
+
+            _copyRequested: function(event) {
+                this.openConfirmMsg({
+                    type: 'info',
+                    title: Things.DataGlobal.t("button.copy_region"),
+                    text: Things.DataGlobal.t("text.Server Processing"),
+                    showConfirmButton: false
+                });
+            },
+
+            _copyResponsed: function(event) {
+                this.openConfirmMsg({
+                    type: 'success',
+                    title: Things.DataGlobal.t('button.copy_region'),
+                    text: Things.DataGlobal.t('text.Success to Process')
+                }, function() {
+                    this.fire('things-dialog-close');
+                }.bind(this));
+            }
+		})
+	</script>
+</dom-module>
