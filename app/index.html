@@ -1,106 +1,121 @@
-<!doctype html>
+<!DOCTYPE html>
 
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content="Anythings" />
+    <title>Anythings</title>
 
-<head>
-  <meta charset="utf-8">
-  <meta name="description" content="">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Anythings">
-  <title>Anythings</title>
+    <!-- Place favicon.ico in the `app/` directory -->
 
-  <!-- Place favicon.ico in the `app/` directory -->
+    <!-- Chrome for Android theme color -->
+    <meta name="theme-color" content="#2E3AA1" />
 
-  <!-- Chrome for Android theme color -->
-  <meta name="theme-color" content="#2E3AA1">
+    <!-- Web Application Manifest -->
+    <link rel="manifest" href="manifest.json" />
 
-  <!-- Web Application Manifest -->
-  <link rel="manifest" href="manifest.json">
+    <!-- Tile color for Win8 -->
+    <meta name="msapplication-TileColor" content="#3372DF" />
 
-  <!-- Tile color for Win8 -->
-  <meta name="msapplication-TileColor" content="#3372DF">
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Anythings" />
+    <!--link rel="icon" sizes="192x192" href="images/icon-brand.png"-->
 
-  <!-- Add to homescreen for Chrome on Android -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="application-name" content="Anythings">
-  <!--link rel="icon" sizes="192x192" href="images/icon-brand.png"-->
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Anythings" />
+    <!--link rel="apple-touch-icon" href="images/icon-brand.png"-->
 
-  <!-- Add to homescreen for Safari on iOS -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Anythings">
-  <!--link rel="apple-touch-icon" href="images/icon-brand.png"-->
+    <link rel="icon" href="images/shortcut.ico" />
+    <link rel="shortcut icon" href="images/shortcut.ico" />
 
+    <!-- Tile icon for Win8 (144x144) -->
+    <meta name="msapplication-TileImage" content="images/icon-brand.png" />
 
-  <link rel="icon" href="images/cj.ico">
-  <link rel="shortcut icon" href="images/cj.ico">
+    <!-- build:js bower_components/webcomponentsjs/webcomponents-lite.min.js -->
+    <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <!-- endbuild -->
 
-  <!-- Tile icon for Win8 (144x144) -->
-  <meta name="msapplication-TileImage" content="images/icon-brand.png">
-
-  <!-- build:js bower_components/webcomponentsjs/webcomponents-lite.min.js -->
-  <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
-  <!-- endbuild -->
-
-  <!-- Because this project uses vulcanize this should be your only html import
+    <!-- Because this project uses vulcanize this should be your only html import
        in this file. All other imports should go in elements.html -->
-  <link rel="import" href="bower_components/things-libraries/things-libraries.html">
-  <script src="licenses/things/things-lic.js?rev=@@version"></script>
-  <script src="bower_components/things-license-checker-min/things-license-checker.min.js?rev=@@version"></script>
-  <link rel="import" id="elementsBaseBundle" href="elements/elements.html?rev=@@version">
+    <link
+      rel="import"
+      href="bower_components/things-libraries/things-libraries.html"
+    />
+    <script src="licenses/things/things-lic.js?rev=@@version"></script>
+    <script src="bower_components/things-license-checker-min/things-license-checker.min.js?rev=@@version"></script>
+    <link
+      rel="import"
+      id="elementsBaseBundle"
+      href="elements/elements.html?rev=@@version"
+    />
 
-  <!-- For shared styles, shared-styles.html import in elements.html -->
-  <style is="custom-style" include="shared-styles"></style>
-  <style>
-    ::-webkit-scrollbar {width:5px;}
-    ::-webkit-scrollbar-track {background-color:transparent;}
-    ::-webkit-scrollbar-thumb {background-color:rgba(0,0,0,.2);}
-    ::-webkit-scrollbar-thumb:hover {background-color:#49a8df;}
-    @import url(//fonts.googleapis.com/earlyaccess/notosanskr.css);
+    <!-- For shared styles, shared-styles.html import in elements.html -->
+    <style is="custom-style" include="shared-styles"></style>
+    <style>
+      ::-webkit-scrollbar {
+        width: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background-color: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #49a8df;
+      }
+      @import url(//fonts.googleapis.com/earlyaccess/notosanskr.css);
 
-    body{
-      /* font-family:'Noto','Helvetica',Verdana, Tahoma, sans-serif !important; */
-      font-family: 'Noto Sans KR','Helvetica',Verdana, Tahoma, sans-serif !important;
-    }
-  </style>
-</head>
+      body {
+        /* font-family:'Noto','Helvetica',Verdana, Tahoma, sans-serif !important; */
+        font-family: "Noto Sans KR", "Helvetica", Verdana, Tahoma, sans-serif !important;
+      }
+    </style>
+  </head>
 
-<body unresolved>
-  <!-- build:remove -->
-  <span id="browser-sync-binding"></span>
-  <!-- endbuild -->
+  <body unresolved>
+    <!-- build:remove -->
+    <span id="browser-sync-binding"></span>
+    <!-- endbuild -->
 
-  <!-- Elements wait on the page and are upgraded when elements/elements.html loads. -->
-  <template id="domBind" is="dom-bind">
-    <things-setting hidden></things-setting>
-    <things-i18n-src></things-i18n-src>
+    <!-- Elements wait on the page and are upgraded when elements/elements.html loads. -->
+    <template id="domBind" is="dom-bind">
+      <things-setting hidden></things-setting>
+      <things-i18n-src></things-i18n-src>
 
-    <template is="dom-if" if="thingsApp">
-      <things-app id="stdapp" block-right-click></things-app>
+      <template is="dom-if" if="thingsApp">
+        <things-app id="stdapp" block-right-click></things-app>
+      </template>
+
+      <paper-toast
+        id="caching-complete"
+        duration="6000"
+        text="Caching complete! This app will work offline."
+      >
+      </paper-toast>
+
+      <platinum-sw-register
+        auto-register
+        clients-claim
+        skip-waiting
+        base-uri="bower_components/platinum-sw/bootstrap"
+        on-service-worker-installed="(displayInstalledToast)"
+      >
+        <platinum-sw-cache
+          default-cache-strategy="fastest"
+          cache-config-file="cache-config.json"
+        >
+        </platinum-sw-cache>
+      </platinum-sw-register>
     </template>
 
-    <paper-toast
-      id="caching-complete"
-      duration="6000"
-      text="Caching complete! This app will work offline.">
-    </paper-toast>
-
-    <platinum-sw-register
-      auto-register
-      clients-claim
-      skip-waiting
-      base-uri="bower_components/platinum-sw/bootstrap"
-      on-service-worker-installed="displayInstalledToast">
-      <platinum-sw-cache
-        default-cache-strategy="fastest"
-        cache-config-file="cache-config.json">
-      </platinum-sw-cache>
-    </platinum-sw-register>
-  </template>
-
-  <!-- build:js scripts/app.js -->
-  <script src="scripts/app.js"></script>
-  <!-- endbuild-->
-</body>
-
+    <!-- build:js scripts/app.js -->
+    <script src="scripts/app.js"></script>
+    <!-- endbuild-->
+  </body>
 </html>

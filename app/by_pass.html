@@ -10,15 +10,19 @@ Copyright © HatioLab Inc. All rights reserved.
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="shortcut icon" href="./images/icon-cj.png" type="image/x-icon">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="shortcut icon"
+      href="./images/icon-shortcut.png"
+      type="image/x-icon"
+    />
     <title id="title">이동중...</title>
     <style>
-          @import url(//fonts.googleapis.com/earlyaccess/notosanskr.css);
+      @import url(//fonts.googleapis.com/earlyaccess/notosanskr.css);
       html {
-        font-family: 'Noto Sans KR';
+        font-family: "Noto Sans KR";
         display: flex;
         height: 100%;
       }
@@ -60,9 +64,9 @@ Copyright © HatioLab Inc. All rights reserved.
       </div>
     </div>
     <script>
-      window.addEventListener('load', event => {
-        var siteNameKey = 'site_name=';
-        var subdomainKey = 'subdomain=';
+      window.addEventListener("load", event => {
+        var siteNameKey = "site_name=";
+        var subdomainKey = "subdomain=";
         // var otpKey = 'otp=';
         // var domainIdKey = 'domain_id=';
         // var serverUrlKey = 'server_url=';
@@ -70,17 +74,17 @@ Copyright © HatioLab Inc. All rights reserved.
         var siteName, subdomain;
 
         var params = decodeURIComponent(location.search);
-        if(params.startsWith('?')) {
+        if (params.startsWith("?")) {
           params = params.substr(1, params.length);
         }
 
-        params = params.split('&');
+        params = params.split("&");
 
         params.forEach(param => {
-          if(param.indexOf(siteNameKey) === 0) {
-            siteName = param.replace(siteNameKey, '');
+          if (param.indexOf(siteNameKey) === 0) {
+            siteName = param.replace(siteNameKey, "");
           } else if (param.indexOf(subdomainKey === 0)) {
-            subdomain = param.replace(subdomainKey, '');
+            subdomain = param.replace(subdomainKey, "");
           }
           //   else if (param.indexOf(otpKey) === 0) {
           //   token = param.replace(otpKey, '');
@@ -103,65 +107,68 @@ Copyright © HatioLab Inc. All rights reserved.
         var currentLocale = getLocale();
         var message;
 
-        if(currentLocale.startsWith('ko')) {
+        if (currentLocale.startsWith("ko")) {
           message = `${siteName}(으)로 이동중입니다.`;
-        } else if (currentLocale.startsWith('en')) {
-          message = `Now moving to ${siteName}.`
-        } else if (currentLocale.startsWith('zh')) {
-          message = `Now moving to ${siteName}.`
+        } else if (currentLocale.startsWith("en")) {
+          message = `Now moving to ${siteName}.`;
+        } else if (currentLocale.startsWith("zh")) {
+          message = `Now moving to ${siteName}.`;
         } else {
           message = `${siteName}으로 이동중 입니다.`;
         }
 
-        document.getElementById('msg').textContent = message;
-        document.getElementById('title').textContent = message;
+        document.getElementById("msg").textContent = message;
+        document.getElementById("title").textContent = message;
 
         var times = 1;
         setInterval(function() {
           var dotCnt = times % 3;
           var tempMessage = message;
 
-          for(var i = 0; i < dotCnt; i++) {
-            tempMessage += '.';
+          for (var i = 0; i < dotCnt; i++) {
+            tempMessage += ".";
           }
 
-          document.getElementById('msg').textContent = tempMessage;
+          document.getElementById("msg").textContent = tempMessage;
           times++;
         }, 500);
       }
 
       function getLocale() {
-        var currentLocale = JSON.parse(localStorage.getItem('setting.locale'));
-        if(!currentLocale) {
+        var currentLocale = JSON.parse(localStorage.getItem("setting.locale"));
+        if (!currentLocale) {
           currentLocale = navigator.language.toLowerCase();
-        };
+        }
 
         return currentLocale;
       }
 
       function clearUserInfo() {
-        localStorage.removeItem('setting.user');
+        localStorage.removeItem("setting.user");
       }
 
       function setServerUrl(serverUrl) {
-        localStorage.setItem('setting.baseUrl', JSON.stringify(serverUrl + '/rest'));
+        localStorage.setItem(
+          "setting.baseUrl",
+          JSON.stringify(serverUrl + "/rest")
+        );
       }
 
       function reqeustOTA(token, domainId, serverUrl) {
         var xhr = new XMLHttpRequest();
         xhr.withCredentials = true;
 
-        xhr.open('GET', serverUrl + '/rest/domains', true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('Authorization-Type', 'ota');
-        xhr.setRequestHeader('Authorization-Key', token);
-        xhr.setRequestHeader('x-domain-id', domainId);
+        xhr.open("GET", serverUrl + "/rest/domains", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Authorization-Type", "ota");
+        xhr.setRequestHeader("Authorization-Key", token);
+        xhr.setRequestHeader("x-domain-id", domainId);
 
         xhr.onreadystatechange = function(event) {
-          if(this.readyState === 4 && this.status == 200) {
+          if (this.readyState === 4 && this.status == 200) {
             redirectAfterResponse();
           }
-        }
+        };
 
         xhr.send();
       }
@@ -172,7 +179,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
       function redirectDomainSite(subdomain) {
         setTimeout(() => {
-          location.href = location.origin + '/' + subdomain;
+          location.href = location.origin + "/" + subdomain;
         }, 3000);
       }
     </script>
