@@ -65,13 +65,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         color:#888
       }
       ::shadow things-search-form{
-        margin:5px 15px 0 15px;
+        margin:15px 15px 0 15px;
+        background-color: var(--things-primary-color);
         @apply --things-default-border-radius;
       }
       ::shadow paper-material.things-search-form label.things-input-field, ::shadow paper-material.things-search-form label.things-combo, ::shadow paper-material.things-search-form label.things-number-field,
       ::shadow paper-material.things-search-form label.things-resource-selector,::shadow paper-material.things-search-form label.things-tristate-radio,
       ::shadow paper-material.things-search-form label.things-resource-format-selector {
-        color:#fff
+        color:var(--things-dark-text-color);
       }
       ::shadow paper-material.things-search-form iron-icon.things-combo, ::shadow paper-material.things-search-form .picker,::shadow paper-material.things-search-form iron-icon.things-resource-selector,
       ::shadow paper-material.things-search-form iron-icon.things-resource-format-selector {
@@ -111,7 +112,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         color:var(--things-secondary-color);
       }
       ::shadow paper-material.things-search-form things-tristate-radio{
-        color:#a0a0a0;
+        color:#fff;
         margin-top: 4px;
       }
       ::shadow paper-material.things-search-form things-tristate-radio input{

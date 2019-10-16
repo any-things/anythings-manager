@@ -89,21 +89,20 @@ Copyright © HatioLab Inc. All rights reserved.
             --things-subtitle: {
                 display: inline-block;
                 font-size: 13px;
-                font-weight: bold;
-                color: var(--things-dark-text-color);
+                color: #fff;
             }
 
             /* color style */
-            --things-primary-background-color: #1f4c70;
-            --things-secondary-background-color: #f7af01;
-            --things-primary-color: #1f4c70;
-            --things-secondary-color: #f7af01;
+            --things-primary-background-color: #252222; /*darkgray*/
+            --things-secondary-background-color: #f7af01; /*yellow*/
+            --things-primary-color: #dcb33e; /*pastel yellow*/
+            --things-secondary-color: #f7af01; /*yellow*/
             --things-focus-background-color: #4caf50;
             --things-whitegrey-background-color:#3c3c3c;
             --things-lightgrey-background-color:rgba(0, 0, 0, .1);
             --things-white-background-color:#fff;
             --things-error-color:var(--paper-deep-orange-700);
-            --things-primary-text-color: #62707c;
+            --things-primary-text-color: #ababab;
             --things-dark-text-color: #585858;
             --things-sidebar-text-color:#fff;
             --things-button-text-color:#1d1e21;
@@ -330,7 +329,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 border-left: 1px solid rgba(0, 0, 0, .1);
             }
             --things-button: {
-                background: #3c3c3c; /* Old browsers */
+                background: rgba(255,255,255,.1); /* Old browsers */
                 /* background: linear-gradient(to bottom, #d0d7db 0%,#92a1a8 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
                 @apply(--things-default-border-radius);
                 min-width: initial;
@@ -345,7 +344,7 @@ Copyright © HatioLab Inc. All rights reserved.
             }
             --things-button-hover: {
                 @apply(--things-button);
-                background: #615a5a;
+                background: var(--things-primary-color);
                 color: #fff;
                 font-weight:bold;
             }

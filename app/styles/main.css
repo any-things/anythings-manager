@@ -7,3 +7,5 @@
 .focus-target {
   outline: none;
 }
+
+.c3 line,.c3 path{fill:none;stroke:#fff;}

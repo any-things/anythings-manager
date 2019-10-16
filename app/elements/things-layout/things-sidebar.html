@@ -41,16 +41,17 @@ Copyright © HatioLab Inc. All rights reserved.
       :host {
         display: block;
         background-color:var(--things-sidebar-background-color);
-        color:#fff
+        color:#fff;
       }
       paper-scroll-header-panel {
         height: 100%;
         @apply --things-sidebar-panel;
+        border-right:1px solid #252222;
       }
       .brand {
         height:39px;
         padding: 14px 0 0 10px;
-        font-size:26px
+        background-color: var(--things-primary-background-color);
       }
       paper-button {
         display: block;
@@ -72,7 +73,7 @@ Copyright © HatioLab Inc. All rights reserved.
       paper-button iron-icon {
         @apply --things-small-icon;
         margin-top: -2px;
-        margin-right: 4px
+        margin-right: 4px;
       }
       paper-listbox {
         background: -moz-linear-gradient(top, #312e2e 20%, #252222 100%); /* FF3.6-15 */
@@ -95,7 +96,7 @@ Copyright © HatioLab Inc. All rights reserved.
         display: block !important;
         min-height:25px !important;
         font-size: 13px !important;
-        color:rgba(255,255,255,.6);
+        color: var(--things-primary-text-color);
       }
 
       paper-item:hover{
