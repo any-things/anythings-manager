@@ -14,7 +14,7 @@ window.Things.THINGS_XMES_THEME_STYLES = {
         "background": "#ffffff",
         "color": "#f0f0f0",
         "head": {
-            "borderRight": "#fff",
+            "borderRight": "#ffffffff",
             "shapeColor": "#cccccc",
             "shapeHoveredColor": "#ffffff"
         },
@@ -25,10 +25,10 @@ window.Things.THINGS_XMES_THEME_STYLES = {
         "item": {
             "color": "#001",
             "background": "#fff",
-            "borderRight": "#fff"
+            "borderRight": "#ffffffff"
         },
         "itemInner": {
-            "borderRight": "#fff"
+            "borderRight": "#ffffffff"
         }
     },
     "body": {
@@ -36,44 +36,43 @@ window.Things.THINGS_XMES_THEME_STYLES = {
         "borderRight": null
     },
     "header": {
-        "background": "#f1f4f7",
-        "color": "#6d839a",
-        "borderTop":"#e6b7c9d5,1",
-        "borderRight":"#b3b7c9d5,1",
-        "borderBottom": "#b3acbac4,1",
-        "borderLeft":"#f2f3f7,1",
+        "background": "#fff3f3f3",
+        "color": "#ff222222",
+        // "borderTop":"#e6b7c9d5,1",
+        "borderRight":"#ffd8d9db",
+        "borderBottom": "#ffd8d9db",
+        "borderLeft":"#fff2f3f7,1",
         // "borderBottom": "#1A000000",
         // "borderRight": null,
         // "borderTop": null,
         "paddingTop": 5,
         "paddingBottom": 5,
-        "selectedBackground": null,
-        "selectedColor": "#78bf4c",
-        "hoveredBackground": null,
-        "hoveredColor": "#49a8df",
+        "selectedBackground": "#ffc9c9c9",
+        "selectedColor": null,
+        "hoveredBackground": "#ffe5e4e4",
+        "hoveredColor": null,
         "fontSize": 12,
         "fontBold": false,
         "fontName": "arial",
 
         "group": {
-            "background": "#d8eaf4",
+            "background": "#ffd7d7d7",
             "color": "#ff333333",
-            "borderBottom": "#7e9eb3",
-            "borderRight": "#aecee3",
+            "borderBottom": "#ffc5c5c5",
+            "borderRight": "#ffaecee3",
             "borderTop": null,
-            "selectedBackground": "#cadbe4",
-            "hoveredBackground": "#eafbff",
+            "selectedBackground": "#ffcadbe4",
+            "hoveredBackground": "#ffbebebe",
         }
     },
     "footer": {
-        "background": "#eef0f4",
-        "foreground": "#000000",
-        "borderTop": "#a0a0a0,1",
+        "background": "#ffeef0f4",
+        "foreground": "#ff000000",
+        "borderTop": "#ffffa0a0,1",
         "borderLeft": "#ffffffff,1",
         "borderRight": "#ffa0a0a0,1",
-
         "iconLocation": "leftSide",
-        "border": "#88888888,1",
+        "border": "#ffc5c5c5,1",
         "iconAlignment": "center",
         "iconOffset": "0",
         "selectedBackground": "#ff696969",
@@ -92,12 +91,12 @@ window.Things.THINGS_XMES_THEME_STYLES = {
     },
     "rowGroup": {
         "header": {
-            "background": "#5f9fc4",
-            "color": "#fff",
-            "borderBottom": "#2083bd",
+            "background": "#ffbebebe",
+            "color": "#ffffffff",
+            "borderBottom": "#ff2083bd",
             "borderTop": null, // "#ffffffff,1",
             "borderRight": "#ff85a8d0,1",
-            "shapeColor": "#ff003f4f"
+            "shapeColor": "#ff505050"
         },
         "footer": {},
         "expander": {
@@ -105,7 +104,7 @@ window.Things.THINGS_XMES_THEME_STYLES = {
         },
         "head": {
             "iconLocation": "leftSide",
-            "border": "#ff313539,1",
+            "border": "#ffff313539,1",
             "iconAlignment": "center",
             "selectedBackground": "#ffff0000",
             "contentFit": "auto",
@@ -114,7 +113,7 @@ window.Things.THINGS_XMES_THEME_STYLES = {
             "selectionDisplay": "inversion",
             "iconPadding": "0",
             "hoveredMaskBackground": "linear,#fffff8a9,#ffffd75e,90",
-            "hoveredMaskBorder": "#ffff0000,1",
+            "hoveredMaskBorder": "#ffc5c5c5,1",
             "figureBackground": "#ff000000",
             "paddingBottom": "2",
             "paddingTop": "2",
@@ -132,15 +131,15 @@ window.Things.THINGS_XMES_THEME_STYLES = {
             "borderTop2": "#ff79828b,1",
             "borderRight2": "#ff9099a3,1",
 
-            "background": "#eef0f4",
-            "foreground": "#000000",
-            "borderTop": "#a0a0a0,1",
+            "background": "#ffeef0f4",
+            "foreground": "#ff000000",
+            "borderTop": "#ffa0a0,1",
             "borderLeft": "#ffffffff,0",
             "borderRight": "#ffa0a0a0,1",
 
             "paddingRight": "2",
             "iconLocation": "leftSide",
-            "border": "#88888888,1",
+            "border": "#ffc5c5c5,1",
             "selectedForeground": "#ffffffff",
             "iconAlignment": "center",
             "inactiveForeground": "#ff808080",
@@ -150,8 +149,8 @@ window.Things.THINGS_XMES_THEME_STYLES = {
             "lineAlignment": "center",
             "inactiveBackground": "#ffd3d3d3",
             "selectionDisplay": "mask",
-            "hoveredMaskBorder": "#335292f7,1",
-            "hoveredMaskBackground": "#1f5292f7",
+            "hoveredMaskBorder": "#ff5292f7,1",
+            "hoveredMaskBackground": "#ff5292f7",
             "contentFit": "auto",
             "paddingTop": "2",
             "figureBackground": "#ff008800",
@@ -160,20 +159,20 @@ window.Things.THINGS_XMES_THEME_STYLES = {
             "iconIndex": "0"
         },
         "indent": { // ?
-            "background": "#d1e4f0",
-            "borderRight": "#bedef3, 1",
-            "borderBottom": "#ff0000, 0"
+            "background": "#ffd1e4f0",
+            "borderRight": "#ffbedef3, 1",
+            "borderBottom": "#ffc5c5c5, 1"
         }
     },
     "rowIndicator": {
-        "background": "#0D000000",
-        "color": "#666",
-        "hoveredBackground": "#71cffa",
+        "background": "#ffebebeb",
+        "color": "#ff535353",
+        "hoveredBackground": "#fff7af01",
         "borderLeft": null,
         "borderRight": null,
-        "borderBottom": "#1A000000,1",
-        "borderTop": "#1A000000,0",
-        "shapeColor": "#fff",
+        "borderBottom": "#ffc5c5c5,1",
+        "borderTop": "#ffc5c5c5,0",
+        "shapeColor": "#f7af01",
         "iconLocation": "leftSide",
         "border": "#ff313539,1",
         "iconAlignment": "center",
@@ -190,25 +189,25 @@ window.Things.THINGS_XMES_THEME_STYLES = {
         "lineAlignment": "center",
         "iconIndex": "0",
         "state": { // ?
-            "background": "#f8f8f8",
+            "background": "#fff8f8f8",
             "paddingRight": "2",
 
             "iconLocation": "leftSide",
-            "border": "#ff313539,1",
+            "border": "#ffc5c5c5,1",
             "selectedForeground": "#ffffffff",
             "iconAlignment": "center",
             "foreground": "#ff000000",
             "inactiveForeground": "#ff808080",
-            "borderBottom": "#ffaab1b8,1",
+            "borderBottom": "#ffc5c5c5,1",
             "textAlignment": "center",
             "selectedBackground": "#ff696969",
             "lineAlignment": "center",
             "inactiveBackground": "#ffd3d3d3",
             "iconOffset": "0",
             "selectionDisplay": "mask",
-            "hoveredMaskBorder": "#335292f7,1",
+            "hoveredMaskBorder": "#ff656565,1",
             "iconPadding": "0",
-            "hoveredMaskBackground": "#1f5292f7",
+            "hoveredMaskBackground": "#ff656565",
             "contentFit": "auto",
             "paddingTop": "2",
             "borderRight": "#ffaab1b8,1",
@@ -220,11 +219,11 @@ window.Things.THINGS_XMES_THEME_STYLES = {
     "checkBar": {
         "background": null,
         "borderRight": null,
-        "borderBottom": "#1A000000,1",
+        "borderBottom": "#ffc5c5c5,1",
 
         "paddingRight": "2",
         "iconLocation": "leftSide",
-        "border": "#4d000000,1",
+        "border": "#ffc5c5c5,1",
         "selectedForeground": "#ffffffff",
         "iconAlignment": "center",
         "foreground": "#ff555555",
@@ -235,28 +234,28 @@ window.Things.THINGS_XMES_THEME_STYLES = {
         "inactiveBackground": "#ffd3d3d3",
         "iconOffset": "0",
         "selectionDisplay": "mask",
-        "hoveredMaskBorder": "#335292f7,1",
+        "hoveredMaskBorder": "#fff7af01,1",
         "iconPadding": "0",
-        "hoveredMaskBackground": "#1f5292f7",
+        "hoveredMaskBackground": "#f7af01",
         "contentFit": "auto",
         "paddingTop": "2",
         "figureBackground": "#ff008e00",
         "paddingBottom": "2",
         "iconIndex": "1",
         "head": {
-            "shapeInactiveColor": "#B349a8df",
-            "shapeColor": "#1e495e",
+            "shapeInactiveColor": "#fff7af01",
+            "shapeColor": "#fff7af01",
             "iconLocation": "leftSide",
-            "border": "#ff000000,0",
+            "border": "#ffc5c5c5,0",
             "iconAlignment": "center",
             "contentFit": "auto",
             "inactiveBackground": "#ffd3d3d3",
             "iconOffset": "0",
             "selectionDisplay": "mask",
             "iconPadding": "0",
-            "hoveredMaskBackground": "#1f5292f7",
-            "hoveredMaskBorder": "#335292f7,1",
-            "figureBackground": "#ff008e00",
+            "hoveredMaskBackground": "#fff7af01",
+            "hoveredMaskBorder": "#fff7af01,1",
+            "figureBackground": "#ff4b4b4b",
             "paddingBottom": "2",
             "paddingTop": "2",
             "paddingRight": "2",
@@ -267,8 +266,8 @@ window.Things.THINGS_XMES_THEME_STYLES = {
         }
     },
     "selection": {
-        "background": "#10000000",
-        "border": "#e64a19,1"
+        "background": "#fff7af01",
+        "border": "#ffe64a19,0"
     },
     "tree": {
         "expander": {
@@ -278,13 +277,13 @@ window.Things.THINGS_XMES_THEME_STYLES = {
     "scrollBar": {
         "background": "#1A000000",
         "button": {
-            "shapeColor": "#66000000",
-            "shapeSelectedColor": "#49a8df"
+            "shapeColor": "#26000000",
+            "shapeSelectedColor": "#ffdcb33e"
         },
         "thumb": {
-            "background": "#33000000",
-            "hoveredBackground": "#49a8df",
-            "selectedBackground": "#49a8df"
+            "background": "#1A000000",
+            "hoveredBackground": "#ffdcb33e",
+            "selectedBackground": "#ffdcb33e"
         }
     }
 };
@@ -303,6 +302,6 @@ window.Things.THINGS_XMES_THEME_OPTIONS = {
         thumbWidth:10,
     },
     display: {
-        focusBorder: "#73c900,1px"
+        focusBorder: "#ffecac13,1px"
     }
 }

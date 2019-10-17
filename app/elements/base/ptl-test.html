@@ -56,34 +56,34 @@ Copyright © HatioLab Inc. All rights reserved.
                "a b c" 1fr / 2fr 2fr 3fr;
             grid-gap: 15px;
         }
-		
-		#selecting-block>#rack-gw { 
-			 grid-area: a; 
+
+		#selecting-block>#rack-gw {
+			 grid-area: a;
 		}
-		
-		#selecting-block>#zone { 
-			 grid-area: b; 
+
+		#selecting-block>#zone {
+			 grid-area: b;
 		}
-		
-		#selecting-block>#cell { 
-			grid-area: c; 
+
+		#selecting-block>#cell {
+			grid-area: c;
 		}
-        #option-block { 
-			grid-area: opt; 
+        #option-block {
+			grid-area: opt;
 		}
-		
+
 		#option-block>#options {
             background: white;
             border-radius: 5px;
 			overflow-y: scroll;
             padding: 0 var(--normal-gap) 0 var(--normal-gap);
         }
-        #sent-msg-block { 
-			grid-area: sen; 
+        #sent-msg-block {
+			grid-area: sen;
 		}
-		
-		#received-msg-block { 
-			grid-area: rec; 
+
+		#received-msg-block {
+			grid-area: rec;
 		}
 		paper-button {
 			min-width: 25px;
@@ -101,14 +101,14 @@ Copyright © HatioLab Inc. All rights reserved.
         .contents-with-subtitle>.contents {
             grid-area: b;
         }
-		
+
 		/***********************/
-        .margin-zero { 
-			margin: 0; 
+        .margin-zero {
+			margin: 0;
 		}
-		
-		.padding-zero { 
-			padding: 0; 
+
+		.padding-zero {
+			padding: 0;
 		}
         .option {
             display: grid;
@@ -133,7 +133,7 @@ Copyright © HatioLab Inc. All rights reserved.
         }
         .description {
             height: auto;
-            color: #AAA;
+            color: #5d5d5d;
             font-size: 10pt;
         }
         .things-combo-field {
@@ -240,7 +240,7 @@ Copyright © HatioLab Inc. All rights reserved.
                		<span class="subtitle">
 						<paper-button id="reg-gw-swap-btn" class="margin-zero padding-zero" on-click="swapDistributeType">[[firstGridTitle]]</paper-button>
 					</span>
-					
+
 					<!-- 호기 (게이트웨이) 그리드 -->
 					<things-resource-grid
 						id="rack-gw-grid"
@@ -259,13 +259,13 @@ Copyright © HatioLab Inc. All rights reserved.
 						grid-save-action="[[menuInfo.grid_save_url]]">
                		</things-resource-grid>
             	</div>
-				
+
 				<div id="zone" class="contents-with-subtitle">
 					<!-- 작업 영역 (장비 영역) 서브 타이틀 -->
                		<span class="subtitle">
 						<paper-button id="work-device-swap-btn" class="margin-zero padding-zero" on-click="swapZoneType">[[secondGridTitle]]</paper-button>
 					</span>
-					
+
 					<!-- 작업 영역 (장비 영역) 그리드 -->
 					<things-resource-grid
 						id="zone-grid"
@@ -283,11 +283,11 @@ Copyright © HatioLab Inc. All rights reserved.
 						grid-save-action="[[menuInfo.grid_save_url]]">
                		</things-resource-grid>
 				</div>
-				
+
             	<div id="cell" class="contents-with-subtitle">
 					<!-- 셀 서브 타이틀 -->
                		<span class="subtitle">[[subtitles.cell]]</span>
-					
+
 					<!-- 셀 그리드 -->
 					<things-resource-grid
 						id="cell-grid"
@@ -307,19 +307,19 @@ Copyright © HatioLab Inc. All rights reserved.
                		</things-resource-grid>
             	</div>
 			</div>
-			 
+
         	<div id="option-block" class="contents-with-subtitle">
 				<!-- 표시기 설정 옵션 서브 타이틀 -->
 				<span class="subtitle">[[subtitles.option]]</span>
-				
+
 				<!-- 표시기 설정 옵션 폼 -->
             	<div id="options"></div>
          	</div>
-		 
+
 			<div id="sent-msg-block" class="contents-with-subtitle">
 				<!-- 요청 메시지 서브 타이틀 -->
             	<span class="subtitle">[[subtitles.sentMessage]]</span>
-				
+
 				<!-- 요청 메시지 에디터 -->
 				<things-editor-script
 					theme="ace/theme/monokai"
@@ -332,11 +332,11 @@ Copyright © HatioLab Inc. All rights reserved.
 					readonly>
             	</things-editor-script>
 			</div>
-			 
+
          	<div id="received-msg-block" class="contents-with-subtitle">
 				<!-- 응답 메시지 서브 타이틀 -->
             	<span class="subtitle">[[subtitles.receivedMessage]]</span>
-				
+
 				<!-- 응답 메시지 에디터 -->
 				<things-editor-script
 					theme="ace/theme/monokai"
@@ -350,7 +350,7 @@ Copyright © HatioLab Inc. All rights reserved.
             	</things-editor-script>
          	</div>
 		</div>
-		  
+
     	<paper-toolbar>
          	<div class="bottom">
             	<things-button-bar id="button-group" buttons="[[buttons]]"></things-button-bar>
@@ -366,8 +366,8 @@ Copyright © HatioLab Inc. All rights reserved.
          	],
          	properties: {
         		/**
-         		 * @description 그리드 기본 옵션 
-				 ************************ 
+         		 * @description 그리드 기본 옵션
+				 ************************
          		 * @type {Object}
          		 */
 				gridConfig: {
@@ -392,7 +392,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
         		/**
          		 * @description 호기 그리드 모델
-				 ************************ 
+				 ************************
          		 * @type {Array}
          		 */
 				rackGridModel: {
@@ -410,7 +410,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
         		/**
          		 * @description 호기 그리드 컬럼
-				 ************************ 
+				 ************************
          		 * @type {Array}
          		 */
 				rackGridColumns: {
@@ -441,7 +441,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
         		/**
          		 * @description 게이트웨이 그리드 모델
-				 ************************ 
+				 ************************
          		 * @type {Array}
          		 */
 				gatewayGridModel: {
@@ -459,7 +459,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 게이트웨이 그리드 컬럼
-				 ************************ 
+				 ************************
          		 * @type {Array}
          		 */
 				gatewayGridColumns: {
@@ -490,7 +490,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 작업 영역 그리드 모델
-				 ************************ 
+				 ************************
          		 * @type {Array}
          		 */
 				workZoneGridModel: {
@@ -504,7 +504,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 작업 영역 그리드 컬럼
-				 ************************ 
+				 ************************
          		 * @type {Array}
          		 */
 				workZoneGridColumns: {
@@ -525,7 +525,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 장비 영역 그리드 모델
-				 ************************ 
+				 ************************
          		 * @type {Array}
          		 */
 				deviceZoneGridModel: {
@@ -539,7 +539,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 장비 영역 그리드 컬럼
-				 ************************ 
+				 ************************
          		 * @type {Array}
          		 */
 				deviceZoneGridColumns: {
@@ -560,7 +560,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 셀 그리드 모델
-				 ************************ 
+				 ************************
          		 * @type {Array}
          		 */
 				cellGridModel: {
@@ -578,7 +578,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 셀 그리드 컬럼
-				 ************************ 
+				 ************************
          		 * @type {Array}
          		 */
 				cellGridColumns: {
@@ -611,8 +611,8 @@ Copyright © HatioLab Inc. All rights reserved.
 				},
 
        			/**
-         		 * @description 서브 타이틀 정보  
-				 ************************ 
+         		 * @description 서브 타이틀 정보
+				 ************************
          		 * @type {Object}
          		 */
 				subtitles: {
@@ -632,8 +632,8 @@ Copyright © HatioLab Inc. All rights reserved.
 				},
 
        			/**
-         		 * @description 호기 또는 게이트웨이 선택  
-				 ************************ 
+         		 * @description 호기 또는 게이트웨이 선택
+				 ************************
          		 * @type {String}
          		 */
 				firstSelect: {
@@ -645,7 +645,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 호기 또는 게이트웨이 그리드 타이틀
-				 ************************ 
+				 ************************
          		 * @type {String}
          		 */
 				firstGridTitle: {
@@ -655,7 +655,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 호기 또는 게이트웨이 그리드 선택된 행
-				 ************************ 
+				 ************************
          		 * @type {Object}
          		 */
 				firstGridSelectedRow: {
@@ -664,7 +664,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 작업 존 또는 장비 존 선택
-				 ************************ 
+				 ************************
          		 * @type {Object}
          		 */
 				secondSelect: {
@@ -675,8 +675,8 @@ Copyright © HatioLab Inc. All rights reserved.
 				},
 
        			/**
-         		 * @description 작업 존 또는 장비 존 그리드 서브 타이틀 
-				 ************************ 
+         		 * @description 작업 존 또는 장비 존 그리드 서브 타이틀
+				 ************************
          		 * @type {String}
          		 */
 				secondGridTitle: {
@@ -685,8 +685,8 @@ Copyright © HatioLab Inc. All rights reserved.
 				},
 
        			/**
-         		 * @description 작업 존 또는 장비 존 그리드 선택된 행 
-				 ************************ 
+         		 * @description 작업 존 또는 장비 존 그리드 선택된 행
+				 ************************
          		 * @type {Object}
          		 */
 				secondGridSelectedRow: {
@@ -694,18 +694,18 @@ Copyright © HatioLab Inc. All rights reserved.
 				},
 
        			/**
-         		 * @description 가공 전 존 데이터 
-				 ************************ 
+         		 * @description 가공 전 존 데이터
+				 ************************
          		 * @type {Object}
          		 */
 				zoneDataRaw: {
 					type: Object,
 					observer: "_zoneDataRawChanged"
 				},
-				
+
        			/**
          		 * @description 대상 표시기 그룹 타입 (호기별, 게이트웨이별, 존별, 로케이션 각각)
-				 ************************ 
+				 ************************
          		 * @type {Object}
          		 */
 				targetType: {
@@ -713,8 +713,8 @@ Copyright © HatioLab Inc. All rights reserved.
 				},
 
        			/**
-         		 * @description 전송 메시지 
-				 ************************ 
+         		 * @description 전송 메시지
+				 ************************
          		 * @type {Object}
          		 */
 				sentMessage: {
@@ -724,7 +724,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 그리드 별 REST 호출할 URL
-				 ************************ 
+				 ************************
          		 * @type {Object}
          		 */
 				resourceUrls: {
@@ -741,8 +741,8 @@ Copyright © HatioLab Inc. All rights reserved.
 				},
 
        			/**
-         		 * @description 표시기 설정 옵션 
-				 ************************ 
+         		 * @description 표시기 설정 옵션
+				 ************************
          		 * @type {Array}
          		 */
             	options: {
@@ -866,7 +866,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
        			/**
          		 * @description 서버에서 받은 설정값을 인풋 폼의 개수에 맞춰 인풋 폼 각각에 나눠서 적용한다.
-				 ************************ 
+				 ************************
          		 * @type {Object}
          		 */
             	makeFormDataFunctions: {
@@ -886,7 +886,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
 				/**
          		 * @description 서버로 설정값을 올릴 때, 폼에 들어있는 값들을 모아 하나의 값으로 만든다.
-				 ************************ 
+				 ************************
          		 * @type {Object}
          		 */
             	getValueFunctions: {
@@ -977,7 +977,7 @@ Copyright © HatioLab Inc. All rights reserved.
 					ajax.generateRequest();
 				}
 			},
-			
+
 			/**
 			 * 로케이션 정보를 조회하여 존 코드를 그룹화
 			 ****************************
@@ -1097,7 +1097,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			},
 
 			/**
-			 * 점등/소등 구분하여 동작 
+			 * 점등/소등 구분하여 동작
 			 ****************************
 			 * @param {Object} operation
 			 */
@@ -1165,15 +1165,15 @@ Copyright © HatioLab Inc. All rights reserved.
 					ajax.body = body;
 					ajax.generateRequest();
 				} else {
-					this.openInfoMsg({ 
-						type: 'info', 
-						title: Things.DataGlobal.t('text.NOTHING_SELECTED') 
+					this.openInfoMsg({
+						type: 'info',
+						title: Things.DataGlobal.t('text.NOTHING_SELECTED')
 					});
 				}
 			},
 
 			/**
-			 * 표시기 점등 요청 
+			 * 표시기 점등 요청
 			 ****************************
 			 * @param {Object} event
 			 */
@@ -1182,7 +1182,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			},
 
 			/**
-			 * 표시기 소등 요청 
+			 * 표시기 소등 요청
 			 ****************************
 			 * @param {Object} event
 			 */
@@ -1191,7 +1191,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			},
 
 			/**
-			 * LED 바 점등 요청 
+			 * LED 바 점등 요청
 			 ****************************
 			 * @param {Object} event
 			 */
@@ -1200,7 +1200,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			},
 
 			/**
-			 * LED 바 소등 요청 
+			 * LED 바 소등 요청
 			 ****************************
 			 * @param {Object} event
 			 */
@@ -1209,7 +1209,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			},
 
 			/**
-			 * 옵션 리스트 생성 
+			 * 옵션 리스트 생성
 			 ****************************
 			 */
          	createOptions: function () {
@@ -1221,10 +1221,10 @@ Copyright © HatioLab Inc. All rights reserved.
          	},
 
 			/**
-			 * 옵션 생성 
+			 * 옵션 생성
 			 ****************************
 			 * @param {Object} option
-			 * @return {Object} 입력 폼 
+			 * @return {Object} 입력 폼
 			 */
          	createOption: function (option) {
             	var row = this.create('div');
@@ -1239,7 +1239,7 @@ Copyright © HatioLab Inc. All rights reserved.
                		getValue: this.getValueFunctions[option.getValue || 'one'],
                		separator: option.separator
 				};
-			
+
 				let form = this.createInputForm(option.formFields, props);
             	row.appendChild(form);
             	return row;
@@ -1250,7 +1250,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			 ****************************
 			 * @param {Array} formFields
 			 * @param {Array} properties
-			 * @return {Object} 입력 폼 
+			 * @return {Object} 입력 폼
 			 */
          	createInputForm: function (formFields, properties) {
             	let wrapper = this.create('div', properties);
@@ -1262,12 +1262,12 @@ Copyright © HatioLab Inc. All rights reserved.
                      		form = this.create('things-number-field', formFields[i].properties);
                      		form.setAttribute('class', 'option-input things-field style-scope ' + this.is);
 						} break;
-						  
+
                   		case 'combo': {
                      		form = this.create('things-combo', formFields[i].properties);
                      		form.setAttribute('class', 'option-input things-combo-field style-scope ' + this.is);
 						} break;
-						  
+
                   		case 'code-combo': {
                      		form = this.create('things-combo', formFields[i].properties);
                      		form.setAttribute('class', 'option-input things-combo-field style-scope ' + this.is);
@@ -1281,12 +1281,12 @@ Copyright © HatioLab Inc. All rights reserved.
                         		},
                         		comboElement: form
 							};
-							 
+
                      		let codeAjax = this.create('things-ajax', props);
                      		// add event listener
                      		this.listen(codeAjax, 'things-ajax-response', '_setComboItems');
 						} break;
-						  
+
 						case 'resource-code': {
 							form = this.create('things-combo', formFields[i].properties);
 							form.setAttribute('class', 'option-input things-combo-field style-scope ' + this.is);
@@ -1300,7 +1300,7 @@ Copyright © HatioLab Inc. All rights reserved.
 								nameField: formFields[i].properties.nameField || 'name',
 								descriptionField: formFields[i].properties.descriptionField || 'description'
 							};
-								
+
 							let codeAjax = this.create('things-ajax', props);
 							// add event listener
 							this.listen(codeAjax, 'things-ajax-response', '_setResourceCodeItems');
@@ -1311,7 +1311,7 @@ Copyright © HatioLab Inc. All rights reserved.
                      		form.setAttribute('class', 'option-input things-field style-scope ' + this.is);
                   		} break;
                		}
-					   
+
 					wrapper.appendChild(form);
             	}
             	return wrapper;
@@ -1321,7 +1321,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			 * code-combo 타입 전용) 콤보 박스 아이템 설정
 			 ****************************
 			 * @param {Object} e
-			 */ 
+			 */
          	_setComboItems: function (e) {
             	e.target.comboElement.items = e.detail.items;
          	},
@@ -1330,7 +1330,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			 * resource-code 타입 전용) 콤보 박스 아이템 설정
 			 ****************************
 			 * @param {Object} e
-			 */ 
+			 */
 			_setResourceCodeItems: function (e) {
 				e.target.comboElement.items = e.detail.items.map(function (item, index) {
 					return {
@@ -1339,12 +1339,12 @@ Copyright © HatioLab Inc. All rights reserved.
 					};
 				});
 			},
-			
+
 			/**
 			 * 사용자가 옵션에 적은 값들을 반환
 			 ****************************
 			 * @return {Object} 옵션 값
-			 */ 
+			 */
 			getOptionValues: function () {
 				var inputWrappers = this.$['options'].querySelectorAll('.input-wrapper');
 				var values = {};
