@@ -26,27 +26,41 @@ Copyright © HatioLab Inc. All rights reserved.
             @apply --things-default-padding;
             display: grid;
             grid-template:
-               "pro" auto
-               "gri" 1fr
-               "bar" auto / calc(100% - calc(10px / 2));
+               "pro"auto "gri"1fr "bar"auto / calc(100% - calc(10px / 2));
             grid-gap: 10px;
          }
-         #contents>#grid { grid-area: gri; }
-         #contents>#editor { grid-area: edi; }
-         #contents>#bar { grid-area: bar; }
+
+         #contents>#grid {
+            grid-area: gri;
+         }
+
+         #contents>#editor {
+            grid-area: edi;
+         }
+
+         #contents>#bar {
+            grid-area: bar;
+         }
+
          #contents>#progress-rate {
             grid-area: pro;
             display: grid;
             grid-template:
-               "a" auto
-               "b" auto / 1fr;
+               "a"auto "b"auto / 1fr;
          }
-         #contents>#progress-rate>p { grid-area: a; }
-         #contents>#progress-rate>paper-progress { grid-area: b; width: unset;}
+
+         #contents>#progress-rate>p {
+            grid-area: a;
+         }
+
+         #contents>#progress-rate>paper-progress {
+            grid-area: b;
+            width: unset;
+         }
 
          #progress-bar {
             --paper-progress-active-color: var(--paper-light-blue-500);
-    		   --paper-progress-secondary-color: var(--paper-light-blue-100);
+            --paper-progress-secondary-color: var(--paper-light-blue-100);
 
             --paper-progress-transition-duration: 1s;
             --paper-progress-transition-timing-function: ease;
@@ -54,9 +68,14 @@ Copyright © HatioLab Inc. All rights reserved.
          }
 
          /* 바깥 여백 제거 */
-         .margin-zero { margin: 0px; }
+         .margin-zero {
+            margin: 0px;
+         }
+
          /* 안쪽 여백 제거 */
-         .padding-zero { padding: 0px; }
+         .padding-zero {
+            padding: 0px;
+         }
 
          paper-toolbar::shadow #bottomBar {
             @apply --layout-horizontal;
@@ -65,58 +84,36 @@ Copyright © HatioLab Inc. All rights reserved.
       </style>
 
       <!-- 메타 호출 ajax -->
-      <things-ajax
-         auto
-         id="resource-meta"
-         resource-url="[[menuMetaUrl]]"
-         resource-action="index"
+      <things-ajax auto id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index"
          last-response="{{metaData}}">
       </things-ajax>
 
       <!-- 주문 취소 ajax -->
-      <things-ajax
-         id="cancel-receive-ajax"
-         resource-id="[[receiptSummaryId]]"
-         resource-url="job_batch/receive_orders/cancel/:id"
-         method="post">
+      <things-ajax id="cancel-receive-ajax" resource-id="[[receiptSummaryId]]"
+         resource-url="job_batch/receive_orders/cancel/:id" method="post">
       </things-ajax>
 
       <!-- 주문 수신 시작 ajax -->
-      <things-ajax
-         id="start-receiving-ajax"
-         resource-id="[[receiptSummaryId]]"
-         resource-url="job_batch/receive_orders/start"
-         resource-action="update_multiple">
+      <things-ajax id="start-receiving-ajax" resource-id="[[receiptSummaryId]]"
+         resource-url="job_batches/receive_batches/start" resource-action="update_multiple">
       </things-ajax>
 
       <!-- 진행 상황 ajax -->
-      <things-ajax
-         id="progress-status-ajax"
-         resource-id="[[receiptSummaryId]]"
-         resource-url="job_batch/receive_orders/rate/:id"
-         resource-action="get">
+      <things-ajax id="progress-status-ajax" resource-id="[[receiptSummaryId]]"
+         resource-url="job_batch/receive_orders/rate/:id" resource-action="get">
       </things-ajax>
 
       <div id="contents">
          <div id="progress-rate">
             <p class="margin-zero" hidden=[[hideProgressBar]]>[[progressRate]]% [[progressMessage]]</p>
-            <paper-progress id="progress-bar" class="transiting" value="[[progressRate]]" hidden=[[hideProgressBar]]></paper-progress>
+            <paper-progress id="progress-bar" class="transiting" value="[[progressRate]]" hidden=[[hideProgressBar]]>
+            </paper-progress>
          </div>
 
-         <things-resource-grid
-            id="grid"
-            class="padding-zero"
-            config="[[gridConfig]]"
-            model="[[gridModel]]"
-            columns="[[gridColumns]]"
-            buttons=""
-            paginatable=[[menuInfo.pagination]]
-            show-paginator=[[menuInfo.pagination]]
-            current-page="{{page}}"
-            limit="{{limit}}"
-            data="[[items]]"
-            total-count="[[itemCount]]"
-            fixed-column-count="[[menuInfo.fixed_columns]]"
+         <things-resource-grid id="grid" class="padding-zero" config="[[gridConfig]]" model="[[gridModel]]"
+            columns="[[gridColumns]]" buttons="" paginatable=[[menuInfo.pagination]]
+            show-paginator=[[menuInfo.pagination]] current-page="{{page}}" limit="{{limit}}" data="[[items]]"
+            total-count="[[itemCount]]" fixed-column-count="[[menuInfo.fixed_columns]]"
             grid-save-action="[[menuInfo.grid_save_url]]">
          </things-resource-grid>
 
@@ -138,15 +135,15 @@ Copyright © HatioLab Inc. All rights reserved.
          ],
 
          properties: {
-           /**
-            * 프로그레스 바 숨기기
-            **************
-            * @type Number
-            */
-           hideProgressBar: {
-              type: Boolean,
-              value: false
-           },
+            /**
+             * 프로그레스 바 숨기기
+             **************
+             * @type Number
+             */
+            hideProgressBar: {
+               type: Boolean,
+               value: false
+            },
 
             /**
              * 진행 상황 업데이트 주기
@@ -166,20 +163,20 @@ Copyright © HatioLab Inc. All rights reserved.
              * @type Object
              */
             gridConfig: {
-              type: Object,
-              value: function () {
-                return {
-                  options: {
-                    edit: {
-                      editable: false,
-                      pasteEnabled: false
-                    },
-                    displayOptions: {
-                      fitStyle: 'fill'
-                    }
-                  }
-                };
-              }
+               type: Object,
+               value: function () {
+                  return {
+                     options: {
+                        edit: {
+                           editable: false,
+                           pasteEnabled: false
+                        },
+                        displayOptions: {
+                           fitStyle: 'fill'
+                        }
+                     }
+                  };
+               }
             },
 
             /**
@@ -237,7 +234,7 @@ Copyright © HatioLab Inc. All rights reserved.
              * @type String
              */
             progressMessage: {
-                type: String
+               type: String
             },
 
             /**
@@ -286,20 +283,20 @@ Copyright © HatioLab Inc. All rights reserved.
             var gridObj = this.$['grid'].getGridObject();
             // status 컬럼 값에 따라 행의 스타일 변경
             gridObj.body().setCellDynamicStyles([{
-              // '완료' 상태에서 녹색
-              expression: "values['status'] == 'F'",
-              styles: {
+               // '완료' 상태에서 녹색
+               expression: "values['status'] == 'F'",
+               styles: {
                   background: '#e5ffe2',
                   foreground: '#494f48'
-                }
-              }, {
-                // '에러' 상태에서 붉은색
-                expression: "values['status'] == 'E'",
-                styles: {
+               }
+            }, {
+               // '에러' 상태에서 붉은색
+               expression: "values['status'] == 'E'",
+               styles: {
                   background: '#fce5e5',
                   foreground: '#740000'
-                }
-              }]);
+               }
+            }]);
 
             gridObj.checkAll(true);
          },
@@ -309,9 +306,9 @@ Copyright © HatioLab Inc. All rights reserved.
           **********************
           * @param {Object} receiptSummary
           */
-         receiptSummaryChanged: function(receiptSummary) {
-           this.items = receiptSummary && receiptSummary.items;
-           this.progressRate = receiptSummary && receiptSummary.progress_rate && receiptSummary.progress_rate.toFixed(3);
+         receiptSummaryChanged: function (receiptSummary) {
+            this.items = receiptSummary && receiptSummary.items;
+            this.progressRate = receiptSummary && receiptSummary.progress_rate && receiptSummary.progress_rate.toFixed(3);
          },
 
          /**
@@ -319,10 +316,10 @@ Copyright © HatioLab Inc. All rights reserved.
           **********************
           * @param {Object} event
           */
-         onReceivingStarted: function(event) {
-           // 진행율 체크 호출
-           var progressAjax = this.$['progress-status-ajax'];
-           progressAjax.generateRequest();
+         onReceivingStarted: function (event) {
+            // 진행율 체크 호출
+            var progressAjax = this.$['progress-status-ajax'];
+            progressAjax.generateRequest();
          },
 
          /**
@@ -341,40 +338,40 @@ Copyright © HatioLab Inc. All rights reserved.
           * @param {Object} event
           */
          startReceiving: function (event) {
-          this.isFinished = false;
-          var summaryItems = this.receiptSummary.items;
+            this.isFinished = false;
+            var summaryItems = this.receiptSummary.items;
 
-          // 1. 그리드에서 체크 안 된 항목은 skip_flag를 true로 설정
-          var grid = this.$['grid'];
-          let rows = grid.grid.getCheckedRows();
+            // 1. 그리드에서 체크 안 된 항목은 skip_flag를 true로 설정
+            var grid = this.$['grid'];
+            let rows = grid.grid.getCheckedRows();
 
-          // 2. 체크된 항목만 skip_flag를 false로 설정
-          if (rows && rows.length > 0) {
-            // 3. skip_flag를 모두 true로 설정
-            summaryItems.forEach(function(item) {
-              item.skip_flag = true;
-            });
+            // 2. 체크된 항목만 skip_flag를 false로 설정
+            if (rows && rows.length > 0) {
+               // 3. skip_flag를 모두 true로 설정
+               summaryItems.forEach(function (item) {
+                  item.skip_flag = true;
+               });
 
-            rows.forEach(function (row) {
-              var rowObj = row.getRowObject();
-              var summaryItem = summaryItems.find(function(item) {
-                return rowObj.id == item.id;
-              });
+               rows.forEach(function (row) {
+                  var rowObj = row.getRowObject();
+                  var summaryItem = summaryItems.find(function (item) {
+                     return rowObj.id == item.id;
+                  });
 
-              if(summaryItem != null) {
-                summaryItem.skip_flag = false;
-              }
-            }.bind(this));
+                  if (summaryItem != null) {
+                     summaryItem.skip_flag = false;
+                  }
+               }.bind(this));
 
-            // 4. 주문 수신 시작
-            var startAjax = this.$['start-receiving-ajax'];
-            startAjax.body = this.receiptSummary;
-            startAjax.generateRequest();
+               // 4. 주문 수신 시작
+               var startAjax = this.$['start-receiving-ajax'];
+               startAjax.body = this.receiptSummary;
+               startAjax.generateRequest();
 
-          } else {
-            // 항목을 선택해주세요.
-            this.openInfoMsg({ type: 'info', title: Things.DataGlobal.t('text.select_item') });
-          }
+            } else {
+               // 항목을 선택해주세요.
+               this.openInfoMsg({ type: 'info', title: Things.DataGlobal.t('text.select_item') });
+            }
          },
 
          /**
@@ -389,52 +386,52 @@ Copyright © HatioLab Inc. All rights reserved.
             var receiptStatus = event.detail.status;
 
             // progressRate가 100이면 완료
-            if(receiptStatus === 'F') {
-              this.isFinished = true;
-              this.progressMessage = '- (' + Things.DataGlobal.t('button.complete') + ')';
-              // 수신이 완료되었습니다
-              this.openInfoMsg({ type: 'info', title: Things.DataGlobal.t('text.Success to Process') });
+            if (receiptStatus === 'F') {
+               this.isFinished = true;
+               this.progressMessage = '- (' + Things.DataGlobal.t('button.complete') + ')';
+               // 수신이 완료되었습니다
+               this.openInfoMsg({ type: 'info', title: Things.DataGlobal.t('text.Success to Process') });
             }
 
             // 수신 서머리 상태가 취소이면 중지
-            if(!this.isFinished) {
-              if(receiptStatus === 'C') {
-                this.isFinished = true;
-                this.progressMessage = '- (' + Things.DataGlobal.t('button.cancel') + ')';
-                this.openInfoMsg({ type: 'info', title: 'Receiving orders canceled.' });
+            if (!this.isFinished) {
+               if (receiptStatus === 'C') {
+                  this.isFinished = true;
+                  this.progressMessage = '- (' + Things.DataGlobal.t('button.cancel') + ')';
+                  this.openInfoMsg({ type: 'info', title: 'Receiving orders canceled.' });
 
-              } else if(receiptStatus === 'E') {
-                this.isFinished = true;
-                this.progressMessage = '- (' + Things.DataGlobal.t('label.error') + ')';
-                var errTitle = 'Receiving was stopped because error occurred when receiving orders';
-                this.items.forEach(function(item) {
-                   if(item.err_msg && item.err_msg.length > 2) {
-                      errTitle = item.err_msg;
-                      return;
-                   }
-                });
-                this.openInfoMsg({ type: 'error', title: errTitle });
-              }
+               } else if (receiptStatus === 'E') {
+                  this.isFinished = true;
+                  this.progressMessage = '- (' + Things.DataGlobal.t('label.error') + ')';
+                  var errTitle = 'Receiving was stopped because error occurred when receiving orders';
+                  this.items.forEach(function (item) {
+                     if (item.err_msg && item.err_msg.length > 2) {
+                        errTitle = item.err_msg;
+                        return;
+                     }
+                  });
+                  this.openInfoMsg({ type: 'error', title: errTitle });
+               }
             }
 
             // 수신이 완료되었는지 확인 후 안 되어있으면
             if (!this.isFinished) {
-              var runningItem = this.items.find(function(item) {
+               var runningItem = this.items.find(function (item) {
                   return item.status === 'R';
-              });
+               });
 
-              if(runningItem != null) {
-                var received_cnt = runningItem.received_cnt + runningItem.err_cnt;
-                this.progressMessage = `- Receiving [${runningItem.item_nm}] I/F data... (${received_cnt} / ${runningItem.expected_cnt})`;
-              } else {
-                this.progressMessage = '';
-              }
+               if (runningItem != null) {
+                  var received_cnt = runningItem.received_cnt + runningItem.err_cnt;
+                  this.progressMessage = `- Receiving [${runningItem.item_nm}] I/F data... (${received_cnt} / ${runningItem.expected_cnt})`;
+               } else {
+                  this.progressMessage = '';
+               }
 
-              // 완료되지 않았다면 updateInterval 후 다시 진행율 조회
-              var ajax = this.$['progress-status-ajax'];
-              setTimeout(function () {
-                ajax.generateRequest();
-              }.bind(this), this.updateInterval);
+               // 완료되지 않았다면 updateInterval 후 다시 진행율 조회
+               var ajax = this.$['progress-status-ajax'];
+               setTimeout(function () {
+                  ajax.generateRequest();
+               }.bind(this), this.updateInterval);
             }
          }
       });
