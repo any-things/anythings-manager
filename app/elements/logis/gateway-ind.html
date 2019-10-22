@@ -103,7 +103,7 @@
         </things-ajax>
 
         <!-- IND 데이터 조회 Ajax -->
-        <things-ajax id="search-ind-list" resource-url="ind" sort-fields='[{"field" : "ind_cd", "ascending" : true}]'
+        <things-ajax id="search-ind-list" resource-url="indicators" sort-fields='[{"field" : "ind_nm", "ascending" : true}]'
             query-fields="[[indQueryFields]]" resource-action="index" limit="100000" last-response="{{indItems}}">
         </things-ajax>
 
@@ -179,7 +179,7 @@
           value: [{
             name: 'routing',
             operator: 'eq',
-            value: 'ind'
+            value: 'indicators'
           }]
         },
 
@@ -421,7 +421,7 @@
         },
 
         /**
-         * IND 쿼리 정보
+         * Indicators 쿼리 정보
          ********
          * @type {Array}
          */
@@ -432,7 +432,11 @@
             operator: 'eq',
             value: ''
           }, {
-            name: 'rack_cd',
+            name: 'equip_type',
+            operator: 'eq',
+            value: 'Rack'
+          }, {
+            name: 'equip_cd',
             operator: 'eq',
             value: ''
           }]
@@ -613,9 +617,7 @@
         this.indQueryFields.forEach(function(field) {
           if (field.name == 'gw_cd') {
             field.value = gwCd;
-          }
-
-          if (field.name == 'rack_cd') {
+          } else if (field.name == 'equip_cd') {
             field.value = rackCd;
           }
         });

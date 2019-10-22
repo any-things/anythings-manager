@@ -64,7 +64,7 @@
       limit="100000" last-response="{{gatewayItems}}">
     </things-ajax>
 
-    <things-ajax id="search-ind-items" resource-url="ind" sort-fields='[{"field" : "gw_cd", "ascending" : true}]'
+    <things-ajax id="search-ind-items" resource-url="indicators" sort-fields='[{"field" : "ind_nm", "ascending" : true}]'
       query-fields="[[indQueryFields]]" response-root="items" resource-action="index" limit="100000"
       last-response="{{indItems}}">
     </things-ajax>
