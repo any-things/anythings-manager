@@ -42,31 +42,6 @@ Copyright © HatioLab Inc. All rights reserved.
             grid-area: bar;
          }
 
-         #contents>#progress-rate {
-            grid-area: pro;
-            display: grid;
-            grid-template:
-               "a"auto "b"auto / 1fr;
-         }
-
-         #contents>#progress-rate>p {
-            grid-area: a;
-         }
-
-         #contents>#progress-rate>paper-progress {
-            grid-area: b;
-            width: unset;
-         }
-
-         #progress-bar {
-            --paper-progress-active-color: var(--paper-light-blue-500);
-            --paper-progress-secondary-color: var(--paper-light-blue-100);
-
-            --paper-progress-transition-duration: 1s;
-            --paper-progress-transition-timing-function: ease;
-            --paper-progress-transition-transition-delay: 0s;
-         }
-
          /* 바깥 여백 제거 */
          .margin-zero {
             margin: 0px;
@@ -88,11 +63,6 @@ Copyright © HatioLab Inc. All rights reserved.
          last-response="{{metaData}}">
       </things-ajax>
 
-      <!-- 주문 취소 ajax -->
-      <things-ajax id="cancel-receive-ajax" resource-id="[[receiptSummaryId]]"
-         resource-url="job_batch/receive_orders/cancel/:id" method="post">
-      </things-ajax>
-
       <!-- 주문 수신 시작 ajax -->
       <things-ajax id="start-receiving-ajax" resource-id="[[receiptSummaryId]]"
          resource-url="job_batches/receive_batches/start" resource-action="update_multiple">
@@ -100,16 +70,10 @@ Copyright © HatioLab Inc. All rights reserved.
 
       <!-- 진행 상황 ajax -->
       <things-ajax id="progress-status-ajax" resource-id="[[receiptSummaryId]]"
-         resource-url="job_batch/receive_orders/rate/:id" resource-action="get">
+         resource-url="job_batches/receive_batches/rate/:id" resource-action="get">
       </things-ajax>
 
       <div id="contents">
-         <div id="progress-rate">
-            <p class="margin-zero" hidden=[[hideProgressBar]]>[[progressRate]]% [[progressMessage]]</p>
-            <paper-progress id="progress-bar" class="transiting" value="[[progressRate]]" hidden=[[hideProgressBar]]>
-            </paper-progress>
-         </div>
-
          <things-resource-grid id="grid" class="padding-zero" config="[[gridConfig]]" model="[[gridModel]]"
             columns="[[gridColumns]]" buttons="" paginatable=[[menuInfo.pagination]]
             show-paginator=[[menuInfo.pagination]] current-page="{{page}}" limit="{{limit}}" data="[[items]]"
@@ -217,27 +181,6 @@ Copyright © HatioLab Inc. All rights reserved.
             },
 
             /**
-             * 주문 수신 전체 진행율
-             ***************
-             * @type Number
-             */
-            progressRate: {
-               type: Number,
-               value: function () {
-                  return 0;
-               }
-            },
-
-            /**
-             * 프로그레스 바 위치에 표시할 메시지
-             ***************
-             * @type String
-             */
-            progressMessage: {
-               type: String
-            },
-
-            /**
              * 주문 수신 ajax 호출 후 응답 데이터
              ***************
              * @type Object
@@ -273,7 +216,7 @@ Copyright © HatioLab Inc. All rights reserved.
             "start-receiving-ajax.things-ajax-response": "onReceivingStarted",
             "progress-status-ajax.things-ajax-response": "updateProgressRate",
             "button-group.receive_order-btn-tap": "startReceiving",
-            "button-group.cancel-btn-tap": "cancelReceiving"
+            "button-group.close-btn-tap": "closeReceivingPop"
          },
 
          /**
@@ -285,6 +228,13 @@ Copyright © HatioLab Inc. All rights reserved.
             gridObj.body().setCellDynamicStyles([{
                // '완료' 상태에서 녹색
                expression: "values['status'] == 'F'",
+               styles: {
+                  background: '#e5ffe2',
+                  foreground: '#494f48'
+               }
+            }, {
+               // '취소' 상태에서 녹색 ( Skip )
+               expression: "values['status'] == 'C'",
                styles: {
                   background: '#e5ffe2',
                   foreground: '#494f48'
@@ -308,7 +258,6 @@ Copyright © HatioLab Inc. All rights reserved.
           */
          receiptSummaryChanged: function (receiptSummary) {
             this.items = receiptSummary && receiptSummary.items;
-            this.progressRate = receiptSummary && receiptSummary.progress_rate && receiptSummary.progress_rate.toFixed(3);
          },
 
          /**
@@ -323,13 +272,12 @@ Copyright © HatioLab Inc. All rights reserved.
          },
 
          /**
-          * 주문 수신 취소
+          * 주문 수신 팝업 닫기 
           **********************
           * @param {Object} event
           */
-         cancelReceiving: function (event) {
-            var ajax = this.$['cancel-receive-ajax'];
-            ajax.generateRequest();
+         closeReceivingPop: function (event) {
+            document.dispatchEvent(new CustomEvent('things-dialog-close'));
          },
 
          /**
@@ -382,13 +330,11 @@ Copyright © HatioLab Inc. All rights reserved.
          updateProgressRate: function (event) {
             // 서버에서 내려주는 그리드 목록, 수신 진행율을 적용
             this.items = event.detail.items;
-            this.progressRate = event.detail.progress_rate.toFixed(3);
             var receiptStatus = event.detail.status;
 
             // progressRate가 100이면 완료
             if (receiptStatus === 'F') {
                this.isFinished = true;
-               this.progressMessage = '- (' + Things.DataGlobal.t('button.complete') + ')';
                // 수신이 완료되었습니다
                this.openInfoMsg({ type: 'info', title: Things.DataGlobal.t('text.Success to Process') });
             }
@@ -397,12 +343,10 @@ Copyright © HatioLab Inc. All rights reserved.
             if (!this.isFinished) {
                if (receiptStatus === 'C') {
                   this.isFinished = true;
-                  this.progressMessage = '- (' + Things.DataGlobal.t('button.cancel') + ')';
                   this.openInfoMsg({ type: 'info', title: 'Receiving orders canceled.' });
 
                } else if (receiptStatus === 'E') {
                   this.isFinished = true;
-                  this.progressMessage = '- (' + Things.DataGlobal.t('label.error') + ')';
                   var errTitle = 'Receiving was stopped because error occurred when receiving orders';
                   this.items.forEach(function (item) {
                      if (item.err_msg && item.err_msg.length > 2) {
@@ -422,9 +366,6 @@ Copyright © HatioLab Inc. All rights reserved.
 
                if (runningItem != null) {
                   var received_cnt = runningItem.received_cnt + runningItem.err_cnt;
-                  this.progressMessage = `- Receiving [${runningItem.item_nm}] I/F data... (${received_cnt} / ${runningItem.expected_cnt})`;
-               } else {
-                  this.progressMessage = '';
                }
 
                // 완료되지 않았다면 updateInterval 후 다시 진행율 조회
