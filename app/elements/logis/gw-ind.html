@@ -60,7 +60,7 @@
     </things-ajax>
 
     <things-ajax auto id="search-gateway-items" resource-url="gateways"
-      sort-fields='[{"field" : "station_cd", "ascending" : true}]' response-root="items" resource-action="index"
+      sort-fields='[{"field" : "id", "ascending" : true}]' response-root="items" resource-action="index"
       limit="100000" last-response="{{gatewayItems}}">
     </things-ajax>
 
@@ -95,7 +95,7 @@
       properties: {
         gridConfig: {
           type: Object,
-          value: function () {
+          value: function() {
             return {
               checkBar: false,
               options: {
@@ -112,7 +112,7 @@
           value: [{
             name: "routing",
             operator: "eq",
-            value: "gateway"
+            value: "gateways"
           }]
         },
 
@@ -140,7 +140,7 @@
           value: [{
             name: "routing",
             operator: "eq",
-            value: "ind"
+            value: "indicators"
           }]
         },
 
@@ -185,9 +185,9 @@
        * *******
        * @param {Object} e
        */
-      _onBeforeGwGridConfigure: function (e) {
+      _onBeforeGwGridConfigure: function(e) {
         var cols = e.detail.columns;
-        cols.forEach(function (col) {
+        cols.forEach(function(col) {
           if (col.name === 'station_cd') {
             var index = cols.indexOf(col);
             var zcol = cols.splice(index, 1);
@@ -204,9 +204,9 @@
        * *******
        * @param {Object} e
        */
-      _onBeforeIndGridConfigure: function (e) {
+      _onBeforeIndGridConfigure: function(e) {
         var cols = e.detail.columns;
-        cols.forEach(function (col) {
+        cols.forEach(function(col) {
           if (col.name === 'updated_at' || col.name == 'gw_cd' || col.name === 'updater') {
             var index = cols.indexOf(col);
             cols.splice(index, 1);
@@ -219,9 +219,13 @@
        * *******
        * @param {Object} e
        */
-      _selectFirstGwData: function (e) {
+      _selectFirstGwData: function(e) {
         if (e.detail.length !== 0) {
-          this._findInd({ detail: { gw_cd: e.detail[0].gw_cd } });
+          this._findInd({
+            detail: {
+              gw_cd: e.detail[0].gw_cd
+            }
+          });
         }
       },
 
@@ -230,7 +234,7 @@
        * *******
        * @param {Array} menuItems
        */
-      _gwMenuItemsChanged: function (menuItems) {
+      _gwMenuItemsChanged: function(menuItems) {
         this.gwMenuId = menuItems[0].id;
       },
 
@@ -240,7 +244,7 @@
        * @param {String} menuId 메뉴 아이디
        * @return {String} 메뉴 상세 메타 데이터 조회를 위한 URL
        */
-      _computeMenuMetaUrl: function (menuId) {
+      _computeMenuMetaUrl: function(menuId) {
         return 'menus/' + menuId + '/menu_meta';
       },
 
@@ -249,7 +253,7 @@
        * *******
        * @param {Object} gwMetaData
        */
-      _parseGwMetaData: function (gwMetaData) {
+      _parseGwMetaData: function(gwMetaData) {
         this.gwGridModel = this._parseGridModel(gwMetaData.columns);
         this.gwGridColumns = this._parseGridColumns(gwMetaData.columns);
       },
@@ -259,7 +263,7 @@
        * *******
        * @param {Array} menuItems
        */
-      _indMenuItemsChanged: function (menuItems) {
+      _indMenuItemsChanged: function(menuItems) {
         this.indMenuId = menuItems[0].id;
       },
 
@@ -268,7 +272,7 @@
        * *******
        * @param {Object} indMetaData
        */
-      _parseIndMetaData: function (indMetaData) {
+      _parseIndMetaData: function(indMetaData) {
         this.indGridModel = this._parseGridModel(indMetaData.columns);
         this.indGridColumns = this._parseGridColumns(indMetaData.columns);
       },
@@ -278,9 +282,9 @@
        * *******
        * @param {Object} e
        */
-      _findInd: function (e) {
+      _findInd: function(e) {
         var gw_cd = e.detail.gw_cd;
-        this.indQueryFields.forEach(function (field) {
+        this.indQueryFields.forEach(function(field) {
           if (field.name == 'gw_cd') {
             field.value = gw_cd;
           }

@@ -102,7 +102,7 @@
          */
         gridConfig: {
           type: Object,
-          value: function () {
+          value: function() {
             return {
               checkBar: false
             };
@@ -194,7 +194,7 @@
          */
         cellTitle: {
           type: String,
-          value: function () {
+          value: function() {
             return Things.DataGlobal.t('menu.Cell');
           }
         },
@@ -205,7 +205,11 @@
         cellQueryFields: {
           type: Array,
           value: [{
-            name: 'cell_cd',
+            name: 'equip_type',
+            operator: 'eq',
+            value: 'Rack'
+          }, {
+            name: 'equip_cd',
             operator: 'eq',
             value: ''
           }]
@@ -251,10 +255,10 @@
        *********
        * @param {Object} gridColumns 그리드 컬럼
        */
-      _gridColumnsChanged: function (gridColumns) {
+      _gridColumnsChanged: function(gridColumns) {
         var selectColumns = '';
 
-        gridColumns.forEach(function (metaData) {
+        gridColumns.forEach(function(metaData) {
           if (!metaData.virtual_field || metaData.virtual_field == false) {
             selectColumns += metaData.name + ',';
           }
@@ -270,11 +274,11 @@
        *********
        * @param {String} menuDetailMetaUrl
        */
-      _invokeDetailMetaData: function (menuDetailMetaUrl) {
+      _invokeDetailMetaData: function(menuDetailMetaUrl) {
         var detailMetaAjax = document.createElement('things-ajax');
         detailMetaAjax.resourceId = this.menuId;
         detailMetaAjax.resourceUrl = menuDetailMetaUrl;
-        detailMetaAjax.addEventListener('things-ajax-response', function (event) {
+        detailMetaAjax.addEventListener('things-ajax-response', function(event) {
           this.detailMetaData = event.detail;
         }.bind(this));
 
@@ -287,7 +291,7 @@
        * @param {String} menuId 메뉴 아이디
        * @return {String} 메뉴 상세 메타 데이터 조회를 위한 URL
        */
-      _computeMenuDetailMetaUrl: function (menuId) {
+      _computeMenuDetailMetaUrl: function(menuId) {
         return 'menu_details/' + menuId + '/meta';
       },
 
@@ -296,7 +300,7 @@
        * *******
        * @param {Array} detailMetaList 서버로 부터 응답받은 메뉴 상세에 대한 메타 데이터
        */
-      _parseDetailMetaData: function (detailMetaList) {
+      _parseDetailMetaData: function(detailMetaList) {
         if (!detailMetaList || detailMetaList.length == 0) {
           return;
         }
@@ -316,7 +320,9 @@
           if (metaData.menu_detail_buttons) {
             var buttons = this._parseButtons(metaData.menu_detail_buttons);
             if (buttons && buttons.length > 0) {
-              buttons.forEach(function (button) { button.id = button.name + '-btn'; });
+              buttons.forEach(function(button) {
+                button.id = button.name + '-btn';
+              });
             }
 
             this.detailButtons = buttons;
@@ -338,11 +344,11 @@
        * *******
        * @param {Object} event 그리드 Detail 버튼 선택 이벤트
        */
-      resetResource: function (event) {
-        this.currentRackName = '(' + event.detail.lack_nm + ')';
-        this.cellQueryFields.forEach(function (field) {
-          if (field.name == 'cell_cd') {
-            field.value = event.detail.cell_cd;
+      resetResource: function(event) {
+        this.currentRackName = '(' + event.detail.rack_nm + ')';
+        this.cellQueryFields.forEach(function(field) {
+          if (field.name == 'equip_cd') {
+            field.value = event.detail.rack_cd;
           }
         });
 
@@ -356,7 +362,7 @@
        * *******
        * @param {Number} total
        */
-      _formatTotal: function (total) {
+      _formatTotal: function(total) {
         return total ? total : 0;
       }
     });
