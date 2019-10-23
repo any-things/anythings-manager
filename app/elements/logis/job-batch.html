@@ -242,7 +242,7 @@ Copyright © HatioLab Inc. All rights reserved.
             return Object.assign(new Object(), b);
 
           } else if (status === 'READY') {
-            b.hidden = !(b.id == 'order_preprocess-btn' || b.id == 'job_instruct-btn' || b.id == 'total_picking_instruct-btn');
+            b.hidden = !(b.id == 'order_preprocess-btn' || b.id == 'job_instruct-btn' || b.id == 'total_picking_instruct-btn' || b.id == 'cancel_order-btn');
             return Object.assign(new Object(), b);
 
           } else if (status === 'RUN') {
@@ -396,7 +396,8 @@ Copyright © HatioLab Inc. All rights reserved.
                   id: "check-running-job-ajax",
                   method: "GET",
                   contentType: "application/json",
-                  resourceUrl: "job_batch/running_batch"
+                  resourceUrl: "job_batches/running_batch/:id",
+                  resourceId: checkedRow.stage_cd + "/" + checkedRow.equip_type + "/" + (checkedRow.equip_cd ? checkedRow.equip_cd : "null")
                 };
                 var runningJobAjax = this.create('things-ajax', props);
                 runningJobAjax.checkedRow = checkedRow;
@@ -467,7 +468,7 @@ Copyright © HatioLab Inc. All rights reserved.
           id: "instruct-job-ajax",
           method: "POST",
           contentType: "application/json",
-          resourceUrl: "job_batch/:id/instruct_job",
+          resourceUrl: "job_batches/:id/instruct/batch",
           resourceId: checkedRow.id
         };
         var instructJobAjax = this.create('things-ajax', props);
