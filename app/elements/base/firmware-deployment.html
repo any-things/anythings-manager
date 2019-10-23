@@ -17,7 +17,7 @@ Copyright © HatioLab Inc. All rights reserved.
 -->
 
 <dom-module id="firmware-deployment">
-	<template>
+  <template>
 		<style>
 			:host {
 				display: block;
@@ -84,168 +84,174 @@ Copyright © HatioLab Inc. All rights reserved.
 		</things-resource-grid>
 	</template>
 
-	<script>
-		Polymer({
-			is: 'firmware-deployment',
+  <script>
+    Polymer({
+      is: 'firmware-deployment',
 
-			behaviors: [
-				Things.ResourceMenuContentBehavior
-			],
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
 
-			properties: {
-			},
+      properties: {},
 
-			listeners : {
-				'reserve-btn-tap': 'reserve',
-				'deploy-now-btn-tap': 'deployNow',
-				'new-btn-tap': 'newPopup',
-				'to-gateway-btn-tap': 'newPopup',
-				'to-indicator-btn-tap': 'newPopup',
-				'grid.things-grid-detail-tap': 'downloadFile',
-				'reserve-list-ajax.things-ajax-response' : 'refreshData',
-				'deploy-list-ajax.things-ajax-response' : 'refreshData'
-			},
+      listeners: {
+        'reserve-btn-tap': 'reserve',
+        'deploy-now-btn-tap': 'deployNow',
+        'new-btn-tap': 'newPopup',
+        'to-gateway-btn-tap': 'newPopup',
+        'to-indicator-btn-tap': 'newPopup',
+        'grid.things-grid-detail-tap': 'downloadFile',
+        'reserve-list-ajax.things-ajax-response': 'refreshData',
+        'deploy-list-ajax.things-ajax-response': 'refreshData'
+      },
 
-			/**
-			 * 배포 Job 예약
-			 ***********
-			 * @param {Object} e 버튼 탭 이벤트
-			 */
-			reserve: function(e) {
-				this._checkTransaction(Things.DataGlobal.t(e.detail.text), 'reserve-list-ajax');
-			},
+      /**
+       * 배포 Job 예약
+       ***********
+       * @param {Object} e 버튼 탭 이벤트
+       */
+      reserve: function(e) {
+        this._checkTransaction(Things.DataGlobal.t(e.detail.text), 'reserve-list-ajax');
+      },
 
-			/**
-			 * 즉시 배포
-			 ***********
-			 * @param {Object} e 버튼 탭 이벤트
-			 */
-			deployNow: function(e) {
-				this._checkTransaction(Things.DataGlobal.t(e.detail.text), 'deploy-list-ajax');
-			},
+      /**
+       * 즉시 배포
+       ***********
+       * @param {Object} e 버튼 탭 이벤트
+       */
+      deployNow: function(e) {
+        this._checkTransaction(Things.DataGlobal.t(e.detail.text), 'deploy-list-ajax');
+      },
 
-			/**
-			 * 트랜잭션 체크
-			 *******************
-			 * @param {String} title 트랜잭션 명
-			 * @param {String} ajaxId Ajax ID
-			 */
-			_checkTransaction: function(title, ajaxId) {
-				let targetList = this._selectedItemList();
-				if(targetList != null && targetList.length > 0) {
-					if(this._validateTran(targetList)) {
-						var ajax = this.$[ajaxId];
-						ajax.body = targetList.map(function(target) { return target.id; });
-						this._doTransaction(title, ajax);
-					}
-				}
-			},
+      /**
+       * 트랜잭션 체크
+       *******************
+       * @param {String} title 트랜잭션 명
+       * @param {String} ajaxId Ajax ID
+       */
+      _checkTransaction: function(title, ajaxId) {
+        let targetList = this._selectedItemList();
+        if (targetList != null && targetList.length > 0) {
+          if (this._validateTran(targetList)) {
+            var ajax = this.$[ajaxId];
+            ajax.body = targetList.map(function(target) {
+              return target.id;
+            });
+            this._doTransaction(title, ajax);
+          }
+        }
+      },
 
-			/**
-			 * 트랜잭션 전 Validation
-			 ************************
-			 * @param {Array} targetList
-			 */
-			_validateTran: function(targetList) {
-				var invalidateList = targetList.filter(function (target) {
-					return target.status != 'WAIT';
-				}.bind(this));
+      /**
+       * 트랜잭션 전 Validation
+       ************************
+       * @param {Array} targetList
+       */
+      _validateTran: function(targetList) {
+        var invalidateList = targetList.filter(function(target) {
+          return target.status != 'WAIT';
+        }.bind(this));
 
-				var invalid = invalidateList && invalidateList.length > 0;
-				if(invalid) {
-					// 게이트웨이 (0)는 예약대기 상태가 아닙니다.
-					var text = Things.DataGlobal.t('text.a_is_not_b_status', {
-							a : Things.DataGlobal.t('menu.Gateway') + '(' + invalidateList[0].target_id + ')',
-							b : Things.DataGlobal.t('label.reservation')
-					});
-					this.openConfirmMsg({
-						type: 'error',
-						title: Things.DataGlobal.t('label.validator'),
-						text: text
-					});
-				}
-				return !invalid;
-			},
+        var invalid = invalidateList && invalidateList.length > 0;
+        if (invalid) {
+          // 게이트웨이 (0)는 예약대기 상태가 아닙니다.
+          var text = Things.DataGlobal.t('text.a_is_not_b_status', {
+            a: Things.DataGlobal.t('menu.Gateway') + '(' + invalidateList[0].target_id + ')',
+            b: Things.DataGlobal.t('label.reservation')
+          });
+          this.openConfirmMsg({
+            type: 'error',
+            title: Things.DataGlobal.t('label.validator'),
+            text: text
+          });
+        }
+        return !invalid;
+      },
 
-			/**
-			 * 트랜잭션 실행
-			 ***************
-			 * @param {String} title
-			 * @param {Object} ajax
-			 */
-			_doTransaction: function(title, ajax) {
-				// Ajax 호출
-				var text = Things.DataGlobal.t('text.Sure to X', { x : title });
-				this.openConfirmMsg({
-					type: 'info', title: title, text: text, showCancelButton: true
-				}, function () {
-					ajax.generateRequest();
-				});
-			},
+      /**
+       * 트랜잭션 실행
+       ***************
+       * @param {String} title
+       * @param {Object} ajax
+       */
+      _doTransaction: function(title, ajax) {
+        // Ajax 호출
+        var text = Things.DataGlobal.t('text.Sure to X', {
+          x: title
+        });
+        this.openConfirmMsg({
+          type: 'info',
+          title: title,
+          text: text,
+          showCancelButton: true
+        }, function() {
+          ajax.generateRequest();
+        });
+      },
 
-			/**
-			 * 선택된 항목의 ID 리스트 조회
-			 ***************
-			 * @return
-			 */
-			_selectedItemList: function() {
-				let rows = this.$['grid'].grid.getCheckedRows();
-				if (rows && rows.length > 0) {
-					return rows.map(function (row) {
-						return row.getRowObject();
-					}.bind(this));
-				} else {
-					return null;
-				}
-			},
+      /**
+       * 선택된 항목의 ID 리스트 조회
+       ***************
+       * @return
+       */
+      _selectedItemList: function() {
+        let rows = this.$['grid'].grid.getCheckedRows();
+        if (rows && rows.length > 0) {
+          return rows.map(function(row) {
+            return row.getRowObject();
+          }.bind(this));
+        } else {
+          return null;
+        }
+      },
 
-			/**
-			 * 배포 창을 띄운다.
-			 ***********
-			 * @param {Object} e 버튼 탭 이벤트
-			 */
-			newPopup: function(e) {
-				event.preventDefault();
+      /**
+       * 배포 창을 띄운다.
+       ***********
+       * @param {Object} e 버튼 탭 이벤트
+       */
+      newPopup: function(e) {
+        event.preventDefault();
 
-				var view = document.createElement('deployment-popup');
-				var popupTitle = e.detail.text;
-				view.title = Things.DataGlobal.t(popupTitle);
-				view.resourceName = 'Gateway';
-				view.resourceUrl = 'gateway';
-				view.resourceType = 'Entity';
-				view.resourceIdField = 'gw_cd';
-				view.label = this.labelGwCd;
-				view.targetType = (popupTitle == 'button.to-gateway') ? 'GW' : 'MPI';
+        var view = document.createElement('deployment-popup');
+        var popupTitle = e.detail.text;
+        view.title = Things.DataGlobal.t(popupTitle);
+        view.resourceName = 'Gateway';
+        view.resourceUrl = 'gateway';
+        view.resourceType = 'Entity';
+        view.resourceIdField = 'gw_cd';
+        view.label = this.labelGwCd;
+        view.targetType = (popupTitle == 'button.to-gateway') ? 'GW' : 'MPI';
 
-				var closeCallback = function() {
-					this.refreshData();
-				}.bind(this);
+        var closeCallback = function() {
+          this.refreshData();
+        }.bind(this);
 
-				// 다이얼로그 오픈
-				this.fire('things-open-custom-size-dialog', {
-					view: view,
-					modal: true,
-					dialogSize: 'medium',
-					closeCallback: closeCallback
-				});
-			},
+        // 다이얼로그 오픈
+        this.fire('things-open-custom-size-dialog', {
+          view: view,
+          modal: true,
+          dialogSize: 'medium',
+          closeCallback: closeCallback
+        });
+      },
 
-			/**
-			 * 그리드 셀 선택이 변경되었을 경우 파일 다운로드
-			 ********
-			 * @param {Object} e
-			 */
-			downloadFile: function(e) {
-				var baseUrl = this.get('globals.baseUrl');
-				this.openConfirmMsg({
-					type : 'info',
-					title : Things.DataGlobal.t('text.Want to download file'),
-					text : Things.DataGlobal.t('text.You can download file'),
-					showCancelButton: true
-				}, function() {
-					window.location = baseUrl + '/deployment/download_file/' + e.detail.id;
-				});
-			}
-		});
-	</script>
+      /**
+       * 그리드 셀 선택이 변경되었을 경우 파일 다운로드
+       ********
+       * @param {Object} e
+       */
+      downloadFile: function(e) {
+        var baseUrl = this.get('globals.baseUrl');
+        this.openConfirmMsg({
+          type: 'info',
+          title: Things.DataGlobal.t('text.Want to download file'),
+          text: Things.DataGlobal.t('text.You can download file'),
+          showCancelButton: true
+        }, function() {
+          window.location = baseUrl + '/deployment/download_file/' + e.detail.id;
+        });
+      }
+    });
+  </script>
 </dom-module>

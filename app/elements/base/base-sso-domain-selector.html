@@ -31,6 +31,7 @@ Copyright © HatioLab Inc. All rights reserved.
         @apply --things-login-button;
       }
     </style>
+    
     <div id="container">
       <string>[[infoMsg]]</string>
 
@@ -40,14 +41,14 @@ Copyright © HatioLab Inc. All rights reserved.
             <template id="domain-item-repeat" is="dom-repeat" items="[[domains]]">
               <paper-item item-idx$="[[_computeItemIdx(index)]]">[[item.brand_name]]</paper-item>
             </template>
-          </paper-listbox>
-        </paper-dropdown-menu>
-      </div>
+  </paper-listbox>
+  </paper-dropdown-menu>
+  </div>
 
-      <paper-button id="confirm-btn" raised on-tap="_onConfrimBtnTap">
-        [[moveBtnLabel]]
-      </paper-button>
-    </div>
+  <paper-button id="confirm-btn" raised on-tap="_onConfrimBtnTap">
+    [[moveBtnLabel]]
+  </paper-button>
+  </div>
   </template>
 
   <script>
@@ -57,21 +58,23 @@ Copyright © HatioLab Inc. All rights reserved.
       properties: {
         infoMsg: {
           type: String,
-          value: function () {
-            return Things.DataGlobal.t('text.please_select_x', { x: Things.DataGlobal.t('label.site') })
+          value: function() {
+            return Things.DataGlobal.t('text.please_select_x', {
+              x: Things.DataGlobal.t('label.site')
+            })
           }
         },
 
         domainLabel: {
           type: String,
-          value: function () {
+          value: function() {
             return Things.DataGlobal.t('label.site');
           }
         },
 
         moveBtnLabel: {
           type: String,
-          value: function () {
+          value: function() {
             return Things.DataGlobal.t('button.move')
           }
         },
@@ -89,11 +92,11 @@ Copyright © HatioLab Inc. All rights reserved.
         Things.MsgBoxBehavior
       ],
 
-      _computeItemIdx: function (index) {
+      _computeItemIdx: function(index) {
         return index;
       },
 
-      _onConfrimBtnTap: function () {
+      _onConfrimBtnTap: function() {
         this.selectedDomain = this._getSelectedDomain();
         if (this.selectedDomain) {
           document.dispatchEvent(new CustomEvent('things-dialog-close'));
@@ -102,7 +105,7 @@ Copyright © HatioLab Inc. All rights reserved.
         }
       },
 
-      _getSelectedDomain: function (event) {
+      _getSelectedDomain: function(event) {
         var selectedDomain = null;
         if (this.$['domain-combo'].selectedItem) {
           var selectedDomainEl = this.$['domain-combo'].selectedItem;
@@ -112,7 +115,7 @@ Copyright © HatioLab Inc. All rights reserved.
         return selectedDomain;
       },
 
-      showErrorMsg: function (title, text) {
+      showErrorMsg: function(title, text) {
         this.openConfirmMsg({
           type: 'error',
           title: title,

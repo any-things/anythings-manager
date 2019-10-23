@@ -15,7 +15,7 @@ Copyright © HatioLab Inc. All rights reserved.
 -->
 
 <dom-module id="base-log-viewer">
-	<template>
+  <template>
 		<style>
 			:host {
 				display: block;
@@ -106,68 +106,68 @@ Copyright © HatioLab Inc. All rights reserved.
 		</things-layout-hera>
 	</template>
 
-	<script>
-		Polymer({
-			is: 'base-log-viewer',
+  <script>
+    Polymer({
+      is: 'base-log-viewer',
 
-			behaviors: [
-				Things.ResourceMenuContentBehavior
-			],
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
 
-			properties: {
-				/**
-				 * Left Content Title
-				 */
-				leftContentTitle: {
-					type: String,
-					value: function() {
-						return Things.DataGlobal.t('label.file');
-					}
-				},
+      properties: {
+        /**
+         * Left Content Title
+         */
+        leftContentTitle: {
+          type: String,
+          value: function() {
+            return Things.DataGlobal.t('label.file');
+          }
+        },
 
         /**
-				 * Left Content Title
-				 */
-				rightContentTitle: {
-					type: String,
-					value: function() {
-						return Things.DataGlobal.t('label.log');
-					}
-				},
-
-				/**
-				 * things-layout-hera의 비율을 결정하는 property
-				 */
-				rightRatio: {
-					type: String,
-					value: function() {
-						return 'ratio3'
-					}
-				},
-
-				/**
-				 * Grid Config
-				 */
-				gridConfig: {
-					type: Object,
-					value: function() {
-						return {
-							options: {
-								checkBar: {
-									exclusive: true
-								}
-							}
-						}
-					}
-				},
+         * Left Content Title
+         */
+        rightContentTitle: {
+          type: String,
+          value: function() {
+            return Things.DataGlobal.t('label.log');
+          }
+        },
 
         /**
-				 * Grid Model
-				 */
-				gridModel: {
-					type: Array,
-					value: function() {
-						return [ {
+         * things-layout-hera의 비율을 결정하는 property
+         */
+        rightRatio: {
+          type: String,
+          value: function() {
+            return 'ratio3'
+          }
+        },
+
+        /**
+         * Grid Config
+         */
+        gridConfig: {
+          type: Object,
+          value: function() {
+            return {
+              options: {
+                checkBar: {
+                  exclusive: true
+                }
+              }
+            }
+          }
+        },
+
+        /**
+         * Grid Model
+         */
+        gridModel: {
+          type: Array,
+          value: function() {
+            return [{
               fieldName: 'id'
             }, {
               fieldName: 'name'
@@ -175,45 +175,45 @@ Copyright © HatioLab Inc. All rights reserved.
               fieldName: 'size',
               type: 'number'
             }, {
-							fieldName: 'size_str'
-						} ];
-					}
-				},
+              fieldName: 'size_str'
+            }];
+          }
+        },
 
         /**
-				 * Grid Columns
-				 */
-				gridColumns: {
-					type: Array,
-					value: function() {
-						return [ {
-							name: 'name',
-							fieldName: 'name',
-							width: 175,
-							header: {
-								text: Things.DataGlobal.t('label.name')
-							}
-						}, {
-							name: 'size_str',
-							fieldName: 'size_str',
-							width: 75,
-							header: {
-								text: Things.DataGlobal.t('label.size')
-							},
-							styles: {
-								textAlignment: 'far'
-							}
-						} ];
-					}
-				},
+         * Grid Columns
+         */
+        gridColumns: {
+          type: Array,
+          value: function() {
+            return [{
+              name: 'name',
+              fieldName: 'name',
+              width: 175,
+              header: {
+                text: Things.DataGlobal.t('label.name')
+              }
+            }, {
+              name: 'size_str',
+              fieldName: 'size_str',
+              width: 75,
+              header: {
+                text: Things.DataGlobal.t('label.size')
+              },
+              styles: {
+                textAlignment: 'far'
+              }
+            }];
+          }
+        },
 
         logButtons: {
           type: Array,
           value: function() {
-            return [ {
-							id: 'refresh-btn',
-							text: 'refresh'
-						} ]
+            return [{
+              id: 'refresh-btn',
+              text: 'refresh'
+            }]
           }
         },
 
@@ -225,7 +225,10 @@ Copyright © HatioLab Inc. All rights reserved.
         logObj: {
           type: Object,
           value: function() {
-            return { id : '1', log : '', }
+            return {
+              id: '1',
+              log: '',
+            }
           }
         },
 
@@ -238,25 +241,25 @@ Copyright © HatioLab Inc. All rights reserved.
         unitSystem: {
           type: Array,
           value: function() {
-            return ['kB','MB','GB','TB','PB','EB','ZB','YB'];
+            return ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
           }
         },
 
         unitHuman: {
           type: Array,
           value: function() {
-            return ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+            return ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
           }
         }
-			},
+      },
 
       listeners: {
-				'read-log-ajax.things-ajax-response': 'afterReadLog',
+        'read-log-ajax.things-ajax-response': 'afterReadLog',
         'delete-log-ajax.things-ajax-response': 'refreshData',
-				'refresh-btn-tap': 'refreshLogContent',
+        'refresh-btn-tap': 'refreshLogContent',
         'download-btn-tap': 'downloadLogFile',
         'delete-btn-tap': 'deleteLogFile'
-			},
+      },
 
       observers: [
         '_lastResponseChanged(lastResponse)',
@@ -287,8 +290,8 @@ Copyright © HatioLab Inc. All rights reserved.
        *
        * @param {lastResponse} 로그 파일 리스트
        */
-       _lastResponseChanged: function(lastResponse) {
-        if(lastResponse) {
+      _lastResponseChanged: function(lastResponse) {
+        if (lastResponse) {
           this.logList = lastResponse.map(function(file) {
             file.size_str = this._humanizeByte(file.size);
             return file;
@@ -299,120 +302,122 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
-			 * Byte 정보를 KB, MB, GB 형태로 ...
-			 ************
-			 * @param {Number} bytes
-			 * @param {String} si
-			 */
-			_humanizeByte: function(bytes, si) {
-				var thresh = si ? 1000 : 1024;
+       * Byte 정보를 KB, MB, GB 형태로 ...
+       ************
+       * @param {Number} bytes
+       * @param {String} si
+       */
+      _humanizeByte: function(bytes, si) {
+        var thresh = si ? 1000 : 1024;
 
-				if(Math.abs(bytes) < thresh) {
-					return bytes + ' B';
-				}
+        if (Math.abs(bytes) < thresh) {
+          return bytes + ' B';
+        }
 
-				var units = si ? this.unitSystem : this.unitHuman;
-				var u = -1;
+        var units = si ? this.unitSystem : this.unitHuman;
+        var u = -1;
 
-				do {
-					bytes /= thresh;
-					++u;
-				} while(Math.abs(bytes) >= thresh && u < units.length - 1);
+        do {
+          bytes /= thresh;
+          ++u;
+        } while (Math.abs(bytes) >= thresh && u < units.length - 1);
 
-				return bytes.toFixed(1) + ' ' + units[u];
-			},
-
-      /**
-			 * 그리드에서 체크된 Row의 데이터를 리턴
-			 */
-			gridCheckedRow: function() {
-				var resourceGrid = this.$.grid;
-				var rows = resourceGrid.getGridObject().getCheckedRows();
-
-				if (rows && rows.length > 0) {
-					var ds = resourceGrid.getGridDataSet();
-					var data = ds.getRowObject(rows[0].dataIndex());
-					return data;
-
-				}	else {
-					return null;
-				}
-			},
-
-			/**
-			 * After Log Read
-			 *********
-			 * @param {Object} event
-			 */
-			afterReadLog: function(event) {
-				this.rightContentTitle = Things.DataGlobal.t('label.log') + ' (' + this.resource.name + ')';
-			},
+        return bytes.toFixed(1) + ' ' + units[u];
+      },
 
       /**
-			 * Refresh Log Content
-			 *********
-			 * @param {Object} event
-			 */
+       * 그리드에서 체크된 Row의 데이터를 리턴
+       */
+      gridCheckedRow: function() {
+        var resourceGrid = this.$.grid;
+        var rows = resourceGrid.getGridObject().getCheckedRows();
+
+        if (rows && rows.length > 0) {
+          var ds = resourceGrid.getGridDataSet();
+          var data = ds.getRowObject(rows[0].dataIndex());
+          return data;
+
+        } else {
+          return null;
+        }
+      },
+
+      /**
+       * After Log Read
+       *********
+       * @param {Object} event
+       */
+      afterReadLog: function(event) {
+        this.rightContentTitle = Things.DataGlobal.t('label.log') + ' (' + this.resource.name + ')';
+      },
+
+      /**
+       * Refresh Log Content
+       *********
+       * @param {Object} event
+       */
       refreshLogContent: function(event) {
         var formData = this.$['search-form'].serializeMyForm();
         var lines = formData.lines ? formData.lines : '1000';
         var readLogAjax = this.$['read-log-ajax'];
-        readLogAjax.params = { lines : lines };
+        readLogAjax.params = {
+          lines: lines
+        };
         readLogAjax.generateRequest();
       },
 
       /**
-			 * Delete Log File
-			 *********
-			 * @param {Object} event
-			 */
-			deleteLogFile: function(event) {
+       * Delete Log File
+       *********
+       * @param {Object} event
+       */
+      deleteLogFile: function(event) {
         var log = this.gridCheckedRow();
-				if(log) {
-					var deleteLogAjax = this.$['delete-log-ajax'];
-					deleteLogAjax.resourceId = log.name;
-					this.executeApp(log.name, Things.DataGlobal.t('text.sure_to_delete_file'), deleteLogAjax);
-				}
-			},
+        if (log) {
+          var deleteLogAjax = this.$['delete-log-ajax'];
+          deleteLogAjax.resourceId = log.name;
+          this.executeApp(log.name, Things.DataGlobal.t('text.sure_to_delete_file'), deleteLogAjax);
+        }
+      },
 
       /**
-			 * 로그 파일 다운로드
-			 *********
-			 * @param {Object} event
-			 */
-			downloadLogFile: function(event) {
+       * 로그 파일 다운로드
+       *********
+       * @param {Object} event
+       */
+      downloadLogFile: function(event) {
         var log = this.gridCheckedRow();
 
-				if(log) {
+        if (log) {
           var downloadLogUrl = this.logDownloadUrl.replace(':id', log.name);
-					this.openConfirmMsg({
-						type : 'info',
-						title : Things.DataGlobal.t('text.Want to download file'),
-						text : Things.DataGlobal.t('text.You can download file'),
-						showCancelButton: true
-					}, function() {
-						window.location = downloadLogUrl;
-					});
-				}
-			},
+          this.openConfirmMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('text.Want to download file'),
+            text: Things.DataGlobal.t('text.You can download file'),
+            showCancelButton: true
+          }, function() {
+            window.location = downloadLogUrl;
+          });
+        }
+      },
 
       /**
-			 * Application 수행
-			 *********
-			 * @param {String} title
-			 * @param {String} text
-			 * @param {String} ajax
-			 */
-			executeApp: function(title, text, ajax) {
-				this.openConfirmMsg({
-					type : 'info',
-					title : title,
-					text : text,
-					showCancelButton: true
-				}, function() {
-					ajax.generateRequest();
-				});
-			}
-		})
-	</script>
+       * Application 수행
+       *********
+       * @param {String} title
+       * @param {String} text
+       * @param {String} ajax
+       */
+      executeApp: function(title, text, ajax) {
+        this.openConfirmMsg({
+          type: 'info',
+          title: title,
+          text: text,
+          showCancelButton: true
+        }, function() {
+          ajax.generateRequest();
+        });
+      }
+    })
+  </script>
 </dom-module>

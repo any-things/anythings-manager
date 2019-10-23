@@ -6,6 +6,9 @@ Copyright © HatioLab Inc. All rights reserved.
 
 <link rel="import" href="./base-sso-domain-selector.html">
 
+<!--
+  로그인 화면
+-->
 <dom-module id="base-sso-login">
   <template>
     <style>
@@ -176,28 +179,28 @@ Copyright © HatioLab Inc. All rights reserved.
                 <template is="dom-repeat" items="[[locales]]">
                   <paper-item>[[item.description]]</paper-item>
                 </template>
-              </paper-listbox>
-            </paper-dropdown-menu>
-          </div>
-        </div>
+  </paper-listbox>
+  </paper-dropdown-menu>
+  </div>
+  </div>
 
-        <paper-button id="sign-in-btn" raised on-tap="_signIn">
-          <things-i18n-msg auto msgid="button.sign_in">Sign In</things-i18n-msg>
-        </paper-button>
+  <paper-button id="sign-in-btn" raised on-tap="_signIn">
+    <things-i18n-msg auto msgid="button.sign_in">Sign In</things-i18n-msg>
+  </paper-button>
 
-        <div class="button-container">
-          <paper-button id="req-active-btn" class="extra-links" on-tap="_onReqActiveBtnTap">
-            <things-i18n-msg auto msgid="button.request_active">Request Active</things-i18n-msg>
-          </paper-button>
+  <div class="button-container">
+    <paper-button id="req-active-btn" class="extra-links" on-tap="_onReqActiveBtnTap">
+      <things-i18n-msg auto msgid="button.request_active">Request Active</things-i18n-msg>
+    </paper-button>
 
-          <paper-button id="reset-pwd-btn" class="extra-links" on-tap="_onResetPwdTap">
-            <things-i18n-msg auto msgid="button.reset_password">Reset Password</things-i18n-msg>
-          </paper-button>
-        </div>
-      </div>
+    <paper-button id="reset-pwd-btn" class="extra-links" on-tap="_onResetPwdTap">
+      <things-i18n-msg auto msgid="button.reset_password">Reset Password</things-i18n-msg>
+    </paper-button>
+  </div>
+  </div>
 
-      <div id="info-msg"></div>
-    </div>
+  <div id="info-msg"></div>
+  </div>
   </template>
 
   <script>
@@ -220,7 +223,7 @@ Copyright © HatioLab Inc. All rights reserved.
          */
         locales: {
           type: Array,
-          value: function () {
+          value: function() {
             return [{
               key: 'en-US',
               description: 'English'
@@ -258,7 +261,7 @@ Copyright © HatioLab Inc. All rights reserved.
          */
         loginInfoMessageParams: {
           type: Object,
-          value: function () {
+          value: function() {
             return {
               name: 'login.info.message'
             }
@@ -297,10 +300,10 @@ Copyright © HatioLab Inc. All rights reserved.
        *
        * 2. 현재 설정되어 있는 locale을 적용
        */
-      ready: function () {
+      ready: function() {
         this._checkAuth();
 
-        document.addEventListener('things-expired-password-changed', function (event) {
+        document.addEventListener('things-expired-password-changed', function(event) {
           // 비밀번호 변경 다이얼로그 닫기 위해
           this.fire('things-dialog-close');
           // document.dispatchEvent(new CustomEvent('things-dialog-close'));
@@ -314,7 +317,7 @@ Copyright © HatioLab Inc. All rights reserved.
       /**
        * @description 현재 유저의 인증 상태 및 사이트 권환 여부를 판단하는 ajax 호출
        */
-      _checkAuth: function () {
+      _checkAuth: function() {
         this._checkAuthAjax = this._getCheckAuthAjax();
       },
 
@@ -324,19 +327,19 @@ Copyright © HatioLab Inc. All rights reserved.
        * 2. 로컬스토리지에 값이 없다면 브라우저의 언어를 추출하여 로케일을 추정함
        * 3. 추정한 로케일과 사용가능한 로케일에 매칭하는 값이 없으면 defaultLocale을 현재 언어로 설정함
        */
-      _setCurrentLocale: function () {
+      _setCurrentLocale: function() {
         var currentLocale = JSON.parse(localStorage.getItem('setting.locale'));
         if (!currentLocale) {
           currentLocale = this.defaultLocale;
           var browserLang = navigator.language.toLowerCase();
-          this.locales.forEach(function (locale) {
+          this.locales.forEach(function(locale) {
             if (locale.key.toLowerCase().indexOf(browserLang) === 0) {
               currentLocale = locale.key;
             }
           })
         }
 
-        this.locales.forEach(function (locale, index) {
+        this.locales.forEach(function(locale, index) {
           if (locale.key === currentLocale) {
             this.$['locale-list'].selected = index;
           }
@@ -348,7 +351,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * 로케일 콤보 박스의 값이 변경되었을 때 이벤트 핸들러
        * 선택한 로케일을 적용
        */
-      _onLocaleChanged: function (event) {
+      _onLocaleChanged: function(event) {
         var selectedLocaleIdx = event.detail.value;
         this.set('globals.locale', this.locales[selectedLocaleIdx].key);
       },
@@ -358,7 +361,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * keypress event handler
        * 엔터 입력시 로그인 시도
        */
-      _handlerKeypress: function (event) {
+      _handlerKeypress: function(event) {
         if (event.charCode === 13) {
           this._signIn();
         }
@@ -371,7 +374,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * 2. 진행중 다이얼로그 출력
        * 3. check_user 호출 (현재 사용자의 상태를 조회, 세션 생성 X)
        */
-      _signIn: function () {
+      _signIn: function() {
         if (this.validateBeforeSignIn()) {
           this._getSignInBtn().disabled = true;
           this.showInfoMsg(Things.DataGlobal.t('text.processing_msg'), `<br/><h3><span>${Things.DataGlobal.t('text.please_wait')}</span><h3>`);
@@ -400,7 +403,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * 3. status = password_expired
        *    비밀번호를 연장 혹은 변경해야 하는 상태
        */
-      _onSignInResponsed: function (event) {
+      _onSignInResponsed: function(event) {
         var userInfo = event.detail;
 
         this._getSignInBtn().disabled = false;
@@ -425,7 +428,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * 로그인, 비밀번호 변경, 비밀번호 연장 혹은 변경 프로세스를 진행
        * @param {Object} 사용자 정보
        */
-      _checkUserStatus: function (userInfo) {
+      _checkUserStatus: function(userInfo) {
         var status = userInfo.status;
         switch (status) {
           case 'site_domain':
@@ -446,7 +449,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @description
        * 시스템 도메인(통합 관리)이 아닌 일반 도메인으로 직접 연결 시도 했을 경우 login을 직접 호출 함
        */
-      _requestSiteSignIn: function () {
+      _requestSiteSignIn: function() {
         var siteSignInAjax = this._getSiteSignInAjax();
         siteSignInAjax.body = {
           email: btoa(this.username),
@@ -460,7 +463,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * check_user를 통해 확인한 사용자의 상태가 비밀번호를 반드시 변경해야 하는 상태일 때
        * 비밀번호 변경 프로세스를 진행
        */
-      _passwordChangeProcess: function (userInfo) {
+      _passwordChangeProcess: function(userInfo) {
         this.openConfirmMsg({
           type: 'info',
           title: Things.DataGlobal.t('button.password_change'),
@@ -477,7 +480,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * check_user를 통해 확인한 사용자의 상태가 비밀번호를 변경 혹은 연장해야 하는 상태일 때
        * 비밀번호 변경 혹은 연장 프로세스를 진행
        */
-      _passwordExpiredProcess: function (userInfo) {
+      _passwordExpiredProcess: function(userInfo) {
         this.openConfirmMsg({
           type: 'info',
           title: Things.DataGlobal.t('button.password_change'),
@@ -499,12 +502,12 @@ Copyright © HatioLab Inc. All rights reserved.
        * 팝업이 종료 닫을 경우 (비밀번호 변경 없이) 브라우저를 refresh함
        * @param {Object} 사용자 정보
        */
-      _showPwdChangePopup: function (userInfo) {
+      _showPwdChangePopup: function(userInfo) {
         var changePwdView = document.createElement('things-change-password');
         this.fire('things-open-popup-view', {
           view: changePwdView,
           modal: true,
-          openCallback: function () {
+          openCallback: function() {
             changePwdView.title = Things.DataGlobal.t('button.change_password');
             changePwdView.actionUrl = 'users/change_pass/' + userInfo.id;
             changePwdView.method = 'POST';
@@ -524,7 +527,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Boolean} moveToSite 사이트를 선택하면 기본적으로 login 요청을 보냄 (_requestSiteSignIn)
        * moveToSite가 true이면 세션이 이미 유효한 상태로 간주하고 로그인을 요청하지 않고 해당 사이트로 URL을 리다이렉트
        */
-      _showDomainSelector: function (domains, forceSelect, moveToSite) {
+      _showDomainSelector: function(domains, forceSelect, moveToSite) {
         var domainSelector = document.createElement('base-sso-domain-selector');
         domainSelector.title = Things.DataGlobal.t('label.site');
 
@@ -532,10 +535,10 @@ Copyright © HatioLab Inc. All rights reserved.
           view: domainSelector,
           modal: true,
           dialogSize: 'small',
-          openCallback: function () {
+          openCallback: function() {
             domainSelector.domains = domains;
           },
-          closeCallback: function () {
+          closeCallback: function() {
             if (domainSelector.selectedDomain) {
               this.siteDomainUrl = this._computeDomainUrl(domainSelector.selectedDomain);
               if (moveToSite) {
@@ -558,7 +561,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Object} 선택한 domain 정보
        * @returns {String} 이동할 url
        */
-      _computeDomainUrl: function (domain) {
+      _computeDomainUrl: function(domain) {
         var protocol = location.protocol;
         var redirectUrl, serverUrl;
         var port = location.port ? `:${location.port}` : '';
@@ -585,7 +588,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @description 개발 모드일 경우 현재 설정되어 있는 서버 url을 추출하여 리턴함
        * @returns {String} 현재 설정되어 있는 서버 url
        */
-      _getCurrentServerOrigin: function () {
+      _getCurrentServerOrigin: function() {
         return new URL(this.globals.baseUrl).host;
       },
 
@@ -594,7 +597,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * 전달 받은 URL로 redirect
        * @param {String} 이동할 url
        */
-      _moveToSelectedDomain: function (url) {
+      _moveToSelectedDomain: function(url) {
         location.href = url;
       },
 
@@ -604,7 +607,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * 비밀번호 유효기간 연장 서비스 호출
        * @param {Object} 사용자 정보
        */
-      _requestPwdExtend: function (userInfo) {
+      _requestPwdExtend: function(userInfo) {
         var pwdExtendAjax = this._getPwdExtendAjax();
         pwdExtendAjax.resourceId = userInfo.id;
         pwdExtendAjax.generateRequest();
@@ -616,14 +619,14 @@ Copyright © HatioLab Inc. All rights reserved.
        * things-expired-password-changed 이벤트를 발생 시켜
        * 다시한번 check_user 시도함
        */
-      _onPwdExtendResponsed: function () {
+      _onPwdExtendResponsed: function() {
         this.fire('things-expired-password-changed');
       },
 
       /**
        * 로그인 출력 메시지 화면에 표시
        */
-      _loginInfoMessageResponsed: function (event) {
+      _loginInfoMessageResponsed: function(event) {
         if (event && event.detail && event.detail.value) {
           this.$['info-msg'].innerHTML = event.detail.value.replace(/\\n/g, '<br />');
         }
@@ -634,7 +637,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * 비밀번호 변경 / 연장을 진행했을 경우 다시한번 check_user를 호출하여
        * 로그인을 시도함
        */
-      _retrySignIn: function () {
+      _retrySignIn: function() {
         this._signIn();
       },
 
@@ -643,7 +646,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * 로그인 에러 발생에 대한 event handler
        * 로그인 에러 발생시 팝업 출력
        */
-      _onSignInError: function (event) {
+      _onSignInError: function(event) {
         this._getSignInBtn().disabled = false;
         var req = event.detail.request;
         var res = req.xhr.response;
@@ -661,7 +664,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * 도메인 사이트에 직접 로그인 성공시 response handler
        * @param {Object} 사용자 정보
        */
-      _onSiteSignInResponsed: function (event) {
+      _onSiteSignInResponsed: function(event) {
         if (event.detail.status && event.detail.status !== 'ok') {
           this._checkUserStatus(event.detail);
           return;
@@ -675,7 +678,7 @@ Copyright © HatioLab Inc. All rights reserved.
         }
       },
 
-      _getLastLoginInfo: function (userInfo) {
+      _getLastLoginInfo: function(userInfo) {
         var loginInfoAjax = this._getLoginInfoAjax();
         loginInfoAjax.params = {
           sort: JSON.stringify([{
@@ -695,7 +698,7 @@ Copyright © HatioLab Inc. All rights reserved.
         loginInfoAjax.generateRequest();
       },
 
-      _onLastLoginInfoResponsed: function (event) {
+      _onLastLoginInfoResponsed: function(event) {
         if (event.detail.items.length == 2) {
           var timeoutSec = 5;
           var lastLoginInfo = event.detail.items[1];
@@ -703,17 +706,23 @@ Copyright © HatioLab Inc. All rights reserved.
             type: 'info',
             title: Things.DataGlobal.t('title.last_login_info'),
             text: '<div>' +
-              Things.DataGlobal.t('text.last_logged_in_at_x', { x: '<span style="font-weight: normal;">[ ' + lastLoginInfo.created_at + ' ]</span>' }) +
-              '<br>' + Things.DataGlobal.t('text.last_logged_in_from_x', { x: '<span style="font-weight: normal;">[ ' + lastLoginInfo.access_ip + ' ]</span>' }) +
-              '<br>' + Things.DataGlobal.t('text.auto_close_after_x_sec', { x: '<span style="font-weight: normal;">' + timeoutSec + '</span>' }),
+              Things.DataGlobal.t('text.last_logged_in_at_x', {
+                x: '<span style="font-weight: normal;">[ ' + lastLoginInfo.created_at + ' ]</span>'
+              }) +
+              '<br>' + Things.DataGlobal.t('text.last_logged_in_from_x', {
+                x: '<span style="font-weight: normal;">[ ' + lastLoginInfo.access_ip + ' ]</span>'
+              }) +
+              '<br>' + Things.DataGlobal.t('text.auto_close_after_x_sec', {
+                x: '<span style="font-weight: normal;">' + timeoutSec + '</span>'
+              }),
             html: true,
             showCancelButton: false,
             showConfirmButton: true
-          }, function () {
+          }, function() {
             this._moveToHome();
           }.bind(this));
 
-          setTimeout(function () {
+          setTimeout(function() {
             swal.close();
             this._moveToHome();
           }.bind(this), timeoutSec * 1000);
@@ -730,7 +739,7 @@ Copyright © HatioLab Inc. All rights reserved.
        *    세션이 살아 있지만 권한이 없는 사이트로 접속 했을 경우 => alert 후 사이트 선택 URL로 리다이렉트
        * 3. authResult = ok 정상 처리
        */
-      _onCheckAuthResponsed: function (event) {
+      _onCheckAuthResponsed: function(event) {
         var authResult = event.detail.result.toLowerCase();
         if (authResult == 'site_list') {
           // 1. show site selector
@@ -749,8 +758,10 @@ Copyright © HatioLab Inc. All rights reserved.
           this.openConfirmMsg({
             type: 'error',
             title: Things.DataGlobal.t('error.not_allowed_access'),
-            text: Things.DataGlobal.t('error.cant_access_x_site', { x: location.pathname.replace(/\//g, '') })
-          }, function () {
+            text: Things.DataGlobal.t('error.cant_access_x_site', {
+              x: location.pathname.replace(/\//g, '')
+            })
+          }, function() {
             location.href = location.origin;
           });
         }
@@ -759,12 +770,12 @@ Copyright © HatioLab Inc. All rights reserved.
       /**
        * @description 사이트 선택에 앞서 불필요한 화면 요소를 제거함
        */
-      _clearView: function () {
+      _clearView: function() {
         page('/login');
         app.querySelector('things-sidebar').querySelector('#panel').hidden = true;
       },
 
-      _moveToHome: function () {
+      _moveToHome: function() {
         if (this.siteDomainUrl) {
           this._moveToSelectedDomain(this.siteDomainUrl);
         } else {
@@ -777,11 +788,11 @@ Copyright © HatioLab Inc. All rights reserved.
        * 로그인 시도 이전에 수행하는 validation
        * @return 유효성 결과
        */
-      validateBeforeSignIn: function () {
+      validateBeforeSignIn: function() {
         return this._getUsernameInput().validate() && this._getPasswordInput().validate();
       },
 
-      _showLastSignInInfo: function () {
+      _showLastSignInInfo: function() {
 
       },
 
@@ -789,7 +800,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @description
        * 로그인 정상 종료시 페이지 이동 및 브라우저 리프레시 수행
        */
-      _reloadAfterLoginSucceed: function (user) {
+      _reloadAfterLoginSucceed: function(user) {
         page('/');
         location.reload(true);
       },
@@ -797,50 +808,50 @@ Copyright © HatioLab Inc. All rights reserved.
       /**
        * @returns username input element
        */
-      _getUsernameInput: function () {
+      _getUsernameInput: function() {
         return this.$['username'];
       },
 
       /**
        * @returns password input element
        */
-      _getPasswordInput: function () {
+      _getPasswordInput: function() {
         return this.$['password'];
       },
 
       /**
        * @returns sign-in-btn element
        */
-      _getSignInBtn: function () {
+      _getSignInBtn: function() {
         return this.$['sign-in-btn'];
       },
 
       /**
        * @returns sign-in-ajax element
        */
-      _getSignInAjax: function () {
+      _getSignInAjax: function() {
         return this.$['sign-in-ajax'];
       },
 
       /**
        * @returns site-sign-in-ajax element
        */
-      _getSiteSignInAjax: function () {
+      _getSiteSignInAjax: function() {
         return this.$['site-sign-in-ajax'];
       },
 
       /**
        * @returns pwd-extend-ajax element
        */
-      _getPwdExtendAjax: function () {
+      _getPwdExtendAjax: function() {
         return this.$['pwd-extend-ajax'];
       },
 
-      _getLoginInfoAjax: function () {
+      _getLoginInfoAjax: function() {
         return this.$['login-info-ajax'];
       },
 
-      _getCheckAuthAjax: function () {
+      _getCheckAuthAjax: function() {
         return this.$['check-auth-ajax'];
       },
 
@@ -850,7 +861,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {String} title 메시지 타이틀
        * @param {String} text 메시지 내용
        */
-      showInfoMsg: function (title, text) {
+      showInfoMsg: function(title, text) {
         this.openInfoMsg({
           type: 'info',
           title: title,
@@ -865,7 +876,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * uuid 생성기
        * @returns {String} token과 맵핑할 UUID를 생성하여 return
        */
-      uuidGen: function () {
+      uuidGen: function() {
         function s4() {
           return Math.floor((1 + Math.random()) * 0x10000)
             .toString(16)
@@ -874,20 +885,20 @@ Copyright © HatioLab Inc. All rights reserved.
         return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
       },
 
-      _onReqActiveBtnTap: function () {
+      _onReqActiveBtnTap: function() {
         var requestActive = document.createElement('things-request-active');
         requestActive.title = this.reqActiveLabel;
         requestActive.actionUrl = 'request_auths/account/activate/request';
         requestActive.method = 'POST';
 
-        requestActive.addEventListener('things-request-active-success', function (event) {
+        requestActive.addEventListener('things-request-active-success', function(event) {
           var event = new CustomEvent('things-close-popup-view', {
             detail: this
           });
           document.dispatchEvent(event);
         });
 
-        requestActive.addEventListener('things-request-active-failure', function (event) {
+        requestActive.addEventListener('things-request-active-failure', function(event) {
           var response = event.detail.request.xhr.response;
           this.openResponseError(response);
         })
@@ -903,20 +914,20 @@ Copyright © HatioLab Inc. All rights reserved.
         document.dispatchEvent(event);
       },
 
-      _onResetPwdTap: function () {
+      _onResetPwdTap: function() {
         var pwInit = document.createElement('things-password-init');
         pwInit.title = this.resetPassLabel;
         pwInit.actionUrl = 'request_auths/password/reset/request';
         pwInit.method = 'POST';
 
-        pwInit.addEventListener('things-password-init-success', function (event) {
+        pwInit.addEventListener('things-password-init-success', function(event) {
           var event = new CustomEvent('things-close-popup-view', {
             detail: this
           });
           document.dispatchEvent(event);
         });
 
-        pwInit.addEventListener('things-password-init-failure', function (event) {
+        pwInit.addEventListener('things-password-init-failure', function(event) {
           var response = event.detail.request.xhr.response;
           this.openResponseError(response);
         });
