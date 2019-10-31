@@ -416,7 +416,7 @@ Copyright © HatioLab Inc. All rights reserved.
                     method: "GET",
                     contentType: "application/json",
                     resourceUrl: "job_batches/running_batch/:id",
-                    resourceId: checkedRow.stage_cd + "/" + checkedRow.equip_type + "/" + checkedRow.equip_group + "/" + (checkedRow.equip_cd ? checkedRow.equip_cd : "null")
+                    resourceId: checkedRow.stage_cd + "/" + checkedRow.equip_type + "/" + (checkedRow.equip_cd ? checkedRow.equip_cd : "null")
                   };
 
                   var runningJobAjax = this.create('things-ajax', props);
