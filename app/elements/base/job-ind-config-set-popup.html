@@ -1,0 +1,81 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+
+<dom-module id="job-ind-config-set-popup">
+    <template>
+        <style>
+            :host {
+                @apply --layout-vertical;
+                @apply --layout-flex;
+            }
+
+            #input-container {
+                margin: auto;
+            }
+        </style>
+        <div id="input-container">
+            <things-input-field id="conf_set_cd" label="[[confSetCdLabel]]" value="[[confSetCd]]" readonly>
+            </things-input-field>
+            <things-input-field id="conf_set_nm" label="[[confSetNmLabel]]" value="[[confSetNm]]" readonly>
+            </things-input-field>
+            <things-input-field id="target_set_nm" label="[[targetSetNmLabel]]">
+            </things-input-field>
+            <things-button-bar id="button-bar" buttons="[[buttons]]" style="float: right;"></things-button-bar>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'job-ind-config-set-popup',
+
+            properties: {
+                /**
+                 * 
+                 */
+                confSetCdLabel: {
+                    type: String,
+                    value: "소스 설정 셋 코드"
+                },
+
+                /**
+                 * 
+                 */
+                confSetNmLabel: {
+                    type: String,
+                    value: "소스 설정 셋 명"
+                },
+
+                /**
+                 * 
+                 */
+                targetSetNmLabel: {
+                    type: String,
+                    value: "타겟 설정 셋 명"
+                },
+
+                buttons: {
+                    type: Array,
+                    value: function () {
+                        return [{
+                            id: 'ok-btn',
+                            text: 'ok'
+                        }, {
+                            id: 'cancel-btn',
+                            text: 'cancel'
+                        }]
+                    }
+                }
+            },
+
+            listeners: {
+                'ok-btn-tap': '_okBtnTap'
+            },
+
+            _okBtnTap(event) {
+                console.log(this.$.target_set_nm.value);
+            }
+        })
+    </script>
+</dom-module>
