@@ -2,384 +2,403 @@
 @license
 Copyright © HatioLab Inc. All rights reserved.
 -->
+
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
 <link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
-
 <link rel="import" href="../../bower_components/things-meta/things-named-meta-behavior.html">
+
 <!--
-  Base Home View
+  홈 메뉴 
  -->
 
 <dom-module id="base-home">
-    <template>
-        <style>
-            :host {
-                @apply --layout-flex;
-                @apply --layout-vertical;
-            }
+  <template>
+		<style>
+			:host {
+				@apply --layout-flex;
+				@apply --layout-vertical;
+			}
 
-            .container {
-                height: 100%;
-                display: grid;
-                grid-template-rows: 5% 25% 25% 25% auto;
-                grid-template-columns: 10% 65% 20% 5%;
-                border-radius: 4px;
-                grid-column-gap: 1em;
-                grid-row-gap: 1em;
-            }
+			.container {
+				height: 100%;
+				display: grid;
+				grid-template-rows: 5% 25% 25% 25% auto;
+				grid-template-columns: 10% 65% 20% 5%;
+				border-radius: 4px;
+				grid-column-gap: 1em;
+				grid-row-gap: 1em;
+			}
 
-            .top-section {
-                @apply --layout-vertical;
-                @apply --layout-flex;
-                grid-row-start: 1;
-                grid-row-end: 1;
-                /* grid-column-start: 1;
-                grid-column-end: 3; */
-            }
+			.top-section {
+				@apply --layout-vertical;
+				@apply --layout-flex;
+				grid-row-start: 1;
+				grid-row-end: 1;
+				/* grid-column-start: 1;
+				grid-column-end: 3; */
+			}
 
-            .middle-section {
-                @apply --layout-vertical;
-                @apply --layout-flex;
-                grid-row-start: 2;
-                grid-row-end: 2;
-                /* grid-column-start: 1;
-                grid-column-end: 3; */
-            }
+			.middle-section {
+				@apply --layout-vertical;
+				@apply --layout-flex;
+				grid-row-start: 2;
+				grid-row-end: 2;
+				/* grid-column-start: 1;
+				grid-column-end: 3; */
+			}
 
-            .bottom-section {
-                @apply --layout-vertical;
-                @apply --layout-flex;
-                grid-row-start: 3;
-                grid-row-end: 3;
-                /* grid-column-start: 1;
-                grid-column-end: 3; */
-            }
+			.bottom-section {
+				@apply --layout-vertical;
+				@apply --layout-flex;
+				grid-row-start: 3;
+				grid-row-end: 3;
+				/* grid-column-start: 1;
+				grid-column-end: 3; */
+			}
 
-            #chart-subtitle {
-                @apply(--things-default-padding);
-                @apply(--things-subtitle);
-                grid-row-start: 1;
-                grid-row-end: 1;
-                grid-column-start: 2;
-                grid-column-end: 2;
-                font-size: 15px;
-                padding-top: 1.2em;
-                text-align: center;
-            }
+			#chart-subtitle {
+				@apply(--things-default-padding);
+				@apply(--things-subtitle);
+				grid-row-start: 1;
+				grid-row-end: 1;
+				grid-column-start: 2;
+				grid-column-end: 2;
+				font-size: 15px;
+				padding-top: 1.2em;
+				text-align: center;
+			}
 
-            #sum-subtitle {
-                @apply(--things-default-padding);
-                @apply(--things-subtitle);
-                grid-row-start: 1;
-                grid-row-end: 1;
-                grid-column-start: 3;
-                grid-column-end: 3;
-                font-size: 15px;
-                padding-top: 1.2em;
-                text-align: center;
-            }
+			#sum-subtitle {
+				@apply(--things-default-padding);
+				@apply(--things-subtitle);
+				grid-row-start: 1;
+				grid-row-end: 1;
+				grid-column-start: 3;
+				grid-column-end: 3;
+				font-size: 15px;
+				padding-top: 1.2em;
+				text-align: center;
+			}
 
-            #july-text {
-                display: grid;
-                grid-row-start: 2;
-                grid-row-end: 2;
-                grid-column-start: 1;
-                grid-column-end: 1;
-            }
+			#july-text {
+				display: grid;
+				grid-row-start: 2;
+				grid-row-end: 2;
+				grid-column-start: 1;
+				grid-column-end: 1;
+			}
 
-            #august-text {
-                display: grid;
-                grid-row-start: 3;
-                grid-row-end: 3;
-                grid-column-start: 1;
-                grid-column-end: 1;
-            }
+			#august-text {
+				display: grid;
+				grid-row-start: 3;
+				grid-row-end: 3;
+				grid-column-start: 1;
+				grid-column-end: 1;
+			}
 
-            #september-text {
-                display: grid;
-                grid-row-start: 4;
-                grid-row-end: 4;
-                grid-column-start: 1;
-                grid-column-end: 1;
-            }
+			#september-text {
+				display: grid;
+				grid-row-start: 4;
+				grid-row-end: 4;
+				grid-column-start: 1;
+				grid-column-end: 1;
+			}
 
-            #july-chart-container {
-                display: grid;
-                grid-row-start: 2;
-                grid-row-end: 2;
-                grid-column-start: 2;
-                grid-column-end: 2;
-                background-color: rgba(255,255,255,.04);
-                fill: silver;
-            }
+			#july-chart-container {
+				display: grid;
+				grid-row-start: 2;
+				grid-row-end: 2;
+				grid-column-start: 2;
+				grid-column-end: 2;
+				background-color: rgba(255,255,255,.04);
+				fill: silver;
+			}
 
-            #august-chart-container {
-                display: grid;
-                grid-row-start: 3;
-                grid-row-end: 3;
-                grid-column-start: 2;
-                grid-column-end: 2;
-                background-color: rgba(255,255,255,.04);
-                fill: silver;
-            }
+			#august-chart-container {
+				display: grid;
+				grid-row-start: 3;
+				grid-row-end: 3;
+				grid-column-start: 2;
+				grid-column-end: 2;
+				background-color: rgba(255,255,255,.04);
+				fill: silver;
+			}
 
-            #september-chart-container {
-                display: grid;
-                grid-row-start: 4;
-                grid-row-end: 4;
-                grid-column-start: 2;
-                grid-column-end: 2;
-                background-color: rgba(255,255,255,.04);
-                fill: silver;
-            }
+			#september-chart-container {
+				display: grid;
+				grid-row-start: 4;
+				grid-row-end: 4;
+				grid-column-start: 2;
+				grid-column-end: 2;
+				background-color: rgba(255,255,255,.04);
+				fill: silver;
+			}
 
-            #july-sum {
-                display: grid;
-                grid-row-start: 2;
-                grid-row-end: 2;
-                grid-column-start: 3;
-                grid-column-end: 3;
-                background-color: rgba(255,255,255,.04);
-            }
+			#july-sum {
+				display: grid;
+				grid-row-start: 2;
+				grid-row-end: 2;
+				grid-column-start: 3;
+				grid-column-end: 3;
+				background-color: rgba(255,255,255,.04);
+			}
 
-            #august-sum {
-                display: grid;
-                grid-row-start: 3;
-                grid-row-end: 3;
-                grid-column-start: 3;
-                grid-column-end: 3;
-                background-color: rgba(255,255,255,.04);
-            }
+			#august-sum {
+				display: grid;
+				grid-row-start: 3;
+				grid-row-end: 3;
+				grid-column-start: 3;
+				grid-column-end: 3;
+				background-color: rgba(255,255,255,.04);
+			}
 
-            #september-sum {
-                display: grid;
-                grid-row-start: 4;
-                grid-row-end: 4;
-                grid-column-start: 3;
-                grid-column-end: 3;
-                background-color: rgba(255,255,255,.04);
-            }
+			#september-sum {
+				display: grid;
+				grid-row-start: 4;
+				grid-row-end: 4;
+				grid-column-start: 3;
+				grid-column-end: 3;
+				background-color: rgba(255,255,255,.04);
+			}
 
-            div.bottom-section {
-                grid-row-start: 5;
-                grid-row-end: 5;
-                grid-column-start: 3;
-                grid-column-end: 3;
-                text-align: right;
-                color: var(--things-primary-text-color);
-                font-size: 13px;
-            }
+			div.bottom-section {
+				grid-row-start: 5;
+				grid-row-end: 5;
+				grid-column-start: 3;
+				grid-column-end: 3;
+				text-align: right;
+				color: var(--things-primary-text-color);
+				font-size: 13px;
+			}
 
-            span.month {
-                font-size: 21px;
-                color: #222;
-                text-align: center;
-                background-color: var(--things-primary-color);
-                width: 62px;
-                height: 39px;
-                line-height: 41px;
-                border-radius: 8px;
-                margin-left: 53px;
+			span.month {
+				font-size: 21px;
+				color: #222;
+				text-align: center;
+				background-color: var(--things-primary-color);
+				width: 62px;
+				height: 39px;
+				line-height: 41px;
+				border-radius: 8px;
+				margin-left: 53px;
+			}
 
-            }
+			span.sum-text {
+				font-size: 23px;
+				color: silver;
+				padding-top: 1.2em;
+				text-align: center;
+			}
 
-            span.sum-text {
-                font-size: 23px;
-                color: silver;
-                padding-top: 1.2em;
-                text-align: center;
-            }
+			span.percent {
+				font-size: 23px;
+				color: #fff;
+				text-align: center;
+				font-weight: bold;
+			}
 
-            span.percent {
-                font-size: 23px;
-                color: #fff;
-                text-align: center;
-                font-weight: bold;
-            }
+			div.arrow-up {
+				content: url(../../images/base/blue-arrow-up.png);
+				width: 1em;
+				height: 1em;
+				display: inline;
+				padding-left: 0.5em;
+			}
 
-            div.arrow-up {
-                content: url(../../images/base/blue-arrow-up.png);
-                width: 1em;
-                height: 1em;
-                display: inline;
-                padding-left: 0.5em;
-            }
+			div.arrow-down {
+				content: url(../../images/base/red-arrow-down.png);
+				width: 1em;
+				height: 1em;
+				display: inline;
+				padding-left: 0.5em;
+			}
 
-            div.arrow-down {
-                content: url(../../images/base/red-arrow-down.png);
-                width: 1em;
-                height: 1em;
-                display: inline;
-                padding-left: 0.5em;
-            }
+			span.chart-info {
+				display: inline;
+				text-align: right;
+			}
+		</style>
 
-            span.chart-info {
-                display: inline;
-                text-align: right;
-            }
+		<div class="container">
+			<div class="top-section"></div>
 
+			<div id="july-text">
+				<span class="month">7월</span>
+			</div>
+			
+			<div id="chart-subtitle">물동량 추이
+				<!-- <span class="chart-info">전월 최대<br></span>
+				<span class="chart-info">전월 최소<br></span>
+				<span class="chart-info">단위: PCS</span> -->
+			</div>
+			
+			<div id="july-chart-container">
+				<div id="july-chart"></div>
+			</div>
+			
+			<div id="sum-subtitle">누적합계</div>
+			
+			<div id="july-sum">
+				<span class="sum-text">1,123,456</span>
+				<span class="percent">5%<div class="arrow-down"></div></span>
+			</div>
+			
+			<div id="august-text">
+				<span class="month">8월</span>
+			</div>
+			
+			<div id="august-chart-container">
+				<div id="august-chart"></div>
+			</div>
+			
+			<div id="august-sum">
+				<span class="sum-text">1,324,456</span>
+				<span class="percent">13%<div class="arrow-up"></div></span>
+			</div>
+			
+			<div id="september-text">
+				<span class="month">9월</span>
+			</div>
+			
+			<div id="september-chart-container">
+				<div id="september-chart"></div>
+			</div>
+			
+			<div id="september-sum">
+				<span class="sum-text">823,456</span>
+				<span class="percent">8%<div class="arrow-up"></div></span>
+			</div>
+			
+			<div class="bottom-section">
+				<span class="bottom-text">이번 달은 <br>같은 기간 상승/하락</span>
+			</div>
+		</div>
+  </template>
 
-        </style>
+  <script>
+    Polymer({
+      is: 'base-home',
 
-        <div class="container">
-            <div class="top-section"></div>
-            <div id="july-text">
-                <span class="month">7월</span>
-            </div>
-            <div id="chart-subtitle">물동량 추이
-                <!-- <span class="chart-info">전월 최대<br></span>
-                <span class="chart-info">전월 최소<br></span>
-                <span class="chart-info">단위: PCS</span> -->
-            </div>
-            <div id="july-chart-container">
-                <div id="july-chart"></div>
-            </div>
-            <div id="sum-subtitle">누적합계</div>
-            <div id="july-sum">
-                <span class="sum-text">1,123,456</span>
-                <span class="percent">5%<div class="arrow-down"></div></span>
-            </div>
-            <div id="august-text">
-                <span class="month">8월</span>
-            </div>
-            <div id="august-chart-container">
-                <div id="august-chart"></div>
-            </div>
-            <div id="august-sum">
-                <span class="sum-text">1,324,456</span>
-                <span class="percent">13%<div class="arrow-up"></div></span>
-            </div>
-            <div id="september-text">
-                <span class="month">9월</span>
-            </div>
-            <div id="september-chart-container">
-                <div id="september-chart"></div>
-            </div>
-            <div id="september-sum">
-                <span class="sum-text">823,456</span>
-                <span class="percent">8%<div class="arrow-up"></div></span>
-            </div>
-            <div class="bottom-section">
-                <span class="bottom-text">이번 달은 <br>같은 기간 상승/하락</span>
-            </div>
-        </div>
-    </template>
+      behaviors: [],
 
-    <script>
-        Polymer({
-            is: 'base-home',
+      properties: {},
 
-            behaviors: [
-            ],
+      listeners: {},
 
-            properties: {
+      attached: function() {
+        setTimeout(function() {
+          this._renderJulyChart(50);
+          this._renderAugustChart(50);
+          this._renderSeptemberChart(50);
+        }.bind(this), 2000)
+
+      },
+
+      /**
+       * 7월 차트 렌더링
+       *******************
+       * @param {Number} rate
+       */
+      _renderJulyChart: function(rate) {
+        var legend = Things.DataGlobal.t('label.progress_rate');
+
+        if (this.julyChart) {
+          this.julyChart.load({
+            columns: [
+              [legend, rate]
+            ]
+          });
+
+        } else {
+          this.julyChart = c3.generate({
+            bindto: this.$['july-chart'],
+            data: {
+              x: 'x',
+              columns: [
+                ['x', 10, 20, 30, 40, 50, 60, 70, 80],
+                ['data1', 1100, 1200, 1150, 1200, 1250, 1100]
+              ]
             },
-
-            listeners: {
-            },
-
-            attached: function () {
-                setTimeout(function () {
-                    this._renderJulyChart(50);
-                    this._renderAugustChart(50);
-                    this._renderSeptemberChart(50);
-                }.bind(this), 2000)
-
-            },
-
-            /**
-             * 7월 차트 렌더링
-             *******************
-             * @param {Number} rate
-             */
-            _renderJulyChart: function (rate) {
-                var legend = Things.DataGlobal.t('label.progress_rate');
-
-                if (this.julyChart) {
-                    this.julyChart.load({ columns: [[legend, rate]] });
-
-                } else {
-                    this.julyChart = c3.generate({
-                        bindto: this.$['july-chart'],
-                        data: {
-                            x: 'x',
-                            columns: [
-                                ['x', 10, 20, 30, 40, 50, 60, 70, 80],
-                                ['data1', 1100, 1200, 1150, 1200, 1250, 1100]
-                            ]
-                        },
-                        color: {
-                            pattern: ['#60B044', '#60B044'],
-                            threshold: {
-                                values: [30, 60, 90, 100]
-                            }
-                        }
-                    })
-                }
-            },
-
-            /**
-             * 8월 차트 렌더링
-             *******************
-             * @param {Number} rate
-             */
-            _renderAugustChart: function (rate) {
-                var legend = Things.DataGlobal.t('label.progress_rate');
-
-                if (this.augustChart) {
-                    this.augustChart.load({ columns: [[legend, rate]] });
-
-                } else {
-                    this.augustChart = c3.generate({
-                        bindto: this.$['august-chart'],
-                        data: {
-                            x: 'x',
-                            columns: [
-                                ['x', 10, 20, 30, 40, 50, 60, 70, 80],
-                                ['data2', 1300, 1200, 1150, 1100, 1250, 1150]
-                            ]
-                        },
-                        color: {
-                            pattern: ['#60B044', '#60B044'],
-                            threshold: {
-                                values: [30, 60, 90, 100]
-                            }
-                        }
-                    })
-                }
-            },
-
-            /**
-             * 9월 차트 렌더링
-             *******************
-             * @param {Number} rate
-             */
-            _renderSeptemberChart: function (rate) {
-                var legend = Things.DataGlobal.t('label.progress_rate');
-
-                if (this.septemberChart) {
-                    this.septemberChart.load({ columns: [[legend, rate]] });
-
-                } else {
-                    this.septemberChart = c3.generate({
-                        bindto: this.$['september-chart'],
-                        data: {
-                            x: 'x',
-                            columns: [
-                                ['x', 10, 20, 30, 40, 50, 60, 70, 80],
-                                ['data1', 1100, 1150, 1100, 1200, 1250, 1150],
-                                ['red', 1200, 1200, 1200, 1200, 1200, 1200],
-                                ['blue', 350, 350, 350, 350, 350, 350]
-                            ]
-                        },
-                        color: {
-                            pattern: ['#60B044', '#FF0000', '#0000FF']
-                        }
-                    })
-                }
+            color: {
+              pattern: ['#60B044', '#60B044'],
+              threshold: {
+                values: [30, 60, 90, 100]
+              }
             }
-        })
-    </script>
+          })
+        }
+      },
+
+      /**
+       * 8월 차트 렌더링
+       *******************
+       * @param {Number} rate
+       */
+      _renderAugustChart: function(rate) {
+        var legend = Things.DataGlobal.t('label.progress_rate');
+
+        if (this.augustChart) {
+          this.augustChart.load({
+            columns: [
+              [legend, rate]
+            ]
+          });
+
+        } else {
+          this.augustChart = c3.generate({
+            bindto: this.$['august-chart'],
+            data: {
+              x: 'x',
+              columns: [
+                ['x', 10, 20, 30, 40, 50, 60, 70, 80],
+                ['data2', 1300, 1200, 1150, 1100, 1250, 1150]
+              ]
+            },
+            color: {
+              pattern: ['#60B044', '#60B044'],
+              threshold: {
+                values: [30, 60, 90, 100]
+              }
+            }
+          })
+        }
+      },
+
+      /**
+       * 9월 차트 렌더링
+       *******************
+       * @param {Number} rate
+       */
+      _renderSeptemberChart: function(rate) {
+        var legend = Things.DataGlobal.t('label.progress_rate');
+
+        if (this.septemberChart) {
+          this.septemberChart.load({
+            columns: [
+              [legend, rate]
+            ]
+          });
+
+        } else {
+          this.septemberChart = c3.generate({
+            bindto: this.$['september-chart'],
+            data: {
+              x: 'x',
+              columns: [
+                ['x', 10, 20, 30, 40, 50, 60, 70, 80],
+                ['data1', 1100, 1150, 1100, 1200, 1250, 1150],
+                ['red', 1200, 1200, 1200, 1200, 1200, 1200],
+                ['blue', 350, 350, 350, 350, 350, 350]
+              ]
+            },
+            color: {
+              pattern: ['#60B044', '#FF0000', '#0000FF']
+            }
+          })
+        }
+      }
+    })
+  </script>
 </dom-module>

@@ -21,7 +21,7 @@ Copyright © HatioLab Inc. All rights reserved.
 -->
 
 <dom-module id="deployment-popup">
-	<template>
+  <template>
 		<style>
 			:host {
 				display: block;
@@ -49,8 +49,6 @@ Copyright © HatioLab Inc. All rights reserved.
 				@apply(--layout-end-justified);
 				padding: 0 10px;
 			}
-
-
 		</style>
 
 		<things-i18n-msg auto msgid="label.target_type" msg="{{labelTargetType}}" hidden></things-i18n-msg>
@@ -92,12 +90,16 @@ Copyright © HatioLab Inc. All rights reserved.
 
 			<things-date-time-picker id="scheduled-at" locale='KO' write-format='YYYY-MM-DD HH:mm:ss' label="[[labelScheduledAt]]" value="{{scheduledAt}}" required tab-index ='4' hidden>
 			</things-date-time-picker>
+
       <things-input-field label="[[labelVersion]]" value="{{version}}" required tab-index ='5'>
 			</things-input-field>
+			
 			<!--things-input-field label="[[labelRemark]]" value="{{remark}}" required tab-index ='6'>
 			</things-input-field-->
+			
 			<things-input-field label="[[labelFileName]]" value="{{fileName}}" required tab-index ='7'>
 			</things-input-field>
+			
 			<things-input-field label="[[labelFileSize]]" value="{{fileSize}}" required tab-index ='8'>
 			</things-input-field>
 
@@ -117,214 +119,221 @@ Copyright © HatioLab Inc. All rights reserved.
 		</paper-toolbar>
 	</template>
 
-	<script>
-		Polymer({
-			is: 'deployment-popup',
+  <script>
+    Polymer({
+      is: 'deployment-popup',
 
-			behaviors: [
-				Things.MsgBoxBehavior
-			],
+      behaviors: [
+        Things.MsgBoxBehavior
+      ],
 
-			properties: {
-				/**
-				 * buttons of this screen
-				 *******
-				 * @type {Array}
-				 */
-				buttons: {
-					type: Array,
-					value: function() {
-						return [{ id: 'save-btn', text: 'save' }];
-					}
-				},
+      properties: {
+        /**
+         * buttons of this screen
+         *******
+         * @type {Array}
+         */
+        buttons: {
+          type: Array,
+          value: function() {
+            return [{
+              id: 'save-btn',
+              text: 'save'
+            }];
+          }
+        },
 
-				/**
-				 * Deployment Target Type
-				 *******
-				 * @type {String}
-				 */
-				targetType: {
-					type: String
-				},
+        /**
+         * Deployment Target Type
+         *******
+         * @type {String}
+         */
+        targetType: {
+          type: String
+        },
 
-				/**
-				 * Deployment Target ID
-				 *******
-				 * @type {String}
-				 */
-				targetId: {
-					type: String
-				},
+        /**
+         * Deployment Target ID
+         *******
+         * @type {String}
+         */
+        targetId: {
+          type: String
+        },
 
-				/**
-				 * Firmware Uploaded FileName
-				 *******
-				 * @type {String}
-				 */
-				fileName: {
-					type: String
-				},
+        /**
+         * Firmware Uploaded FileName
+         *******
+         * @type {String}
+         */
+        fileName: {
+          type: String
+        },
 
-				/**
-				 * Deployment Scheduled At
-				 *******
-				 * @type {String}
-				 */
-				scheduledAt: {
-					type: String
-				},
+        /**
+         * Deployment Scheduled At
+         *******
+         * @type {String}
+         */
+        scheduledAt: {
+          type: String
+        },
 
-				/**
-				 * Firmware Version
-				 *******
-				 * @type {String}
-				 */
-				version: {
-					type: String
-				},
+        /**
+         * Firmware Version
+         *******
+         * @type {String}
+         */
+        version: {
+          type: String
+        },
 
-				/**
-				 * Remark
-				 *******
-				 * @type {String}
-				 */
-				remark: {
-					type: String
-				},
+        /**
+         * Remark
+         *******
+         * @type {String}
+         */
+        remark: {
+          type: String
+        },
 
-				/**
-				 * 첨부파일 임시 ID
-				 *******
-				 * @type {String}
-				 */
-				attachTempId: {
-					type: String
-				},
+        /**
+         * 첨부파일 임시 ID
+         *******
+         * @type {String}
+         */
+        attachTempId: {
+          type: String
+        },
 
-				/**
-				 * 예약 여부
-				 *******
-				 * @type {Boolean}
-				 */
-				reserveFlag: {
-					type: Boolean,
-					value: false,
-					observer: '_reserveFlagChanged'
-				},
+        /**
+         * 예약 여부
+         *******
+         * @type {Boolean}
+         */
+        reserveFlag: {
+          type: Boolean,
+          value: false,
+          observer: '_reserveFlagChanged'
+        },
 
-				/**
-				 * 강제 배포 여부
-				 *******
-				 * @type {Boolean}
-				 */
-				forceFlag: {
-					type: Boolean,
-					value: false
-				}
-			},
+        /**
+         * 강제 배포 여부
+         *******
+         * @type {Boolean}
+         */
+        forceFlag: {
+          type: Boolean,
+          value: false
+        }
+      },
 
-			listeners: {
-				'save-btn-tap': 'createDeployment',
-				'file-upload.things-upload-response' : '_fileUploadResponsed',
-				'create-deployment.things-ajax-response': '_afterDeploymentCreated',
-				'scheduled-at.things-datetime-changed' : '_scheduledAtChanged'
-			},
+      listeners: {
+        'save-btn-tap': 'createDeployment',
+        'file-upload.things-upload-response': '_fileUploadResponsed',
+        'create-deployment.things-ajax-response': '_afterDeploymentCreated',
+        'scheduled-at.things-datetime-changed': '_scheduledAtChanged'
+      },
 
-			/**
-			 * 예약 여부 정보 변경시
-			 *************
-			 * @param {Boolean} reserveFlag
-			 */
-			_reserveFlagChanged: function(reserveFlag) {
-				if(reserveFlag) {
-					this.$['scheduled-at'].hidden = false;
-				} else {
-					this.$['scheduled-at'].hidden = true;
-				}
-			},
+      /**
+       * 예약 여부 정보 변경시
+       *************
+       * @param {Boolean} reserveFlag
+       */
+      _reserveFlagChanged: function(reserveFlag) {
+        if (reserveFlag) {
+          this.$['scheduled-at'].hidden = false;
+        } else {
+          this.$['scheduled-at'].hidden = true;
+        }
+      },
 
-			/**
-			 * 배포 데이터 생성
-			 *******
-			 */
-			createDeployment: function() {
-				if(this.validateForm()) {
-					var ajax = this.$['create-deployment'];
-					ajax.body = {
-						attach_temp_id: this.attachTempId,
-						target_type: this.targetType,
-						target_id: this.targetId,
-						version: this.version,
-						scheduled_at: this.scheduledAt,
-						remark: this.remark,
-						force_flag : this.forceFlag
-					};
-					ajax.generateRequest();
-				}
-			},
+      /**
+       * 배포 데이터 생성
+       *******
+       */
+      createDeployment: function() {
+        if (this.validateForm()) {
+          var ajax = this.$['create-deployment'];
+          ajax.body = {
+            attach_temp_id: this.attachTempId,
+            target_type: this.targetType,
+            target_id: this.targetId,
+            version: this.version,
+            scheduled_at: this.scheduledAt,
+            remark: this.remark,
+            force_flag: this.forceFlag
+          };
+          ajax.generateRequest();
+        }
+      },
 
-			/**
-			 * validate 배포 관리 폼
-			 *******
-			 */
-			validateForm: function() {
-				if(this.attachTempId && this.targetType && this.targetId && this.version && ((this.reserveFlag && this.scheduledAt) || (!this.reserveFlag && !this.scheduledAt))) {
-					return true;
-				} else {
-					var notAttached = (!this.attachTempId || this.attachTempId.length < 3);
-					var title = notAttached ? Things.DataGlobal.t('label.attachment') : Things.DataGlobal.t('text.invalid_input');
-					var text = notAttached ? Things.DataGlobal.t('text.firmware_file_is_not_attached') : Things.DataGlobal.t('text.info_invalid');
-					this.openConfirmMsg({ type: 'error', title: title, text: text });
-					return false;
-				}
-			},
+      /**
+       * validate 배포 관리 폼
+       *******
+       */
+      validateForm: function() {
+        if (this.attachTempId && this.targetType && this.targetId && this.version && ((this.reserveFlag && this.scheduledAt) || (!this.reserveFlag && !this.scheduledAt))) {
+          return true;
+        } else {
+          var notAttached = (!this.attachTempId || this.attachTempId.length < 3);
+          var title = notAttached ? Things.DataGlobal.t('label.attachment') : Things.DataGlobal.t('text.invalid_input');
+          var text = notAttached ? Things.DataGlobal.t('text.firmware_file_is_not_attached') : Things.DataGlobal.t('text.info_invalid');
+          this.openConfirmMsg({
+            type: 'error',
+            title: title,
+            text: text
+          });
+          return false;
+        }
+      },
 
-			/**
-			 * after Deployment Created
-			 *******
-			 * @param {Object} event
-			 */
-			_afterDeploymentCreated: function(event) {
-				this.clearValue();
-				var dialogCloseEvent = new CustomEvent('things-dialog-close');
-				document.dispatchEvent(dialogCloseEvent);
-			},
+      /**
+       * after Deployment Created
+       *******
+       * @param {Object} event
+       */
+      _afterDeploymentCreated: function(event) {
+        this.clearValue();
+        var dialogCloseEvent = new CustomEvent('things-dialog-close');
+        document.dispatchEvent(dialogCloseEvent);
+      },
 
-			/**
-			 * clear value
-			 *******
-			 */
-			clearValue: function() {
-				this.attachTempId = null;
-				this.targetType = null;
-				this.targetId = null;
-				this.version = null;
-				this.fileName = null;
-				this.scheduledAt = null;
-				this.forceFlag = false;
-			},
+      /**
+       * clear value
+       *******
+       */
+      clearValue: function() {
+        this.attachTempId = null;
+        this.targetType = null;
+        this.targetId = null;
+        this.version = null;
+        this.fileName = null;
+        this.scheduledAt = null;
+        this.forceFlag = false;
+      },
 
-			/**
-			 * 파일 업로드 응답 시 처리
-			 ********
-			 * @param {Object} event
-			 */
-			_fileUploadResponsed: function(event) {
-				var responseText = event.detail.xhr.responseText;
-				var data = JSON.parse(responseText);
-				this.attachTempId = data.attach_temp_id;
-				this.fileName = data.file_name;
-				this.fileSize = data.file_size;
-			},
+      /**
+       * 파일 업로드 응답 시 처리
+       ********
+       * @param {Object} event
+       */
+      _fileUploadResponsed: function(event) {
+        var responseText = event.detail.xhr.responseText;
+        var data = JSON.parse(responseText);
+        this.attachTempId = data.attach_temp_id;
+        this.fileName = data.file_name;
+        this.fileSize = data.file_size;
+      },
 
-			/**
-			 * 배포 예약 일시 변경시
-			 ********
-			 * @param {Object} event
-			 */
-			_scheduledAtChanged: function(event) {
-				this.scheduledAt = event.detail;
-			}
-		})
-	</script>
+      /**
+       * 배포 예약 일시 변경시
+       ********
+       * @param {Object} event
+       */
+      _scheduledAtChanged: function(event) {
+        this.scheduledAt = event.detail;
+      }
+    })
+  </script>
 </dom-module>

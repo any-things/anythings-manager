@@ -9,7 +9,7 @@
   기준 정보 / 라우터-지시기
 -->
 <dom-module id="gateway-ind">
-    <template>
+  <template>
         <style>
             :host {
                 @apply(--layout-flex);
@@ -86,7 +86,7 @@
         </things-ajax>
 
         <!-- 게이트웨이 데이터 조회 Ajax -->
-        <things-ajax id="search-gateway" resource-url="gateway/search_by_rack/:id"
+        <things-ajax id="search-gateway" resource-url="gateways/search_by_equip/Rack/:id"
             sort-fields='[{"field" : "gw_cd", "ascending" : true}]' resource-action="index" limit="100000"
             last-response="{{gatewayItems}}">
         </things-ajax>
@@ -103,7 +103,7 @@
         </things-ajax>
 
         <!-- IND 데이터 조회 Ajax -->
-        <things-ajax id="search-ind-list" resource-url="ind" sort-fields='[{"field" : "ind_cd", "ascending" : true}]'
+        <things-ajax id="search-ind-list" resource-url="indicators" sort-fields='[{"field" : "ind_nm", "ascending" : true}]'
             query-fields="[[indQueryFields]]" resource-action="index" limit="100000" last-response="{{indItems}}">
         </things-ajax>
 
@@ -146,490 +146,494 @@
         </div>
     </template>
 
-    <script>
-        Polymer({
-            is: 'gateway-ind',
+  <script>
+    Polymer({
+      is: 'gateway-ind',
 
-            behaviors: [
-                Things.MenuGridContentBehavior
-            ],
+      behaviors: [
+        Things.MenuGridContentBehavior
+      ],
 
-            properties: {
-                /**
-                 * 그리드 설정 정보
-                 *******
-                 * @type {Object}
-                 */
-                gridConfig: {
-                    type: Object,
-                    value: function () {
-                        return {
-                            checkBar: false
-                        };
-                    }
-                },
+      properties: {
+        /**
+         * 그리드 설정 정보
+         *******
+         * @type {Object}
+         */
+        gridConfig: {
+          type: Object,
+          value: function() {
+            return {
+              checkBar: false
+            };
+          }
+        },
 
-                /**
-                 * 메뉴 쿼리 정보
-                 *******
-                 * @type {Array}
-                 */
-                menuQueryFields: {
-                    type: Array,
-                    value: [{
-                        name: 'routing',
-                        operator: 'eq',
-                        value: 'ind'
-                    }]
-                },
+        /**
+         * 메뉴 쿼리 정보
+         *******
+         * @type {Array}
+         */
+        menuQueryFields: {
+          type: Array,
+          value: [{
+            name: 'routing',
+            operator: 'eq',
+            value: 'indicators'
+          }]
+        },
 
-                /**
-                 * 게이트웨이 리스트 및 총 게이트웨이 조회 개수 
-                 *******
-                 * @type {Object}
-                 */
-                gatewayItems: {
-                    type: Object,
-                    value: [{
-                        total: 0
-                    }]
-                },
+        /**
+         * 게이트웨이 리스트 및 총 게이트웨이 조회 개수 
+         *******
+         * @type {Object}
+         */
+        gatewayItems: {
+          type: Object,
+          value: [{
+            total: 0
+          }]
+        },
 
-                /**
-                 * 표시기 리스트 및 총 표시기 조회 개수 
-                 *******
-                 * @type {Object}
-                 */
-                indItems: {
-                    type: Object,
-                    value: [{
-                        total: 0
-                    }]
-                },
+        /**
+         * 표시기 리스트 및 총 표시기 조회 개수 
+         *******
+         * @type {Object}
+         */
+        indItems: {
+          type: Object,
+          value: [{
+            total: 0
+          }]
+        },
 
-                /**
-                 * 메뉴 ID
-                 ******** 
-                 * @type {String}
-                 */
-                menuId: {
-                    type: String
-                },
+        /**
+         * 메뉴 ID
+         ******** 
+         * @type {String}
+         */
+        menuId: {
+          type: String
+        },
 
-                /**
-                 * 상세 화면 구성을 위해 필요한 메뉴 메타 데이터를 조회하기 위한 URL
-                 ********
-                 * @type {String}
-                 */
-                menuDetailMetaUrl: {
-                    type: String,
-                    computed: '_computeMenuDetailMetaUrl(menuId)',
-                    observer: '_invokeDetailMetaData'
-                },
+        /**
+         * 상세 화면 구성을 위해 필요한 메뉴 메타 데이터를 조회하기 위한 URL
+         ********
+         * @type {String}
+         */
+        menuDetailMetaUrl: {
+          type: String,
+          computed: '_computeMenuDetailMetaUrl(menuId)',
+          observer: '_invokeDetailMetaData'
+        },
 
-                /**
-                 * 마스터 데이터를 마스터 그리드에 표시할 select 필드
-                 ********
-                 * @type {String}
-                 */
-                masterSelectFields: {
-                    type: String
-                },
+        /**
+         * 마스터 데이터를 마스터 그리드에 표시할 select 필드
+         ********
+         * @type {String}
+         */
+        masterSelectFields: {
+          type: String
+        },
 
-                /**
-                 * 메뉴 Detail 화면 구성을 위한 메타 데이터
-                 ********
-                 * @type {Array}
-                 */
-                detailMetaData: {
-                    type: Array,
-                    observer: '_parseDetailMetaData'
-                },
+        /**
+         * 메뉴 Detail 화면 구성을 위한 메타 데이터
+         ********
+         * @type {Array}
+         */
+        detailMetaData: {
+          type: Array,
+          observer: '_parseDetailMetaData'
+        },
 
-                /**
-                 * 상세 그리드 모델
-                 ********
-                 * @type {Object}
-                 */
-                detailGridModel: {
-                    type: Object
-                },
+        /**
+         * 상세 그리드 모델
+         ********
+         * @type {Object}
+         */
+        detailGridModel: {
+          type: Object
+        },
 
-                /**
-                 * 상세 그리드 컬럼
-                 ********
-                 * @type {Array}
-                 */
-                detailGridColumns: {
-                    type: Array
-                },
+        /**
+         * 상세 그리드 컬럼
+         ********
+         * @type {Array}
+         */
+        detailGridColumns: {
+          type: Array
+        },
 
-                /**
-                 * 상세 조회 URL
-                 ********
-                 * @type {String}
-                 */
-                detailSearchUrl: {
-                    type: String
-                },
+        /**
+         * 상세 조회 URL
+         ********
+         * @type {String}
+         */
+        detailSearchUrl: {
+          type: String
+        },
 
-                /**
-                 * 상세 저장 URL
-                 ********
-                 * @type {String}
-                 */
-                detailSaveUrl: {
-                    type: String
-                },
+        /**
+         * 상세 저장 URL
+         ********
+         * @type {String}
+         */
+        detailSaveUrl: {
+          type: String
+        },
 
-                /**
-                 * 상세 그리드의 바인딩 데이터
-                 ********
-                 * @type {Array}
-                 */
-                detailItems: {
-                    type: Array
-                },
+        /**
+         * 상세 그리드의 바인딩 데이터
+         ********
+         * @type {Array}
+         */
+        detailItems: {
+          type: Array
+        },
 
-                /**
-                 * 상세 그리드 데이터가 참조할 마스터 필드명
-                 ********
-                 * @type {String}
-                 */
-                masterField: {
-                    type: String
-                },
+        /**
+         * 상세 그리드 데이터가 참조할 마스터 필드명
+         ********
+         * @type {String}
+         */
+        masterField: {
+          type: String
+        },
 
-                /**
-                 * 상세 그리드 제목
-                 ********
-                 * @type {String}
-                 */
-                gatewayTitle: {
-                    type: String,
-                    value: function () {
-                        return Things.DataGlobal.t('menu.Gateway');
-                    }
-                },
+        /**
+         * 상세 그리드 제목
+         ********
+         * @type {String}
+         */
+        gatewayTitle: {
+          type: String,
+          value: function() {
+            return Things.DataGlobal.t('menu.Gateway');
+          }
+        },
 
-                /**
-                 * 현재 선택한 랙 코드
-                 ********
-                 * @type {String}
-                 */
-                currentRackCd: {
-                    type: String
-                },
+        /**
+         * 현재 선택한 랙 코드
+         ********
+         * @type {String}
+         */
+        currentRackCd: {
+          type: String
+        },
 
-                /**
-                 * 현재 선택한 랙 명
-                 ********
-                 * @type {String}
-                 */
-                currentRackName: {
-                    type: String
-                },
+        /**
+         * 현재 선택한 랙 명
+         ********
+         * @type {String}
+         */
+        currentRackName: {
+          type: String
+        },
 
-                /**
-                 * 빈 버튼 리스트 
-                 ********
-                 * @type {Array}
-                 */
-                emptyButtons: {
-                    type: Array,
-                    value: []
-                },
+        /**
+         * 빈 버튼 리스트 
+         ********
+         * @type {Array}
+         */
+        emptyButtons: {
+          type: Array,
+          value: []
+        },
 
-                /**
-                 * 그리드 컬럼 정보 
-                 ********
-                 * @type {Array}
-                 */
-                gridColumns: {
-                    type: Array
-                },
+        /**
+         * 그리드 컬럼 정보 
+         ********
+         * @type {Array}
+         */
+        gridColumns: {
+          type: Array
+        },
 
-                /**
-                 * 메뉴 항목 정보 
-                 ********
-                 * @type {Array}
-                 */
-                menuItems: {
-                    type: Array,
-                    observer: '_menuItemsChanged'
-                },
+        /**
+         * 메뉴 항목 정보 
+         ********
+         * @type {Array}
+         */
+        menuItems: {
+          type: Array,
+          observer: '_menuItemsChanged'
+        },
 
-                /**
-                 * IND 메뉴 ID
-                 ********
-                 * @type {String}
-                 */
-                indMenuId: {
-                    type: String
-                },
+        /**
+         * IND 메뉴 ID
+         ********
+         * @type {String}
+         */
+        indMenuId: {
+          type: String
+        },
 
-                /**
-                 * IND 메뉴 메타 데이터 조회 URL
-                 ********
-                 * @type {String}
-                 */
-                indMenuMetaUrl: {
-                    type: String,
-                    computed: '_computeIndMenuMetaUrl(indMenuId)'
-                },
+        /**
+         * IND 메뉴 메타 데이터 조회 URL
+         ********
+         * @type {String}
+         */
+        indMenuMetaUrl: {
+          type: String,
+          computed: '_computeIndMenuMetaUrl(indMenuId)'
+        },
 
-                /**
-                 * IND 메뉴 메타 데이터
-                 ********
-                 * @type {Object}
-                 */
-                indMetaData: {
-                    type: Object,
-                    observer: '_parseIndMetaData'
-                },
+        /**
+         * IND 메뉴 메타 데이터
+         ********
+         * @type {Object}
+         */
+        indMetaData: {
+          type: Object,
+          observer: '_parseIndMetaData'
+        },
 
-                /**
-                 * IND 그리드 모델
-                 ********
-                 * @type {Array}
-                 */
-                indGridModel: {
-                    type: Array
-                },
+        /**
+         * IND 그리드 모델
+         ********
+         * @type {Array}
+         */
+        indGridModel: {
+          type: Array
+        },
 
-                /**
-                 * IND 그리드 컬럼
-                 ********
-                 * @type {Array}
-                 */
-                indGridColumns: {
-                    type: Array
-                },
+        /**
+         * IND 그리드 컬럼
+         ********
+         * @type {Array}
+         */
+        indGridColumns: {
+          type: Array
+        },
 
-                /**
-                 * 게이트웨이 쿼리 정보 
-                 ********
-                 * @type {Array}
-                 */
-                gatewayQueryFields: {
-                    type: Array,
-                    value: [{
-                        name: 'rack_cd',
-                        operator: 'eq',
-                        value: ''
-                    }]
-                },
+        /**
+         * 게이트웨이 쿼리 정보 
+         ********
+         * @type {Array}
+         */
+        gatewayQueryFields: {
+          type: Array,
+          value: [{
+            name: 'rack_cd',
+            operator: 'eq',
+            value: ''
+          }]
+        },
 
-                /**
-                 * IND 쿼리 정보
-                 ********
-                 * @type {Array}
-                 */
-                indQueryFields: {
-                    type: Array,
-                    value: [{
-                        name: 'gw_cd',
-                        operator: 'eq',
-                        value: ''
-                    }, {
-                        name: 'rack_cd',
-                        operator: 'eq',
-                        value: ''
-                    }]
-                },
+        /**
+         * Indicators 쿼리 정보
+         ********
+         * @type {Array}
+         */
+        indQueryFields: {
+          type: Array,
+          value: [{
+            name: 'gw_cd',
+            operator: 'eq',
+            value: ''
+          }, {
+            name: 'equip_type',
+            operator: 'eq',
+            value: 'Rack'
+          }, {
+            name: 'equip_cd',
+            operator: 'eq',
+            value: ''
+          }]
+        },
 
-                /**
-                 * 현재 선택한 게이트웨이 명
-                 ********
-                 * @type {Array}
-                 */
-                currentGatewayName: {
-                    type: String
-                }
-            },
+        /**
+         * 현재 선택한 게이트웨이 명
+         ********
+         * @type {Array}
+         */
+        currentGatewayName: {
+          type: String
+        }
+      },
 
-            listeners: {
-                'rack-grid.things-grid-row-data-select': 'resetResource',
-                'gateway-grid.things-grid-row-data-select': 'searchIndList'
-            },
+      listeners: {
+        'rack-grid.things-grid-row-data-select': 'resetResource',
+        'gateway-grid.things-grid-row-data-select': 'searchIndList'
+      },
 
-            observers: [
-                '_gridColumnsChanged(gridColumns)'
-            ],
+      observers: [
+        '_gridColumnsChanged(gridColumns)'
+      ],
 
-            /**
-             * 마스터 그리드 컬럼이 변경된 이후
-             *********
-             * @param {Object} gridColumns 그리드 컬럼
-             */
-            _gridColumnsChanged: function (gridColumns) {
-                var selectColumns = '';
+      /**
+       * 마스터 그리드 컬럼이 변경된 이후
+       *********
+       * @param {Object} gridColumns 그리드 컬럼
+       */
+      _gridColumnsChanged: function(gridColumns) {
+        var selectColumns = '';
 
-                gridColumns.forEach(function (metaData) {
-                    if (!metaData.virtual_field || metaData.virtual_field == false) {
-                        selectColumns += metaData.name + ',';
-                    }
-                });
-
-                if (selectColumns.length > 2) {
-                    this.masterSelectFields = selectColumns.substr(0, selectColumns.length - 1);
-                }
-            },
-
-            /**
-             * 메뉴 디테일 메타 정보 조회
-             *********
-             * @param {String} menuDetailMetaUrl
-             */
-            _invokeDetailMetaData: function (menuDetailMetaUrl) {
-                var detailMetaAjax = document.createElement('things-ajax');
-                detailMetaAjax.resourceId = this.menuId;
-                detailMetaAjax.resourceUrl = menuDetailMetaUrl;
-                detailMetaAjax.addEventListener('things-ajax-response', function (event) {
-                    this.detailMetaData = event.detail;
-                }.bind(this));
-
-                detailMetaAjax.generateRequest();
-            },
-
-            /**
-             * menuId로 부터 메뉴 상세 메타 데이터 조회를 위한 URL을 생성
-             * *******
-             * @param {String} menuId 메뉴 아이디
-             * @return {String} 메뉴 상세 메타 데이터 조회를 위한 URL
-             */
-            _computeMenuDetailMetaUrl: function (menuId) {
-                return 'menu_details/' + menuId + '/meta';
-            },
-
-            /**
-             * 서버로 부터 응답받은 메뉴 상세에 대한 메타 데이터를 상세 화면 구성을 위해 필요한 메타 데이터로 변환한다.
-             * *******
-             * @param {Array} detailMetaList 서버로 부터 응답받은 메뉴 상세에 대한 메타 데이터
-             */
-            _parseDetailMetaData: function (detailMetaList) {
-                if (!detailMetaList || detailMetaList.length == 0) {
-                    return;
-                }
-
-                for (var i = 0; i < detailMetaList.length; i++) {
-                    var metaData = detailMetaList[i];
-
-                    if (metaData.association != 'one-to-many') {
-                        continue;
-                    }
-
-                    this.detailTitle = metaData.name;
-                    this.detailSearchUrl = metaData.search_url;
-                    this.detailSaveUrl = metaData.save_url;
-                    this.masterField = metaData.master_field;
-
-                    if (metaData.menu_detail_buttons) {
-                        var buttons = this._parseButtons(metaData.menu_detail_buttons);
-                        if (buttons && buttons.length > 0) {
-                            buttons.forEach(function (button) { button.id = button.name + '-btn'; });
-                        }
-
-                        this.detailButtons = buttons;
-                    }
-
-                    if (metaData.menu_detail_columns) {
-                        // Parse Grid Models - Grid
-                        this.detailGridModel = this._parseGridModel(metaData.menu_detail_columns);
-
-                        // Parse Grid Columns - Grid
-                        this.detailGridColumns = this._parseGridColumns(metaData.menu_detail_columns);
-                    }
-                }
-
-                this.fire('detail-meta-data-configured');
-            },
-
-            /**
-             * 그리드 Detail 버튼 선택 시 ...
-             * *******
-             * @param {Object} event 그리드 Detail 버튼 선택 이벤트
-             */
-            resetResource: function (event) {
-                this.currentRackCd = event.detail.rack_cd;
-                this.currentRackName = '(' + event.detail.rack_nm + ')';
-
-                this.gatewayQueryFields.forEach(function (field) {
-                    if (field.name == 'rack_cd') {
-                        field.value = event.detail.rack_cd;
-                    }
-                });
-
-                this.$['search-gateway'].resourceId = event.detail.rack_cd;
-                this.$['search-gateway'].generateRequest();
-                this.resource = event.detail;
-                this.resourceId = this.menuInfo.id_field ? this.resource[this.menuInfo.id_field] : this.resource.id;
-
-                // 게이트웨이를 검색할 때 마다 표시기 그리드 화면 클리어
-                this.currentGatewayName = "";
-                this.indItems = {};
-                this.$['ind-grid'].refreshData(this.indItems);
-            },
-
-            /**
-             * IND 메뉴의 아이디 값을 가져옴
-             * *******
-             * @param {Array} menuItems
-             */
-            _menuItemsChanged: function (menuItems) {
-                this.indMenuId = menuItems[0].id;
-            },
-
-            /**
-             * IND Meta Data를 가져오기 위해 URL을 구한다
-             * *******
-             * @param {String} indMenuId
-             */
-            _computeIndMenuMetaUrl: function (indMenuId) {
-                return 'menus/' + indMenuId + '/menu_meta';
-            },
-
-            /**
-             * 서버로부터 받은 IND Meta Data를 파싱
-             * *******
-             * @param {Object} indMetaData
-             */
-            _parseIndMetaData: function (indMetaData) {
-                this.indGridModel = this._parseGridModel(indMetaData.columns);
-                this.indGridColumns = this._parseGridColumns(indMetaData.columns);
-            },
-
-            /**
-             * Gateway grid 선택 시 해당 게이트웨이 코드와 일치하는 IND 목록을 가져온다
-             * *******
-             * @param {Object} event
-             */
-            searchIndList: function (event) {
-                var gwCd = event.detail.gw_cd;
-                var rackCd = this.currentRackCd;
-
-                this.indQueryFields.forEach(function (field) {
-                    if (field.name == 'gw_cd') {
-                        field.value = gwCd;
-                    }
-
-                    if (field.name == 'rack_cd') {
-                        field.value = rackCd;
-                    }
-                });
-
-                this.currentGatewayName = '(' + gwCd + ')';
-                this.$['search-ind-list'].generateRequest();
-            },
-
-            /**
-             * 총 개수 표시 포매팅
-             * *******
-             * @param {Number} total
-             */
-            _formatTotal: function (total) {
-                return total ? total : 0;
-            }
+        gridColumns.forEach(function(metaData) {
+          if (!metaData.virtual_field || metaData.virtual_field == false) {
+            selectColumns += metaData.name + ',';
+          }
         });
-    </script>
+
+        if (selectColumns.length > 2) {
+          this.masterSelectFields = selectColumns.substr(0, selectColumns.length - 1);
+        }
+      },
+
+      /**
+       * 메뉴 디테일 메타 정보 조회
+       *********
+       * @param {String} menuDetailMetaUrl
+       */
+      _invokeDetailMetaData: function(menuDetailMetaUrl) {
+        var detailMetaAjax = document.createElement('things-ajax');
+        detailMetaAjax.resourceId = this.menuId;
+        detailMetaAjax.resourceUrl = menuDetailMetaUrl;
+        detailMetaAjax.addEventListener('things-ajax-response', function(event) {
+          this.detailMetaData = event.detail;
+        }.bind(this));
+
+        detailMetaAjax.generateRequest();
+      },
+
+      /**
+       * menuId로 부터 메뉴 상세 메타 데이터 조회를 위한 URL을 생성
+       * *******
+       * @param {String} menuId 메뉴 아이디
+       * @return {String} 메뉴 상세 메타 데이터 조회를 위한 URL
+       */
+      _computeMenuDetailMetaUrl: function(menuId) {
+        return 'menu_details/' + menuId + '/meta';
+      },
+
+      /**
+       * 서버로 부터 응답받은 메뉴 상세에 대한 메타 데이터를 상세 화면 구성을 위해 필요한 메타 데이터로 변환한다.
+       * *******
+       * @param {Array} detailMetaList 서버로 부터 응답받은 메뉴 상세에 대한 메타 데이터
+       */
+      _parseDetailMetaData: function(detailMetaList) {
+        if (!detailMetaList || detailMetaList.length == 0) {
+          return;
+        }
+
+        for (var i = 0; i < detailMetaList.length; i++) {
+          var metaData = detailMetaList[i];
+
+          if (metaData.association != 'one-to-many') {
+            continue;
+          }
+
+          this.detailTitle = metaData.name;
+          this.detailSearchUrl = metaData.search_url;
+          this.detailSaveUrl = metaData.save_url;
+          this.masterField = metaData.master_field;
+
+          if (metaData.menu_detail_buttons) {
+            var buttons = this._parseButtons(metaData.menu_detail_buttons);
+            if (buttons && buttons.length > 0) {
+              buttons.forEach(function(button) {
+                button.id = button.name + '-btn';
+              });
+            }
+
+            this.detailButtons = buttons;
+          }
+
+          if (metaData.menu_detail_columns) {
+            // Parse Grid Models - Grid
+            this.detailGridModel = this._parseGridModel(metaData.menu_detail_columns);
+
+            // Parse Grid Columns - Grid
+            this.detailGridColumns = this._parseGridColumns(metaData.menu_detail_columns);
+          }
+        }
+
+        this.fire('detail-meta-data-configured');
+      },
+
+      /**
+       * 그리드 Detail 버튼 선택 시 ...
+       * *******
+       * @param {Object} event 그리드 Detail 버튼 선택 이벤트
+       */
+      resetResource: function(event) {
+        this.currentRackCd = event.detail.rack_cd;
+        this.currentRackName = '(' + event.detail.rack_nm + ')';
+
+        this.gatewayQueryFields.forEach(function(field) {
+          if (field.name == 'rack_cd') {
+            field.value = event.detail.rack_cd;
+          }
+        });
+
+        this.$['search-gateway'].resourceId = event.detail.rack_cd;
+        this.$['search-gateway'].generateRequest();
+        this.resource = event.detail;
+        this.resourceId = this.menuInfo.id_field ? this.resource[this.menuInfo.id_field] : this.resource.id;
+
+        // 게이트웨이를 검색할 때 마다 표시기 그리드 화면 클리어
+        this.currentGatewayName = "";
+        this.indItems = {};
+        this.$['ind-grid'].refreshData(this.indItems);
+      },
+
+      /**
+       * IND 메뉴의 아이디 값을 가져옴
+       * *******
+       * @param {Array} menuItems
+       */
+      _menuItemsChanged: function(menuItems) {
+        this.indMenuId = menuItems[0].id;
+      },
+
+      /**
+       * IND Meta Data를 가져오기 위해 URL을 구한다
+       * *******
+       * @param {String} indMenuId
+       */
+      _computeIndMenuMetaUrl: function(indMenuId) {
+        return 'menus/' + indMenuId + '/menu_meta';
+      },
+
+      /**
+       * 서버로부터 받은 IND Meta Data를 파싱
+       * *******
+       * @param {Object} indMetaData
+       */
+      _parseIndMetaData: function(indMetaData) {
+        this.indGridModel = this._parseGridModel(indMetaData.columns);
+        this.indGridColumns = this._parseGridColumns(indMetaData.columns);
+      },
+
+      /**
+       * Gateway grid 선택 시 해당 게이트웨이 코드와 일치하는 IND 목록을 가져온다
+       * *******
+       * @param {Object} event
+       */
+      searchIndList: function(event) {
+        var gwCd = event.detail.gw_cd;
+        var rackCd = this.currentRackCd;
+
+        this.indQueryFields.forEach(function(field) {
+          if (field.name == 'gw_cd') {
+            field.value = gwCd;
+          } else if (field.name == 'equip_cd') {
+            field.value = rackCd;
+          }
+        });
+
+        this.currentGatewayName = '(' + gwCd + ')';
+        this.$['search-ind-list'].generateRequest();
+      },
+
+      /**
+       * 총 개수 표시 포매팅
+       * *******
+       * @param {Number} total
+       */
+      _formatTotal: function(total) {
+        return total ? total : 0;
+      }
+    });
+  </script>
 </dom-module>

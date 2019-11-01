@@ -12,269 +12,310 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
 
 <!--
-공통 코드 디테일 화면
+    공통 코드 > 코드 상세 화면
 -->
-
 <dom-module id="base-code-detail">
-    <template>
-        <style>
-            :host {
-                display: block;
-                @apply(--layout-vertical);
-            }
+  <template>
+		<style>
+			:host {
+				display: block;
+				@apply(--layout-vertical);
+			}
 
-            #layout-flex {
-                @apply(--layout-flex);
-                @apply(--layout-vertical);
-            }
+			#layout-flex {
+				@apply(--layout-flex);
+				@apply(--layout-vertical);
+			}
 
-            things-resource-grid {
-                @apply(--layout-flex);
-                padding-top: 0;
-            }
+			things-resource-grid {
+				@apply(--layout-flex);
+				padding-top: 0;
+			}
 
-            .subtitle:before {
-                content: "";
-                @apply(--things-subtitle-icon);
-            }
+			.subtitle:before {
+				content: "";
+				@apply(--things-subtitle-icon);
+			}
 
-            .subtitle {
-                @apply(--things-default-padding);
-                padding-top: 0;
-                padding-bottom: 7px;
-                @apply(--things-subtitle);
-            }
-        </style>
+			.subtitle {
+				@apply(--things-default-padding);
+				padding-top: 0;
+				padding-bottom: 7px;
+				@apply(--things-subtitle);
+			}
+		</style>
 
-        <div id="layout-flex">
-            <things-ajax auto id="subcode-list" resource-url="[[codeDetailUrl]]" resource-action="index"
-                resource-id="{{resourceId}}" query-fields="[[queryFields]]" sort-fields="[[sortFields]]"
-                last-response="{{lastResponse}}">
-            </things-ajax>
+		<div id="layout-flex">
+			<things-ajax 
+				auto 
+				id="subcode-list" 
+				resource-url="[[codeDetailUrl]]" 
+				resource-action="index"
+				resource-id="{{resourceId}}" 
+				query-fields="[[queryFields]]" 
+				sort-fields="[[sortFields]]"
+				last-response="{{lastResponse}}">
+			</things-ajax>
 
-            <things-resource-form id='resource-form' title="[[title]]" resource-type="CommonCode"
-                resource-url="[[codeDetailUrl]]" resource-id="[[resourceId]]" form-fields="[[formFields]]">
-            </things-resource-form>
+			<things-resource-form 
+				id='resource-form' 
+				title="[[title]]" 
+				resource-type="CommonCode"
+				resource-url="[[codeDetailUrl]]" 
+				resource-id="[[resourceId]]" 
+				form-fields="[[formFields]]">
+			</things-resource-form>
 
-            <span class="subtitle">
-                <things-i18n-msg msgid="label.sub_codes"></things-i18n-msg>
-            </span>
+			<span class="subtitle">
+					<things-i18n-msg msgid="label.sub_codes"></things-i18n-msg>
+			</span>
 
-            <things-resource-grid id="grid" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]"
-                data="[[items]]" grid-save-action="[[gridSaveUrl]]" buttons="[[buttons]]">
-            </things-resource-grid>
-        </div>
-    </template>
+			<things-resource-grid 
+				id="grid" 
+				config="[[gridConfig]]" 
+				model="[[gridModel]]" 
+				columns="[[gridColumns]]"
+				data="[[items]]" 
+				grid-save-action="[[gridSaveUrl]]" 
+				buttons="[[buttons]]">
+			</things-resource-grid>
+		</div>
+  </template>
 
-    <script>
-        Polymer({
+  <script>
+    Polymer({
 
-            is: 'base-code-detail',
+      is: 'base-code-detail',
 
-            behaviors: [
-                Things.ViewOpenBehavior
-            ],
+      behaviors: [
+        Things.ViewOpenBehavior
+      ],
 
-            properties: {
-                /**
-                 * code id
-                 */
-                resourceId: {
-                    type: String
-                },
+      properties: {
+        /**
+         * @description 코드 ID
+         *********************
+         * @type {String}
+         */
+        resourceId: {
+          type: String
+        },
 
-                /**
-                 * code resource
-                 */
-                resource: {
-                    type: Object
-                },
+        /**
+         * @description 선택한 코드 정보 
+         *********************
+         * @type {Object}
+         */
+        resource: {
+          type: Object
+        },
 
-                /**
-                 * 화면 타이틀
-                 */
-                title: {
-                    type: String
-                },
+        /**
+         * @description 화면 타이틀
+         *********************
+         * @type {String}
+         */
+        title: {
+          type: String
+        },
 
-                /**
-                 * code list
-                 */
-                items: {
-                    type: Array
-                },
+        /**
+         * @description 코드 상세 리스트
+         *********************
+         * @type {Array}
+         */
+        items: {
+          type: Array
+        },
 
-                /**
-                 * code 조회 결과 (response) 정보
-                 */
-                lastResponse: {
-                    type: Object,
-                    observer: '_codeMasterChanged'
-                },
+        /**
+         * @description code 조회 결과 (response) 정보
+         *********************
+         * @type {Object}
+         */
+        lastResponse: {
+          type: Object,
+          observer: '_codeMasterChanged'
+        },
 
-                /**
-                 * grid search fields
-                 */
-                searchFields: {
-                    type: String,
-                    value: 'id,parent_id,name,description'
-                },
+        /**
+         * @description 그리드 검색 필드 
+         *********************
+         * @type {String}
+         */
+        searchFields: {
+          type: String,
+          value: 'id,parent_id,name,description'
+        },
 
-                /**
-                 * grid sort fields
-                 */
-                sortFields: {
-                    type: Array,
-                    value: [{
-                        field: 'name',
-                        ascending: true
-                    }]
-                },
+        /**
+         * @description 그리드 소팅 필드 
+         *********************
+         * @type {Array}
+         */
+        sortFields: {
+          type: Array,
+          value: [{
+            field: 'name',
+            ascending: true
+          }]
+        },
 
-                /**
-                 * grid model
-                 */
-                gridModel: {
-                    type: Array,
-                    value: [{
-                        fieldName: 'id'
-                    }, {
-                        fieldName: 'parent_id'
-                    }, {
-                        fieldName: 'name'
-                    }, {
-                        fieldName: 'description'
-                    }]
-                },
+        /**
+         * @description 그리드 모델  
+         *********************
+         * @type {Array}
+         */
+        gridModel: {
+          type: Array,
+          value: [{
+            fieldName: 'id'
+          }, {
+            fieldName: 'parent_id'
+          }, {
+            fieldName: 'name'
+          }, {
+            fieldName: 'description'
+          }]
+        },
 
-                /**
-                 * grid columns
-                 */
-                gridColumns: {
-                    type: Array,
-                    value: []
-                },
+        /**
+         * @description 그리드 컬럼   
+         *********************
+         * @type {Array}
+         */
+        gridColumns: {
+          type: Array,
+          value: []
+        },
 
-                /**
-                 * Code Detail Search URL
-                 */
-                codeDetailUrl: {
-                    type: String,
-                    value: 'common_codes/:id'
-                },
+        /**
+         * @description 코드 상세 URL   
+         *********************
+         * @type {String}
+         */
+        codeDetailUrl: {
+          type: String,
+          value: 'common_codes/:id'
+        },
 
-                /**
-                 * Code list save URL
-                 */
-                gridSaveUrl: {
-                    type: String,
-                    computed: '_computeCodeListSaveUrl(resourceId)'
-                },
+        /**
+         * @description 코드 상세 저장 URL   
+         *********************
+         * @type {String}
+         */
+        gridSaveUrl: {
+          type: String,
+          computed: '_computeCodeListSaveUrl(resourceId)'
+        },
 
-                /**
-                 * 버튼 정보
-                 */
-                buttons: {
-                    type: Array,
-                    value: [{
-                        id: 'add-btn',
-                        text: 'add'
-                    }, {
-                        id: 'save-btn',
-                        text: 'save'
-                    }, {
-                        id: 'delete-btn',
-                        text: 'delete'
-                    }]
-                }
-            },
+        /**
+         * @description 버튼 정보   
+         *********************
+         * @type {Array}
+         */
+        buttons: {
+          type: Array,
+          value: [{
+            id: 'add-btn',
+            text: 'add'
+          }, {
+            id: 'save-btn',
+            text: 'save'
+          }, {
+            id: 'delete-btn',
+            text: 'delete'
+          }]
+        }
+      },
 
-            listeners: {
-                'grid.things-grid-handle-addrow': 'addRow',
-                'grid.things-grid-save-success': 'reloadGrid'
-            },
+      listeners: {
+        'grid.things-grid-handle-addrow': 'addRow',
+        'grid.things-grid-save-success': 'reloadGrid'
+      },
 
-            /**
-             * Column 번역을 위하여 Attached로 바꿈
-             */
-            attached: function () {
-                this.gridColumns = [{
-                    fieldName: 'id',
-                    width: 0
-                }, {
-                    fieldName: 'parent_id',
-                    width: 0
-                }, {
-                    fieldName: 'name',
-                    header: {
-                        text: Things.DataGlobal.t('label.name')
-                    },
-                    width: 250
-                }, {
-                    fieldName: 'description',
-                    header: {
-                        text: Things.DataGlobal.t('label.description')
-                    },
-                    width: 350
-                }];
-            },
+      /**
+       * @description Column 번역을 위하여 Attached로 바꿈
+       **********************
+       */
+      attached: function() {
+        this.gridColumns = [{
+          fieldName: 'id',
+          width: 0
+        }, {
+          fieldName: 'parent_id',
+          width: 0
+        }, {
+          fieldName: 'name',
+          header: {
+            text: Things.DataGlobal.t('label.name')
+          },
+          width: 250
+        }, {
+          fieldName: 'description',
+          header: {
+            text: Things.DataGlobal.t('label.description')
+          },
+          width: 350
+        }];
+      },
 
-            /**
-             * 코드 정보 변경시
-             *
-             * @param {Object} lastResponse
-             */
-            _codeMasterChanged: function (lastResponse) {
-                this.items = lastResponse.items;
-                this.resource = lastResponse;
-            },
+      /**
+       * @description 코드 정보 변경시
+       **********************
+       * @param {Object} lastResponse
+       */
+      _codeMasterChanged: function(lastResponse) {
+        this.items = lastResponse.items;
+        this.resource = lastResponse;
+      },
 
-            /**
-             * Code Id로 Code List Save URL 생성
-             *
-             * @param {String} resourceId
-             * @return {String} code save url
-             */
-            _computeCodeListSaveUrl: function (resourceId) {
-                return 'common_codes/' + resourceId + '/update_multiple_codes.json';
-            },
+      /**
+       * @description Code Id로 Code List Save URL 생성
+       **********************
+       * @param {String} resourceId
+       * @return {String} code save url
+       */
+      _computeCodeListSaveUrl: function(resourceId) {
+        return 'common_codes/' + resourceId + '/update_multiple_codes.json';
+      },
 
-            /**
-             * Add Grid Row
-             *
-             * @param {Object} e
-             */
-            addRow: function (e) {
-                e.preventDefault();
-                var grid = this.$.grid;
-                var count = grid.dataSet.rowCount();
-                var data = grid.newRowData();
-                data.parent_id = this.resourceId;
-                grid.dataSet.insertRow(count, data);
-            },
+      /**
+       * @description 그리드 행 추가 
+       **********************
+       * @param {Object} e
+       */
+      addRow: function(e) {
+        e.preventDefault();
+        var grid = this.$.grid;
+        var count = grid.dataSet.rowCount();
+        var data = grid.newRowData();
+        data.parent_id = this.resourceId;
+        grid.dataSet.insertRow(count, data);
+      },
 
-            /**
-             * Reload grid data
-             *
-             * @param {Object} e
-             */
-            reloadGrid: function (e) {
-                this.$['subcode-list'].generateRequest();
-            },
+      /**
+       * @description 코드 상세 리스트 조회 
+       **********************
+       * @param {Object} e
+       */
+      reloadGrid: function(e) {
+        this.$['subcode-list'].generateRequest();
+      },
 
-            /**
-             * Detail 화면 Open
-             *
-             * @param {String} resourceId
-             * @param {Object} resource
-             */
-            showDetailView: function (resourceId, resource) {
-                if (this.resourceId != resourceId) {
-                    this.resourceId = resourceId;
-                }
+      /**
+       * @description 코드 상세 화면 팝업 Open
+       **********************
+       * @param {String} resourceId
+       * @param {Object} resource
+       */
+      showDetailView: function(resourceId, resource) {
+        if (this.resourceId != resourceId) {
+          this.resourceId = resourceId;
+        }
 
-                this.openPopupView(this, true);
-            }
-        });
-    </script>
+        this.openPopupView(this, true);
+      }
+    });
+  </script>
 </dom-module>
