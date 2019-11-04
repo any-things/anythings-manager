@@ -70,11 +70,16 @@ Copyright © HatioLab Inc. All rights reserved.
             },
 
             listeners: {
-                'ok-btn-tap': '_okBtnTap'
+                'ok-btn-tap': '_okBtnTap',
+                'cancel-btn-tap': '_cancelBtnTap'
             },
 
             _okBtnTap(event) {
                 console.log(this.$.target_set_nm.value);
+            },
+
+            _cancelBtnTap(event) {
+                this.fire('things-dialog-close', {});
             }
         })
     </script>

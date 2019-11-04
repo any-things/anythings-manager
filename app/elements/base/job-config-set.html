@@ -74,7 +74,7 @@ Copyright © HatioLab Inc. All rights reserved.
         <span class="subtitle">[[menuInfo.title]]</span>
 
         <things-resource-grid id="grid" class="things-resource-grid-main" grid-height="[[gridHeight]]"
-            model="[[gridModel]]" columns="[[gridColumns]]" config="[[gridConfig]]" buttons="[[buttons]]"
+            model="[[gridModel]]" columns="[[gridColumns]]" config="[[masterGridConfig]]" buttons="[[buttons]]"
             current-page="{{page}}" limit="{{limit}}" data="[[items]]" total-count="[[itemCount]]"
             fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]"
             export-file-name="[[menuInfo.title]]" export-sheet-name="[[menuInfo.title]]">
@@ -176,6 +176,22 @@ Copyright © HatioLab Inc. All rights reserved.
 				 */
                 detailTitle: {
                     type: String
+                },
+
+                /**
+                * Grid Config
+                */
+                masterGridConfig: {
+                    type: Object,
+                    value: function () {
+                        return {
+                            options: {
+                                checkBar: {
+                                    exclusive: true
+                                }
+                            }
+                        }
+                    }
                 }
             },
 
@@ -323,7 +339,6 @@ Copyright © HatioLab Inc. All rights reserved.
                 var checkedRow = gridObject.getCheckedRows();
                 if (checkedRow.length > 0 && checkedRow.length < 2) {
                     var rowObject = checkedRow[0].getRowObject();
-                    console.log(rowObject);
 
                     var view = document.createElement('job-ind-config-set-popup');
                     view.title = '복사하기';
@@ -337,11 +352,14 @@ Copyright © HatioLab Inc. All rights reserved.
                     });
 
                 }
-                // 한 개를 선택하세요.
+                // 항목을 선택하세요.
                 else {
-
+                    this.openConfirmMsg({
+                        type: 'info',
+                        title: '',
+                        text: Things.DataGlobal.t('text.select_item')
+                    });
                 }
-                console.log(gridObject);
             }
         });
     </script>
