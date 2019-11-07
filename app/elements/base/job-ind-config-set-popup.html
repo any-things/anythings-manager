@@ -3,84 +3,159 @@
 Copyright © HatioLab Inc. All rights reserved.
 -->
 
+<!--
+	설정 관리 > 작업 설정 프로파일 > 프로파일 복사 팝업 
+-->
 <dom-module id="job-ind-config-set-popup">
-    <template>
-        <style>
-            :host {
-                @apply --layout-vertical;
-                @apply --layout-flex;
-            }
+  <template>
+		<style>
+			:host {
+				@apply --layout-vertical;
+				@apply --layout-flex;
+			}
 
-            #input-container {
-                margin: auto;
-            }
-        </style>
-        <div id="input-container">
-            <things-input-field id="conf_set_cd" label="[[confSetCdLabel]]" value="[[confSetCd]]" readonly>
-            </things-input-field>
-            <things-input-field id="conf_set_nm" label="[[confSetNmLabel]]" value="[[confSetNm]]" readonly>
-            </things-input-field>
-            <things-input-field id="target_set_nm" label="[[targetSetNmLabel]]">
-            </things-input-field>
-            <things-button-bar id="button-bar" buttons="[[buttons]]" style="float: right;"></things-button-bar>
-        </div>
-    </template>
+			#input-container {
+				margin: auto;
+			}
+		</style>
 
-    <script>
-        Polymer({
-            is: 'job-ind-config-set-popup',
+		<!-- 프로파일 복사 Ajax -->
+		<things-ajax 
+			id="copy-profile-ajax" 
+			method="POST" 
+			resource-url="[[copyUrl]]">
+		</things-ajax>
 
-            properties: {
-                /**
-                 * 
-                 */
-                confSetCdLabel: {
-                    type: String,
-                    value: "소스 설정 셋 코드"
-                },
+		<div id="input-container">
+			<things-input-field id="conf_set_cd" label="[[confSetCdLabel]]" value="[[confSetCd]]" readonly>
+			</things-input-field>
 
-                /**
-                 * 
-                 */
-                confSetNmLabel: {
-                    type: String,
-                    value: "소스 설정 셋 명"
-                },
+			<things-input-field id="conf_set_nm" label="[[confSetNmLabel]]" value="[[confSetNm]]" readonly>
+			</things-input-field>
 
-                /**
-                 * 
-                 */
-                targetSetNmLabel: {
-                    type: String,
-                    value: "타겟 설정 셋 명"
-                },
+			<things-input-field id="target_set_nm" label="[[targetSetCdLabel]]">
+			</things-input-field>
 
-                buttons: {
-                    type: Array,
-                    value: function () {
-                        return [{
-                            id: 'ok-btn',
-                            text: 'ok'
-                        }, {
-                            id: 'cancel-btn',
-                            text: 'cancel'
-                        }]
-                    }
-                }
-            },
+			<things-input-field id="target_set_nm" label="[[targetSetNmLabel]]">
+			</things-input-field>
 
-            listeners: {
-                'ok-btn-tap': '_okBtnTap',
-                'cancel-btn-tap': '_cancelBtnTap'
-            },
+			<things-button-bar id="button-bar" buttons="[[buttons]]" style="float: right;"></things-button-bar>
+		</div>
+  </template>
 
-            _okBtnTap(event) {
-                console.log(this.$.target_set_nm.value);
-            },
+  <script>
+    Polymer({
+      is: 'job-ind-config-set-popup',
 
-            _cancelBtnTap(event) {
-                this.fire('things-dialog-close', {});
-            }
-        })
-    </script>
+      properties: {
+        /**
+         * @description 소스 설정 프로파일 코드 라벨 
+         *********************
+         * @type {String}
+         */
+        confSetCdLabel: {
+          type: String,
+          value: function() {
+            return Things.DataGlobal.t('label.source') + Things.DataGlobal.t('label.conf_set_cd')
+          }
+        },
+
+        /**
+         * @description 소스 설정 프로파일 명 라벨 
+         *********************
+         * @type {String}
+         */
+        confSetNmLabel: {
+          type: String,
+          value: function() {
+            return Things.DataGlobal.t('label.source') + Things.DataGlobal.t('label.conf_set_nm')
+          }
+        },
+
+        /**
+         * @description 타겟 설정 프로파일 코드 라벨 
+         *********************
+         * @type {String}
+         */
+        targetSetCdLabel: {
+          type: String,
+          value: function() {
+            return Things.DataGlobal.t('label.target') + Things.DataGlobal.t('label.conf_set_cd')
+          }
+        },
+
+        /**
+         * @description 타겟 설정 프로파일 명 라벨 
+         *********************
+         * @type {String}
+         */
+        targetSetNmLabel: {
+          type: String,
+          value: function() {
+            return Things.DataGlobal.t('label.target') + Things.DataGlobal.t('label.conf_set_nm')
+          }
+        },
+
+        /**
+         * @description 복사하고자 하는 URL
+         *********************
+         * @type {String}
+         */
+        copyUrl: {
+          type: String
+        },
+
+        /**
+         * @description 버튼 리스트  
+         *********************
+         * @type {Array}
+         */
+        buttons: {
+          type: Array,
+          value: function() {
+            return [{
+              id: 'ok-btn',
+              text: 'ok'
+            }, {
+              id: 'cancel-btn',
+              text: 'cancel'
+            }]
+          }
+        }
+      },
+
+      listeners: {
+        'ok-btn-tap': 'copyProfile',
+        'cancel-btn-tap': 'closePopup',
+        'copy-profile-ajax.things-ajax-response': 'afterCopyProfile',
+      },
+
+      /**
+       * @description 프로파일 복사
+       *****************
+       * @param {Object} event
+       */
+      copyProfile(event) {
+        this.$['copy-profile-ajax'].generateRequest();
+      },
+
+      /**
+       * @description 프로파일 복사 이후 
+       *****************
+       * @param {Object} event
+       */
+      afterCopyProfile(event) {
+        this.closePopup();
+      },
+
+      /**
+       * @description 프로파일 복사 팝업 닫기
+       *****************
+       * @param {Object} event
+       */
+      closePopup(event) {
+        this.fire('things-dialog-close', {});
+      }
+    })
+  </script>
 </dom-module>
