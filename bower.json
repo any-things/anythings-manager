@@ -34,6 +34,8 @@
   },
   "ignore": [],
   "resolutions": {
-    "polymer": "^1.5.0"
+    "polymer": "^1.5.0",
+    "paper-scroll-header-panel": "^1.0.0",
+    "webcomponentsjs": "^0.7.24"
   }
 }
