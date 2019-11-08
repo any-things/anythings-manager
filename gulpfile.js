@@ -126,8 +126,7 @@ gulp.task("copy", function() {
         "!app/cache-config.json",
         "!app/licenses",
         "!**/.DS_Store"
-      ],
-      {
+      ], {
         dot: true
       }
     )
@@ -314,8 +313,7 @@ gulp.task("cache-config", function(callback) {
       "bower_components/webcomponentsjs/webcomponents-lite.min.js",
       "bower_components/things-libraries/**/*.html",
       "{scripts,images,styles,licenses,bower_components/things-grid-behavior,bower_components/things-license-checker-min}/**/*.*"
-    ],
-    {
+    ], {
       cwd: dir
     },
     function(error, files) {
@@ -354,8 +352,7 @@ gulp.task("delete", function() {
       dist(
         "bower_components/**/{locale*,dev*,example*,demo*,*test*,doc*,st,html,src}/**"
       )
-    ],
-    {
+    ], {
       force: true
     }
   );
@@ -388,14 +385,14 @@ gulp.task("vulcanize", function() {
           dist() + "/bower_components/things-libraries/things-jsxlsx-lib.html",
           dist() + "/bower_components/things-libraries/things-jszip-lib.html",
           dist() +
-            "/bower_components/things-libraries/things-momentjs-lib.html",
+          "/bower_components/things-libraries/things-momentjs-lib.html",
           dist() +
-            "/bower_components/things-libraries/things-numeraljs-lib.html",
+          "/bower_components/things-libraries/things-numeraljs-lib.html",
           dist() + "/bower_components/things-libraries/things-sockjs-lib.html",
           dist() +
-            "/bower_components/things-libraries/things-sweetalert-lib.html",
+          "/bower_components/things-libraries/things-sweetalert-lib.html",
           dist() +
-            "/bower_components/things-libraries/things-fullcalendar-lib.html"
+          "/bower_components/things-libraries/things-fullcalendar-lib.html"
         ],
         stripComments: true,
         inlineCss: true,
@@ -432,7 +429,7 @@ gulp.task("vulcanize", function() {
 // Watch files for changes & reload
 gulp.task("serve", ["styles"], function() {
   browserSync({
-    port: 5500,
+    port: 5600,
     notify: false,
     logPrefix: "anythings-manager",
     host: "localhost",
@@ -546,21 +543,20 @@ gulp.task("build-deploy-gh-pages", function(cb) {
 gulp.task("deploy-gh-pages", function() {
   return (
     gulp
-      .src(dist("**/*"))
-      // Check if running task from Travis CI, if so run using GH_TOKEN
-      // otherwise run using ghPages defaults.
-      .pipe(
-        $.if(
-          process.env.TRAVIS === "true",
-          $.ghPages({
-            remoteUrl:
-              "https://$GH_TOKEN@github.com/PolymerElements/polymer-starter-kit.git",
-            silent: true,
-            branch: "gh-pages"
-          }),
-          $.ghPages()
-        )
+    .src(dist("**/*"))
+    // Check if running task from Travis CI, if so run using GH_TOKEN
+    // otherwise run using ghPages defaults.
+    .pipe(
+      $.if(
+        process.env.TRAVIS === "true",
+        $.ghPages({
+          remoteUrl: "https://$GH_TOKEN@github.com/PolymerElements/polymer-starter-kit.git",
+          silent: true,
+          branch: "gh-pages"
+        }),
+        $.ghPages()
       )
+    )
   );
 });
 
