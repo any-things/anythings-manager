@@ -3,6 +3,8 @@
 Copyright © HatioLab Inc. All rights reserved.
 -->
 
+<link rel="import" href="../../bower_components/things-msg-box-behavior/things-msg-box-behavior.html">
+
 <!--
 	설정 관리 > 작업 설정 프로파일 > 프로파일 복사 팝업 
 -->
@@ -22,7 +24,8 @@ Copyright © HatioLab Inc. All rights reserved.
 		<!-- 프로파일 복사 Ajax -->
 		<things-ajax 
 			id="copy-profile-ajax" 
-			method="POST" 
+      method="POST" 
+      content-type="application/json"
 			resource-url="[[copyUrl]]">
 		</things-ajax>
 
@@ -33,7 +36,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			<things-input-field id="conf_set_nm" label="[[confSetNmLabel]]" value="[[confSetNm]]" readonly>
 			</things-input-field>
 
-			<things-input-field id="target_set_nm" label="[[targetSetCdLabel]]">
+			<things-input-field id="target_set_cd" label="[[targetSetCdLabel]]">
 			</things-input-field>
 
 			<things-input-field id="target_set_nm" label="[[targetSetNmLabel]]">
@@ -46,6 +49,10 @@ Copyright © HatioLab Inc. All rights reserved.
   <script>
     Polymer({
       is: 'job-ind-config-set-popup',
+
+      behaviors: [
+        Things.MsgBoxBehavior
+      ],
 
       properties: {
         /**
@@ -106,6 +113,15 @@ Copyright © HatioLab Inc. All rights reserved.
         },
 
         /**
+         * @description 팝업이 닫힐 때 실행되는 함수
+         *********************
+         * @type {Function}
+         */
+        closeFunc: {
+          type: Function
+        },
+
+        /**
          * @description 버튼 리스트  
          *********************
          * @type {Array}
@@ -136,7 +152,33 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Object} event
        */
       copyProfile(event) {
-        this.$['copy-profile-ajax'].generateRequest();
+        var targetSetCd = this.$['target_set_cd'].value;
+        var targetSetNm = this.$['target_set_nm'].value;
+
+        if (!targetSetCd || targetSetCd.length == 0) {
+          this.openInfoMsg({
+            type: 'warn',
+            title: '프로파일 코드를 입력하세요'
+          });
+          this.$['target_set_cd'].focus();
+          return;
+        }
+
+        if (!targetSetNm || targetSetNm.length == 0) {
+          this.openInfoMsg({
+            type: 'warn',
+            title: '프로파일 명을 입력하세요'
+          });
+          this.$['target_set_nm'].focus();
+          return;
+        }
+
+        var copyAjax = this.$['copy-profile-ajax'];
+        copyAjax.body = {
+          'target_set_cd': targetSetCd,
+          'target_set_nm': targetSetNm
+        };
+        copyAjax.generateRequest();
       },
 
       /**
@@ -145,6 +187,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Object} event
        */
       afterCopyProfile(event) {
+        this.closeFunc();
         this.closePopup();
       },
 

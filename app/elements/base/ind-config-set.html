@@ -352,7 +352,8 @@ Copyright © HatioLab Inc. All rights reserved.
           view.title = Things.DataGlobal.t('button.copy');
           view.confSetCd = row.conf_set_cd;
           view.confSetNm = row.conf_set_nm;
-          view.copyUrl = `/ind_config_set/${row.id}/copy`;
+          view.copyUrl = `ind_config_set/${row.id}/copy`;
+          view.closeFunc = this.refreshMaster.bind(this);
 
           this.fire('things-open-custom-size-dialog', {
             view: view,
