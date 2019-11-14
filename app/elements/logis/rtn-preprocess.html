@@ -1,0 +1,1182 @@
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<link rel="import" href="./rtn-preprocess-complete-popup.html">
+<link rel="import" href="./rtn-preprocess-assign-region-popup.html">
+<link rel="import" href="./rtn-location-assignment.html">
+
+
+
+<dom-module id="rtn-preprocess">
+   <template>
+      <style>
+         :host {
+            @apply --layout-vertical;
+            padding: 5px 15px 0px 15px;
+            height: 100%;
+         }
+
+         .container {
+            @apply --layout-flex;
+            display: grid;
+            grid-template:
+               "sea sea sea" auto
+               "gsm sum sum" 57px
+               "gri ord reg" 1fr
+               / 1fr minmax(80px, 0.2fr) 0.8fr;
+            grid-gap: 15px;
+         }
+
+         #search-form {grid-area: sea;}
+         #group-summary-grid {grid-area: gsm;}
+         #summary-grid {grid-area: sum;}
+         #region-grid {grid-area: reg;}
+         #order-group-grid {grid-area: ord;}
+         #grid {grid-area: gri;}
+
+         paper-toolbar {
+            height: 50px;
+         }
+
+         paper-toolbar::shadow #bottomBar {
+            height: 50px;
+            @apply --layout-horizontal;
+            @apply --layout-end-justified;
+            padding: 0 10px;
+         }
+
+         .margin-zero {margin: 0px;}
+         .padding-zero {padding: 0px;}
+      </style>
+      
+      <things-ajax auto id="resource-meta" method="GET" resource-url="[[menuMetaUrl]]" last-response="{{metaData}}">
+      </things-ajax>
+
+      
+      <things-ajax id="instruct-jobs-ajax" resource-url="job_batch/b2b/instruct_jobs" resource-action="create">
+      </things-ajax>
+
+      
+      <things-ajax id="search-preprocessing-ajax" resource-url="order_preprocesses/index_all" resource-action="index">
+      </things-ajax>
+
+      
+      <things-ajax id="generate-preprocessing-ajax" resource-url="order_preprocesses/:id/regenerate" resource-action="create">
+      </things-ajax>
+
+      
+      <things-ajax id="auto-region-assign-ajax" resource-url="order_preprocesses/:id/auto_assign/regions" resource-id="[[batchId]]" resource-action="update">
+      </things-ajax>
+
+      
+      <things-ajax id="auto-location-assign-ajax" resource-url="order_preprocesses/:id/auto_assign/locations" resource-id="[[batchId]]" resource-action="update">
+      </things-ajax>
+
+      
+      <things-ajax id="assign-preprocessing-ajax" resource-url="order_preprocesses/:id/assign_region/:rack_cd" resource-action="update">
+      </things-ajax>
+
+      
+      <things-ajax id="reset-assignment-ajax" resource-url="order_preprocesses/:id/reset_assignment" resource-action="update">
+      </things-ajax>
+
+      
+      <things-ajax id="complete-preprocessing-ajax" resource-url="order_preprocesses/:id/complete" resource-action="update">
+      </things-ajax>
+
+      
+      <div class="container">
+        
+         <things-search-form id="search-form" class="margin-zero" title="[[menuInfo.title]]" form-fields="[[searchFormFields]]" select-fields="[[selectFields]]" sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]" page="{{page}}" limit="{{limit}}" last-response="{{lastResponse}}">
+         </things-search-form>
+
+         
+         <things-resource-grid id="group-summary-grid" class="padding-zero" config="[[sumGridConfig]]" model="[[sumGridModel]]" columns="[[sumGridColumns]]" fixed-column-count="0" data="[[groupSummaryData]]" buttons="[[emptyButtons]]">
+         </things-resource-grid>
+
+         
+         <things-resource-grid id="summary-grid" class="padding-zero" config="[[sumGridConfig]]" model="[[sumGridModel]]" columns="[[sumGridColumns]]" fixed-column-count="0" data="[[summaryData]]" buttons="[[emptyButtons]]">
+         </things-resource-grid>
+
+         
+         <things-resource-grid id="region-grid" class="padding-zero" config="[[regionGridConfig]]" model="[[regionGridModel]]" columns="[[regionGridColumns]]" fixed-column-count="0" data="[[regionItems]]" buttons="[[emptyButtons]]">
+         </things-resource-grid>
+
+         
+         <things-resource-grid id="order-group-grid" class="padding-zero" config="[[groupGridConfig]]" model="[[groupGridModel]]" columns="[[groupGridColumns]]" fixed-column-count="0" data="[[groupItems]]" buttons="[[emptyButtons]]">
+         </things-resource-grid>
+
+         
+         <things-resource-grid id="grid" class="padding-zero" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]" data="[[items]]" fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]" buttons="[[emptyButtons]]" export-file-name="[[menuInfo.title]]" export-sheet-name="[[menuInfo.title]]">
+         </things-resource-grid>
+      </div>
+
+      <paper-toolbar>
+        
+         <div class="bottom">
+            <things-button-bar id="button-group" buttons="[[buttons]]"></things-button-bar>
+         </div>
+      </paper-toolbar>
+   </template>
+
+   <script>
+      Polymer({
+         is: 'rtn-preprocess',
+
+         behaviors: [
+            Things.ResourceMenuContentBehavior
+         ],
+
+         properties: {
+            /**
+             * 현재 배치 아이디
+             ***************
+             * @type {String}
+             */
+            batchId: {
+               type: String
+            },
+
+            /**
+             * 선택된 호기 코드
+             ***************
+             * @type {String}
+             */
+            selectRegion: {
+               type: String
+            },
+
+            /**
+             * 선택된 주문 그룹 코드
+             ***************
+             * @type {String}
+             */
+            selectGroup: {
+               type: String
+            },
+
+            /**
+             * 서머리 그리드 데이터
+             ***************
+             * @type {Array}
+             */
+            summaryData: {
+               type: Array
+            },
+
+            /**
+             * 그룹 서머리 그리드 데이터
+             ***************
+             * @type {Array}
+             */
+            groupSummaryData: {
+               type: Array
+            },
+
+            /**
+             * 호기 그리드 데이터
+             ***************
+             * @type {Array}
+             */
+            regionItems: {
+               type: Array
+            },
+
+            /**
+             * 주문 그룹 데이터
+             ***************
+             * @type {Array}
+             */
+            groupItems: {
+               type: Array
+            },
+
+            /**
+             * 빈 버튼
+             ***************
+             * @type {Array}
+             */
+            emptyButtons: {
+               type: Array,
+               value: function () {
+                  return [];
+               }
+            },
+
+            /**
+             * 그리드 설정
+             ***************
+             * @type {Object}
+             */
+            gridConfig: {
+               type: Object,
+               value: function () {
+                  return {
+                     options: {
+                        edit: {
+                           editable: false,
+                           pasteEnabled: false
+                        },
+                        display: {
+                           fitStyle: 'fill'
+                        }
+                     }
+                  };
+               }
+            },
+
+            /**
+             * 서머리 그리드 설정
+             ***************
+             * @type {Object}
+             */
+            sumGridConfig: {
+               type: Object,
+               value: function () {
+                  return {
+                     options: {
+                        edit: {
+                           editable: false,
+                           pasteEnabled: false
+                        },
+                        rowIndicator: {
+                           visible: false
+                        },
+                        checkBar: {
+                           visible: false
+                        }
+                     },
+                     displayOptions: {
+                        fitStyle: 'evenFill'
+                     }
+                  }
+               }
+            },
+
+            /**
+             * 주문 그룹 그리드 설정
+             ***************
+             * @type {Object}
+             */
+            groupGridConfig: {
+               type: Object,
+               value: function () {
+                  return {
+                     options: {
+                        edit: {
+                           editable: false,
+                           pasteEnabled: false
+                        },
+                        checkBar: {
+                           visible: false
+                        }
+                     },
+                     displayOptions: {
+                        fitStyle: 'evenFill'
+                     }
+                  }
+               }
+            },
+
+            /**
+             * 호기 그리드 설정
+             ***************
+             * @type {Object}
+             */
+            regionGridConfig: {
+               type: Object,
+               value: function () {
+                  return {
+                     options: {
+                        edit: {
+                           editable: false,
+                           pasteEnabled: false
+                        },
+                        checkBar: {
+                           exclusive: false
+                        },
+                        display: {
+                           fitStyle: 'fill'
+                        }
+                     }
+                  }
+               }
+            },
+
+            /**
+             * 서머리 그리드 설정
+             ***************
+             * @type {Array}
+             */
+            sumGridModel: {
+               type: Array,
+               value: function () {
+                  return [{
+                     fieldName: 'total_skus', dataType: 'number'
+                  }, {
+                     fieldName: 'assigned_sku', dataType: 'number'
+                  }, {
+                     fieldName: 'remain_sku', dataType: 'number'
+                  }, {
+                     fieldName: 'total_orders_pcs', dataType: 'number'
+                  }, {
+                     fieldName: 'assigned_pcs', dataType: 'number'
+                  }, {
+                     fieldName: 'remain_pcs', dataType: 'number'
+                  }];
+               }
+            },
+
+            /**
+             * 서머리 그리드 설정
+             ***************
+             * @type {Array}
+             */
+            sumGridColumns: {
+               type: Array,
+               value: function () {
+                  return [{
+                     name: 'total_skus',
+                     fieldName: 'total_skus',
+                     width: 60,
+                     header: {
+                        text: Things.DataGlobal.t('label.total_sku')
+                     },
+                     styles: {
+                        textAlignment: 'far', numberFormat: '0,000'
+                     },
+                     editable: false
+                  }, {
+                     name: 'assigned_sku',
+                     fieldName: 'assigned_sku',
+                     width: 60,
+                     header: {
+                        text: Things.DataGlobal.t('label.assigned_sku')
+                     },
+                     styles: {
+                        textAlignment: 'far', numberFormat: '0,000'
+                     },
+                     editable: false
+                  }, {
+                     name: 'remain_sku',
+                     fieldName: 'remain_sku',
+                     width: 60,
+                     header: {
+                        text: Things.DataGlobal.t('label.remain_sku')
+                     },
+                     styles: {
+                        textAlignment: 'far', numberFormat: '0,000'
+                     },
+                     editable: false
+                  }, {
+                     name: 'total_orders_pcs',
+                     fieldName: 'total_orders_pcs',
+                     width: 60,
+                     header: {
+                        text: Things.DataGlobal.t('label.total_pcs')
+                     },
+                     styles: {
+                        textAlignment: 'far', numberFormat: '0,000'
+                     },
+                     editable: false
+                  }, {
+                     name: 'assigned_pcs',
+                     fieldName: 'assigned_pcs',
+                     width: 60,
+                     header: {
+                        text: Things.DataGlobal.t('label.assigned_pcs')
+                     },
+                     styles: {
+                        textAlignment: 'far', numberFormat: '0,000'
+                     },
+                     editable: false
+                  }, {
+                     name: 'remain_pcs',
+                     fieldName: 'remain_pcs',
+                     width: 60,
+                     header: {
+                        text: Things.DataGlobal.t('label.remain_pcs')
+                     },
+                     styles: {
+                        textAlignment: 'far', numberFormat: '0,000'
+                     },
+                     editable: false
+                  }];
+               }
+            },
+
+            /**
+             * 호기 그리드 설정
+             ***************
+             * @type {Array}
+             */
+            regionGridModel: {
+               type: Array,
+               value: function () {
+                  return [{
+                     fieldName: 'rack_cd'
+                  }, {
+                     fieldName: 'rack_nm'
+                  }, {
+                     fieldName: 'remain_cells',
+                     dataType: 'number'
+                  }, {
+                     fieldName: 'assigned_cells',
+                     dataType: 'number'
+                  }, {
+                     fieldName: 'assigned_sku',
+                     dataType: 'number'
+                  }, {
+                     fieldName: 'assigned_pcs',
+                     dataType: 'number'
+                  }];
+               }
+            },
+
+            /**
+             * 호기 그리드 설정
+             ***************
+             * @type {Array}
+             */
+            regionGridColumns: {
+               type: Array,
+               value: function () {
+                  return [{
+                     name: 'assign_icon',
+                     editable: false,
+                     width: 30,
+                     imageList: 'images',
+                     header: { text: '' },
+                     renderer: { type: 'icon' },
+                     styles: {
+                        iconIndex: 'statusGreen.png',
+                        iconLocation: 'center'
+                     }
+                  }, {
+                     name: 'non_assign_icon',
+                     editable: false,
+                     width: 30,
+                     imageList: 'images',
+                     header: { text: '' },
+                     renderer: { type: 'icon' },
+                     styles: {
+                        iconIndex: 'statusGray.png',
+                        iconLocation: 'center'
+                     }
+                  }, {
+                     name: 'rack_cd',
+                     fieldName: 'rack_cd',
+                     width: 0,
+                     header: {
+                        text: Things.DataGlobal.t('label.rack_cd')
+                     },
+                     styles: {
+                        textAlignment: 'center'
+                     },
+                     editable: false
+                  }, {
+                     name: 'rack_nm',
+                     fieldName: 'rack_nm',
+                     width: 70,
+                     header: {
+                        text: Things.DataGlobal.t('label.rack_nm')
+                     },
+                     editable: false
+                  }, {
+                     name: 'remain_cells',
+                     fieldName: 'remain_cells',
+                     width: 60,
+                     header: {
+                        text: Things.DataGlobal.t('label.remain_cells')
+                     },
+                     styles: {
+                        textAlignment: 'far', numberFormat: '0,000'
+                     },
+                     editable: false
+                  }, {
+                     name: 'assigned_cells',
+                     fieldName: 'assigned_cells',
+                     width: 60,
+                     header: {
+                        text: Things.DataGlobal.t('label.assigned_cells')
+                     },
+                     styles: {
+                        textAlignment: 'far', numberFormat: '0,000'
+                     },
+                     editable: false
+                  }, {
+                     name: 'assigned_pcs',
+                     fieldName: 'assigned_pcs',
+                     width: 80,
+                     header: {
+                        text: Things.DataGlobal.t('label.assigned_pcs')
+                     },
+                     styles: {
+                        textAlignment: 'far', numberFormat: '0,000'
+                     },
+                     editable: false
+                  }];
+               }
+            },
+
+            /**
+             * 주문 그룹 그리드 설정
+             ***************
+             * @type {Array}
+             */
+            groupGridModel: {
+               type: Array,
+               value: function () {
+                  return [{
+                     fieldName: 'class_cd'
+                  }];
+               }
+            },
+
+            /**
+             * 주문 그룹 그리드 설정
+             ***************
+             * @type {Array}
+             */
+            groupGridColumns: {
+               type: Array,
+               value: function () {
+                  return [{
+                     name: 'class_cd',
+                     fieldName: 'class_cd',
+                     width: 100,
+                     header: {
+                        text: Things.DataGlobal.t('label.order_group')
+                     },
+                     editable: false
+                  }];
+               }
+            }
+         },
+
+         observers: [
+            '_searchDataChanged(lastResponse)'
+         ],
+
+         listeners: {
+            'things-grid-configured': '_gridConfigured',
+
+            'button-group.back-btn-tap': 'goBack',
+            'button-group.reset-btn-tap': 'generatePreprocessing',
+            'button-group.auto_assign-btn-tap': 'autoAssignment',
+            'button-group.assign_region-btn-tap': 'manualAssignRegion',
+            'button-group.reset_assign-btn-tap': 'resetAssignment',
+            'button-group.swap-btn-tap': 'popupSwapView',
+            'button-group.end_preprocess-btn-tap': 'completePreprocessing',
+
+            'search-form.things-form-submit-configured': '_onSearchFormBeforeSubmit',
+            'region-grid.things-grid-cell-data-select': '_regionGridSelected',
+            'order-group-grid.things-grid-row-data-select': '_selectedGroupChanged',
+
+            'search-preprocessing-ajax.things-ajax-response': '_preprocessListChanged',
+            'generate-preprocessing-ajax.things-ajax-response': 'refreshData',
+            'auto-region-assign-ajax.things-ajax-response': 'refreshData',
+            'assign-preprocessing-ajax.things-ajax-response': 'refreshData',
+            'reset-assignment-ajax.things-ajax-response': '_onResetAssignResponse',
+            'complete-preprocessing-ajax.things-ajax-response': '_preprocessingCompleted',
+            'instruct-jobs-ajax.things-ajax-response': 'goBack'
+         },
+
+         /**
+          * Ready
+          */
+         ready: function () {
+            this.limit = 100000;
+          
+         },
+
+         /**
+          * 그리드 구성 후 처리
+          **************
+          * @param {Object} e
+          */
+         _gridConfigured: function (e) {
+            e.target.grid.autoFill().setEnabled(false);
+
+            // 아이디로 그리드를 찾아 개별 설정
+            switch (e.target.id) {
+               // 호기 그리드의 [ALL]행과 빈 행은 체크할 필요 없음
+               case 'region-grid': {
+                  e.target.grid.checkBar().setCheckableCallback(function (grid, row) {
+                     var rackCd = row.getValue("rack_cd")
+                     return !(rackCd === '[ALL]' || rackCd === '');
+                  });
+                  e.target.grid.checkBar().setHideUncheckable(true);
+               }
+            }
+         },
+
+         /**
+          * 폼 서브밋 전에 서버 호출에 불필요한 query 파라미터를 제거
+          **************
+          * @param {Object} event
+          */
+         _onSearchFormBeforeSubmit: function (event) {
+            var form = event.detail;
+            var query = form.request.params.query;
+          
+            var queryArr = (typeof (query) == 'string') ? JSON.parse(query) : query ? query : [];
+            var realQuery = queryArr.filter(function (query) { 
+               return (query.name == 'rack_cd' || query.name == 'id');
+            });
+            form.request.params.query = JSON.stringify(realQuery);
+
+            this.batchId = this._getCurrentBatchId();
+         },
+
+         /**
+          * region grid cell data selected event handler
+          * 1. 선택한 호기의 코드를 this.selectedRegion에 할당
+          * 2. 선택한 컬럼이 assign_icon/non_assign_icon 이라면 해당 호기에 대한 작업 정보를 조회
+          **************
+          * @param {Object} event
+          */
+         _regionGridSelected: function (event) {
+            var selectedRegionObj = event.detail.row;
+            if (selectedRegionObj) {
+               this.selectedRegion = selectedRegionObj.rack_cd;
+
+               var cellName = event.detail.cell.column.name();
+
+               if (cellName === 'assign_icon') { // 할당 리스트 조회
+                  if (this.selectedRegion == '') {
+                     this._searchPreprocessList('equip_cd', null, 'is_blank');
+                  } else if (this.selectedRegion == '[ALL]') {
+                     this._searchPreprocessList(null, null, null);
+                  } else {
+                     this._searchPreprocessList('equip_cd', this.selectedRegion, 'eq');
+                  }
+               } else if (cellName === 'non_assign_icon') { // 비할당 리스트 조회
+                  this._searchPreprocessList('equip_cd', null, 'is_blank');
+               }
+            }
+         },
+
+         /**
+          * 선택된 주문 그룹이 변경된 경우
+          **************
+          * @param {Object} event
+          */
+         _selectedGroupChanged: function (event) {
+            var selectedGroupObj = event.detail;
+            if (selectedGroupObj) {
+               this.selectedGroup = selectedGroupObj.class_cd;
+               if (this.selectedGroup == '') {
+                  this._searchPreprocessList('class_cd', null, 'is_blank');
+               } else if (this.selectedGroup == '[ALL]') {
+                  this._searchPreprocessList(null, null, null);
+               } else {
+                  this._searchPreprocessList('class_cd', this.selectedGroup, 'eq');
+               }
+            }
+         },
+
+         /**
+          * 주문 가공 정보 조회
+          **************
+          * @param {String} conditionName
+          * @param {String} conditionValue
+          * @param {String} conditionOper
+          */
+         _searchPreprocessList: function (conditionName, conditionValue, conditionOper) {
+            var searchAjax = this.$['search-preprocessing-ajax'];
+            var batchId = this.batchId;
+            var queryFields = [{ name: 'batch_id', value: batchId }];
+
+            if (conditionName) {
+               var operator = !conditionOper ? 'eq' : conditionOper;
+               if (operator == 'is_blank') {
+                  queryFields.push({ name: conditionName, operator: operator });
+               } else {
+                  queryFields.push({ name: conditionName, operator: operator, value: conditionValue });
+               }
+            }
+
+            searchAjax.queryFields = queryFields;
+            searchAjax.sortFields = [{
+               field: 'total_pcs', ascending: false
+            }];
+            searchAjax.page = 1;
+            searchAjax.limit = 100000;
+            searchAjax.generateRequest();
+         },
+
+         /**
+          * 현재 설정된 배치 ID
+          **************
+          * @return {String} 현재 설정된 배치 ID
+          */
+         _getCurrentBatchId: function () {
+            var searchForm = this.getResourceSearchForm();
+            var formData = searchForm.serializeMyForm();
+            return formData.id;
+         },
+
+         /**
+          * 주문 가공 정보가 변경된 경우
+          **************
+          * @param {Object} event
+          */
+         _preprocessListChanged: function (event) {
+            var items = event && event.detail && event.detail.preprocesses;// && event.detail.preprocesses.items;
+            var summ = event && event.detail && event.detail.group_summary;
+            this._preprocessItemsChanged(items, summ);
+         },
+
+         /**
+          * 주문 가공 데이터 가공
+          **************
+          * @param {Array} items
+          */
+         _preprocessItemsChanged: function (items, summary) {
+            if (items && items.length > 0) {
+               this.items = items.map(function (item) {
+                  item.sku_nm = '(' + item.sku_cd + ') ' + item.sku_nm;
+                  return item;
+               });
+            } else {
+               this.items = [];
+            }
+            this.groupSummaryData = [summary];
+            this.$['search-form'].setFormData({ id: this.batchId });
+         },
+
+         /**
+          * 뒤로 이동
+          **************
+          * @param {Object} e 버튼 탭 이벤트
+          */
+         goBack: function (e) {
+            page('/job_batch', {});
+         },
+
+         /**
+          * 주문 가공 정보를 생성한다.
+          **************
+          * @param {Object} e 버튼 탭 이벤트
+          */
+         generatePreprocessing: function (e) {
+            var title = Things.DataGlobal.t(event.detail.text);
+            this._confirmTransaction('generate-preprocessing-ajax', title);
+         },
+
+         /**
+          * 자동 할당 버튼 이벤트 핸들러
+          **************
+          * @param {Object} e 버튼 탭 이벤트
+          */
+         autoAssignment: function (e) {
+
+            // 1. 현재 배치 작업 상태 체크
+            if (!this._checkTransactionEnabled()) return;
+
+            // 2. 할당할 호기가 호기 그리드에 체크되어 있는지 체크
+            var checkedRegions = this._checkedGridRows(this.$['region-grid'], Things.DataGlobal.t('label.region'), true);
+            if (!checkedRegions || checkedRegions.length == 0) return;
+
+            // 3. 대상 상품들이 체크되어 있다면 체크된 개수 만큼만 자동 할당 대상이 되고 체크가 없다면 모든 상품들이 자동 할당 대상이 된다.
+            var checkedCusts = this._checkedGridRows(this.$['grid'], Things.DataGlobal.t('label.customer'), false);
+            var targetCusts = (!checkedCusts || checkedCusts.length == 0) ? this.items : checkedCusts;
+
+            // 서버에 자동할당 요청
+            var params = { regions: checkedRegions.map(row => row.rack_cd).join(',') };
+            var title = Things.DataGlobal.t(event.detail.text);
+            this._confirmTransaction('auto-region-assign-ajax', title, params, targetCusts);
+         },
+
+         /**
+          * 주문 가공 정보에 호기를 지정한다.
+          **************
+          * @param {Object} e 버튼 탭 이벤트
+          */
+         manualAssignRegion: function (e) {
+            // 1. 현재 배치 작업 상태 체크
+            if (!this._checkTransactionEnabled()) return;
+
+            // 2. 호기 체크 항목 확인
+            var checkedRows = this._checkedGridRows(this.$['region-grid'], Things.DataGlobal.t('label.region'), true);
+            if (checkedRows) {
+               if (checkedRows.length > 1) {
+                  this.openInfoMsg({
+                     type: 'info',
+                     title: Things.DataGlobal.t('title.info'),
+                     text: Things.DataGlobal.t('text.must_select_one_region'),
+                     closeOnConfirm: true
+                  });
+
+               } else {
+                  var selectedRegion = checkedRows[0];
+
+                  // 3. 거래처 선택 항목이 없다면 리턴
+                  var toAssignItems = this._checkedGridRows(this.$.grid, Things.DataGlobal.t('label.customer'), true);
+                  if (!toAssignItems || toAssignItems.length == 0) return;
+
+                  // 4. 호기 지정이 이미 완료된 항목이 있다면 제거
+                  var selectedItems = toAssignItems.filter(function (item) { return !item['rack_nm']; });
+                  if (!selectedItems || selectedItems.length == 0) {
+                     var self = this;
+                     this.openConfirmMsg({
+                        type: 'info',
+                        title: Things.DataGlobal.t('title.confirm'),
+                        text: Things.DataGlobal.t('text.assigned_region_in_list') + ' '
+                           + Things.DataGlobal.t('text.Sure to X', { x: Things.DataGlobal.t('text.continue') }),
+                        showCancelButton: true
+                     }, function () {
+                        self.assignRegion(selectedRegion, toAssignItems);
+                     });
+                  } else {
+                     
+                     this.assignRegion(selectedRegion, toAssignItems);
+                  }
+               }
+            }
+         },
+
+         /**
+          * 로케이션 바꾸기 팝업 표시
+          ********************
+          */
+         popupSwapView: function () {
+            var attr = {
+               resourceName: 'RtnLocationAssignment',
+               batchId: this.batchId
+            };
+
+            var swapView = this.create('rtn-location-assignment', attr);
+            this.fire('things-open-custom-size-dialog', {
+               view: swapView,
+               modal: true,
+               dialogSize: 'large',
+               closeCallback: function () {
+                  this.refreshData();
+               }.bind(this)
+            });
+         },
+
+         /**
+          * 팝업을 띄워서 수동으로 호기를 지정한다.
+          **************
+          * @param {Object} region 선택된 호기 오브젝트
+          * @param {Object} selectedCusts 선택된 거래처 리스트
+          */
+         assignRegion: function (region, selectedCusts) {
+            // 선택한 그리드가 있다면 팝업 표시
+            var assignPopup = this.createAssignRegionPopup(region.rack_cd, region.rack_nm, selectedCusts);
+            // 주문 가공 완료 팝업을 표시
+            this.fire('things-open-custom-size-dialog', {
+               view: assignPopup,
+               modal: true,
+               dialogSize: 'large',
+               closeCallback: function () { this.refreshData(); }.bind(this)
+            });
+         },
+
+         /**
+          * 주문 가공 정보에 할당 정보를 초기화한다.
+          **************
+          * @param {Object} e 버튼 탭 이벤트
+          */
+         resetAssignment: function (e) {
+            // 1. 현재 배치 작업 상태 체크
+            if (!this._checkTransactionEnabled()) return;
+
+            var resetAssignAjax = this.$['reset-assignment-ajax'];
+            resetAssignAjax.resourceId = this.batchId;
+
+            this.openConfirmMsg({
+               type: 'info',
+               title: Things.DataGlobal.t('button.reset_assign'),
+               text: Things.DataGlobal.t('text.Sure to X', { x: Things.DataGlobal.t('text.reset_order_preprocess') }),
+               showCancelButton: true,
+               showConfirmButton: true,
+               closeOnConfirm: false
+
+            }, function () {
+               this.openConfirmMsg({
+                  type: 'info',
+                  title: Things.DataGlobal.t('button.reset_assign'),
+                  text: Things.DataGlobal.t('text.reset_region_assignment_also'),
+                  showCancelButton: true,
+                  showConfirmButton: true//, confirmButtonText: 'Yes', cancelButtonText: 'No'
+
+               }, function () {
+                  resetAssignAjax.resourceId = this.batchId + '/true';
+                  resetAssignAjax.generateRequest();
+                  // 서치 폼 호기 코드 입력란 비움
+                  this.initialSearchParams.rack_cd = '';
+
+               }.bind(this), function () {
+                  resetAssignAjax.resourceId = this.batchId + '/false';
+                  resetAssignAjax.generateRequest();
+
+               }.bind(this));
+
+            }.bind(this));
+         },
+
+         /**
+          * 주문 가공을 완료한다.
+          **************
+          * @param {Object} e 버튼 탭 이벤트
+          */
+         completePreprocessing: function (e) {
+            if (!this._checkTransactionEnabled()) return;
+
+            var batchId = this.batchId;
+
+            var title = Things.DataGlobal.t('button.end_preprocess');
+            var ajax = this.$['complete-preprocessing-ajax'];
+            var text = Things.DataGlobal.t('text.Sure to X', { x: title });
+
+            this.openConfirmMsg({
+               type: 'info', title: title, text: text, showCancelButton: true
+            }, function () {
+               ajax.resourceUrl = 'rtn_preprocess/' + batchId + '/complete';
+               ajax.generateRequest();
+            });
+         },
+
+         /**
+          * 호기 지정 팝업을 출력하기 위한 필요한 값들을 초기화하여 다이얼로그를 생성하여 리턴
+          * ***********************
+          * @param {String} batchId
+          * @param {String} batchId
+          * @param {Array} selectedItems
+          * @return 호기 지정 팝업 화면
+          */
+         createAssignRegionPopup: function (regionCd, regionNm, selectedItems) {
+            var batchId = this.batchId;
+            // 1. 호기 지정 팝업 생성
+            var assignPopup = document.createElement('rtn-preprocess-assign-region-popup');
+            assignPopup.regionCd = regionCd;
+            assignPopup.regionNm = regionNm;
+            // 2. 그리드 구성
+            assignPopup.title = Things.DataGlobal.t('button.assign_region');
+            assignPopup.batchId = batchId;
+            assignPopup.gridModel = JSON.parse(JSON.stringify(this.gridModel));
+            assignPopup.assignedGridColumns = JSON.parse(JSON.stringify(this.gridColumns));
+            assignPopup.toAssignGridColumns = JSON.parse(JSON.stringify(this.gridColumns));
+            assignPopup.toAssignItems = selectedItems;
+            // 3. 호기 지정 팝업 리턴
+            return assignPopup;
+         },
+
+         /**
+          * 주문 가공 완료 팝업을 출력하기 위한 필요한 값들을 초기화하여 다이얼로그를 생성하여 리턴
+          * ***********************
+          * @param {String} batchId
+          * @return 주문 가공 완료 팝업 화면
+          */
+         createEndPreprocessPopup: function (batchId) {
+            // 1. 주문 가공 완료 팝업 생성
+            var completePopup = document.createElement('rtn-preprocess-complete-popup');
+            // 2. 정보 폼 구성
+            completePopup.formData = JSON.parse(JSON.stringify(this.getResourceSearchForm().serializeMyForm()));
+            completePopup.searchFormFields = JSON.parse(JSON.stringify(this.searchFormFields));
+            // 3. 그리드 구성
+            completePopup.title = Things.DataGlobal.t('button.end_preprocess');
+            completePopup.gridModel = JSON.parse(JSON.stringify(this.gridModel));
+            completePopup.gridColumns = JSON.parse(JSON.stringify(this.gridColumns));
+            completePopup.items = JSON.parse(JSON.stringify(this.items));
+            // 4. 팝업 리턴
+            return completePopup;
+         },
+
+         /**
+          * 트랜잭션 확인 후 실행
+          ****************
+          * @param {String} ajaxId Ajax Id
+          * @param {String} title 트랜잭션 확인용 타이틀
+          * @param {Object} params ajax 호출용 파라미터
+          * @param {Object} bodyObj ajax 호출용 body 파라미터
+          */
+         _confirmTransaction: function (ajaxId, title, params, bodyObj) {
+            if (!this._checkTransactionEnabled()) return;
+
+            var batchId = this.batchId;
+            if (batchId) {
+               var ajax = this.$[ajaxId];
+               if (params) ajax.params = params;
+               if (bodyObj) ajax.body = bodyObj;
+
+               var text = Things.DataGlobal.t('text.Sure to X', { x: title });
+               this.openConfirmMsg({
+                  type: 'info', title: title, text: text, showCancelButton: true
+               }, function () {
+                  ajax.resourceId = batchId;
+                  ajax.generateRequest();
+               });
+            } else {
+               var text = Things.DataGlobal.t('text.no_batch_id');
+               this.openInfoMsg({ type: 'info', title: text, closeOnConfirm: true });
+            }
+         },
+
+         /**
+          * 조회 데이터 변경시
+          ****************
+          * @param {Object} lastResponse
+          */
+         _searchDataChanged: function (lastResponse) {
+            if (lastResponse) {
+               var sumGridNoData = function (sumGridModel) {
+                  let r = {};
+                  for (let i = 0, n = sumGridModel.length; i < n; i++) {
+                     r[sumGridModel[i].fieldName] = 0;
+                  }
+                  return [r];
+               }
+               this.summaryData = lastResponse.summary && lastResponse.summary[0] ? lastResponse.summary : sumGridNoData(this.sumGridModel);
+               this.groupSummaryData = [lastResponse.group_summary];
+
+               var regionItems = lastResponse.regions;
+               regionItems = (regionItems && regionItems.length > 0) ? regionItems : [];
+               var totalAssigned = 0;
+               var totalRemained = 0;
+               var totalAssignedSku = 0;
+               var totalAssignedPcs = 0;
+
+               regionItems.forEach(function (item) {
+                  totalAssigned += isNaN(item.assigned_cells) ? 0 : item.assigned_cells;
+                  totalRemained += isNaN(item.remain_cells) ? 0 : item.remain_cells;
+                  totalAssignedSku += isNaN(item.assigned_sku) ? 0 : item.assigned_sku;
+                  totalAssignedPcs += isNaN(item.assigned_pcs) ? 0 : item.assigned_pcs;
+               });
+
+               regionItems.unshift({
+                  rack_cd: '',
+                  rack_nm: '',
+                  assigned_cells: null,
+                  remain_cells: null,
+                  assigned_sku: null,
+                  assigned_pcs: null
+               });
+
+               regionItems.unshift({
+                  rack_cd: '[ALL]',
+                  rack_nm: '[ALL]',
+                  assigned_cells: totalAssigned,
+                  remain_cells: totalRemained,
+                  assigned_sku: totalAssignedSku,
+                  assigned_pcs: totalAssignedPcs
+               });
+               this.regionItems = regionItems;
+
+               var groupItems = lastResponse.groups;
+               groupItems = (groupItems && groupItems.length > 0) ? groupItems : [];
+               groupItems.unshift({ class_cd: '' });
+               groupItems.unshift({ class_cd: '[ALL]' });
+               this.groupItems = groupItems;
+
+               this._preprocessItemsChanged(lastResponse.preprocesses, lastResponse.group_summary);
+            }
+         },
+
+         /**
+          * 그리드에서 체크된 Row의 데이터를 리턴
+          *****************
+          * @param {Object} grid 체크할 그리드
+          * @param {String} gridTitle 그리드 타이틀
+          * @param {Boolean} showMessage 그리드에 체크된 항목이 없으면 메시지 표시 여부
+          * @return 그리드에서 체크된 리스트
+          */
+         _checkedGridRows: function (grid, gridTitle, showMessage) {
+            var rows = grid.getGridObject().getCheckedRows();
+
+            if (rows && rows.length > 0) {
+               var ds = grid.getGridDataSet();
+               return rows.map(function (row) {
+                  return ds.getRowObject(row.dataIndex());
+               });
+
+            } else {
+               if (showMessage) {
+                  this.openInfoMsg({
+                     type: 'info',
+                     title: Things.DataGlobal.t('title.info'),
+                     text: Things.DataGlobal.t('text.please_select_items_in_x_grid', { x: gridTitle }),
+                     closeOnConfirm: true
+                  });
+               }
+
+               return null;
+            }
+         },
+
+         /**
+          * 트랜잭션 처리 가능한 지 여부 체크
+          *****************
+          * @param {String} buttonId
+          * @return {Boolean} 작업 처리 가능 여부
+          */
+         _checkTransactionEnabled: function (buttonId) {
+            var formData = this.$['search-form'].serializeMyForm();
+            var status = formData['status'];
+
+            if (status == 'END') {
+               this.openInfoMsg({ type: 'info', title: Things.DataGlobal.t('text.already_complete') });
+               return false;
+            }
+
+            if (status == 'RUN') {
+               this.openInfoMsg({ type: 'info', title: Things.DataGlobal.t('text.already_running') });
+               return false;
+            }
+
+            return true;
+         },
+
+         /**
+          * 할당 리셋 시 배치 화면으로 돌아감
+          **************
+          */
+         _onResetAssignResponse: function() {
+           this.goBack();
+         },
+
+         /**
+          * 주문 가공 완료 처리 후
+          **************
+          * @param {Object} event
+          */
+         _preprocessingCompleted: function(event) {
+           var batchList = event.detail;
+           if(!batchList || batchList.length == 0) return;
+           var firstBatch = batchList[0];
+
+           // 1. 작업 유형이 RTN3 인지 체크
+           if(firstBatch.job_type != 'RTN') {
+             this.goBack();
+
+           // 2. 사용자에게 작업지시까지 처리할 건지 물어보고
+           } else {
+             this.openConfirmMsg({
+               type : 'info',
+               title : Things.DataGlobal.t('title.confirm'),
+               text : Things.DataGlobal.t('text.Sure to X', { x: Things.DataGlobal.t('button.job_instruct') }),
+               showCancelButton : true
+
+             }, function() {
+               var ajax = this.$['instruct-jobs-ajax'];
+               ajax.body = batchList;
+               ajax.generateRequest();
+
+             }.bind(this) , function() {
+               this.goBack();
+
+             }.bind(this));
+           }
+         },
+      });
+   </script>
+</dom-module>

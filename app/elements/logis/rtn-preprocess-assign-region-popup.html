@@ -1,0 +1,37 @@
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+
+
+<dom-module id="rtn-preprocess-assign-region-popup">
+  <template>
+    <style>:host{@apply --layout-flex;@apply --layout-vertical;@apply --things-default-padding;--grid-gap:20px}.container{@apply --layout-flex;display:grid;grid-template:"a a" 50px "b d" 25px "c e" auto/calc(50% - calc(var(--grid-gap)/ 2)) calc(50% - calc(var(--grid-gap)/ 2));grid-row-gap:10px;grid-column-gap:var(--grid-gap)}#resource-form{grid-area:a}#grid-assigned-title{grid-area:b}#grid-assigned{grid-area:c}#grid-to-assign-title{grid-area:d}#grid-to-assign{grid-area:e}.margin-zero{margin:0}.padding-zero{padding:0}</style>
+
+    <things-ajax id="search-preprocessing-ajax" resource-url="order_preprocesses" resource-action="index" last-response="{{searchResponse}}">
+    </things-ajax>
+
+    <things-ajax id="assign-region-ajax" method="PUT" content-type="application/json">
+    </things-ajax>
+
+    <div class="container">
+      <things-resource-form id="resource-form" form-fields="[[formFields]]" column-count="2" buttons="">
+      </things-resource-form>
+
+      <div id="grid-assigned-title">
+        <li>[[global.total_assigned_sku]]: [[searchResponse.items.length]]</li>
+      </div>
+
+      <things-resource-grid id="grid-assigned" class="padding-zero" model="[[gridModel]]" columns="[[assignedGridColumns]]" data="[[searchResponse.items]]" fixed-column-count="0">
+      </things-resource-grid>
+
+      <div id="grid-to-assign-title">
+        <li>[[global.total_to_assign_sku]]: [[toAssignItems.length]]</li>
+      </div>
+
+      <things-resource-grid id="grid-to-assign" class="padding-zero" model="[[gridModel]]" columns="[[toAssignGridColumns]]" data="[[toAssignItems]]" fixed-column-count="0" buttons="[[buttons]]">
+      </things-resource-grid>
+    </div>
+  </template>
+
+  <script>Polymer({is:"rtn-preprocess-assign-region-popup",behaviors:[Things.MsgBoxBehavior],properties:{global:{type:Object,value:function(){return{total_assigned_sku:Things.DataGlobal.t("text.total_assigned_x",{x:Things.DataGlobal.t("label.sku")}),total_to_assign_sku:Things.DataGlobal.t("text.total_to_assign_x",{x:Things.DataGlobal.t("label.sku")})}}},formFields:{type:Array,value:function(){return[{label:Things.DataGlobal.t("label.region_cd"),name:"region_cd",type:"readonly"},{label:Things.DataGlobal.t("label.region_nm"),name:"region_nm",type:"readonly"}]}},batchId:{type:String},regionCd:{type:String},regionNm:{type:String},buttons:{type:Array,value:function(){return[{id:"assign_region",text:"assign_region"}]}},emptyButtons:{type:Array,value:[]},gridModel:{type:Array,value:[]},assignedGridColumns:{type:Array},toAssignGridColumns:{type:Array,value:[]},toAssignItems:{type:Array}},listeners:{"grid-assigned.things-grid-configure":"_onAssignedGridConfigure","grid-to-assign.things-grid-configure":"_onToAssignGridConfigure","grid-assigned.things-grid-configured":"_onAssignedGridConfigured","grid-to-assign.things-grid-configured":"_onToAssignGridConfigured","assign_region-tap":"_assignBtnTapped","assign-region-ajax.things-ajax-response":"_assignResponsed"},_onAssignedGridConfigure:function(n){this.assignedGridColumns&&this.assignedGridColumns.forEach(function(n){"batch_id"!=n.name&&"region_nm"!=n.name&&"loc_cd"!=n.name&&"zone_cd"!=n.name||(n.width=0)})},_onToAssignGridConfigure:function(n){this.toAssignGridColumns&&this.toAssignGridColumns.forEach(function(n){"batch_id"!=n.name&&"region_nm"!=n.name&&"loc_cd"!=n.name&&"zone_cd"!=n.name||(n.width=0)})},_onAssignedGridConfigured:function(n){this.searchAssignedItems();var e={region_cd:this.regionCd,region_nm:this.regionNm};this.$["resource-form"].setFormData(e)},_onToAssignGridConfigured:function(n){this.$["grid-to-assign"].getGridObject().checkAll()},searchAssignedItems:function(){var n=this.$["search-preprocessing-ajax"];n.queryFields=[{name:"batch_id",operator:"eq",value:this.batchId},{name:"region_cd",operator:"eq",value:this.regionCd}],n.generateRequest()},_assignBtnTapped:function(n){var e=this.$["assign-region-ajax"];e.resourceUrl="rtn_preprocess/"+this.batchId+"/assign_region/"+this.regionCd,e.body=this.getCheckedOrders(),e.generateRequest()},_assignResponsed:function(n){this.openConfirmMsg({type:"info",title:Things.DataGlobal.t("button.assign_region"),text:Things.DataGlobal.t("text.Success to Process")},function(){this.fire("things-dialog-close")}.bind(this))},getCheckedOrders:function(){return this.toAssignItems}})</script>
+</dom-module>
