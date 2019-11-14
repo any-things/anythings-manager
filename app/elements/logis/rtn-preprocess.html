@@ -1,4 +1,7 @@
-
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
@@ -10,7 +13,9 @@
 <link rel="import" href="./rtn-preprocess-assign-region-popup.html">
 <link rel="import" href="./rtn-location-assignment.html">
 
-
+<!--
+rtn 주문 가공 화면
+-->
 
 <dom-module id="rtn-preprocess">
    <template>
@@ -53,71 +58,81 @@
          .margin-zero {margin: 0px;}
          .padding-zero {padding: 0px;}
       </style>
-      
+
+      <!-- 메뉴 메타 정보 수신 Ajax -->
       <things-ajax auto id="resource-meta" method="GET" resource-url="[[menuMetaUrl]]" last-response="{{metaData}}">
       </things-ajax>
 
-      
+      <!-- 여러 배치 한꺼번에 작업 지시 Ajax -->
       <things-ajax id="instruct-jobs-ajax" resource-url="job_batch/b2b/instruct_jobs" resource-action="create">
       </things-ajax>
 
-      
-      <things-ajax id="search-preprocessing-ajax" resource-url="order_preprocesses/index_all" resource-action="index">
+      <!-- 주문 가공 데이터 조회 Ajax -->
+      <things-ajax id="search-preprocessing-ajax" resource-url="order_preprocesses" resource-action="index">
       </things-ajax>
 
-      
+      <!-- 주문 가공 데이터 초기화 (삭제 후 생성) Ajax -->
       <things-ajax id="generate-preprocessing-ajax" resource-url="order_preprocesses/:id/regenerate" resource-action="create">
       </things-ajax>
 
-      
-      <things-ajax id="auto-region-assign-ajax" resource-url="order_preprocesses/:id/auto_assign/regions" resource-id="[[batchId]]" resource-action="update">
+      <!-- 주문 가공 데이터 호기 자동 지정 Ajax -->
+      <things-ajax id="auto-region-assign-ajax" resource-url="order_preprocesses/:id/auto_assign/regions" resource-id="[[batchId]]"
+         resource-action="update">
       </things-ajax>
 
-      
-      <things-ajax id="auto-location-assign-ajax" resource-url="order_preprocesses/:id/auto_assign/locations" resource-id="[[batchId]]" resource-action="update">
+      <!-- 주문 가공 데이터 로케이션 자동 지정 Ajax -->
+      <things-ajax id="auto-location-assign-ajax" resource-url="order_preprocesses/:id/auto_assign/locations" resource-id="[[batchId]]"
+         resource-action="update">
       </things-ajax>
 
-      
+      <!-- 주문 가공 데이터 호기 지정 Ajax -->
       <things-ajax id="assign-preprocessing-ajax" resource-url="order_preprocesses/:id/assign_region/:rack_cd" resource-action="update">
       </things-ajax>
 
-      
+      <!-- 주문 가공 데이터 호기 지정 리셋 Ajax -->
       <things-ajax id="reset-assignment-ajax" resource-url="order_preprocesses/:id/reset_assignment" resource-action="update">
       </things-ajax>
 
-      
+      <!-- 주문 가공 데이터 완료 Ajax -->
       <things-ajax id="complete-preprocessing-ajax" resource-url="order_preprocesses/:id/complete" resource-action="update">
       </things-ajax>
 
-      
+      <!-- 반품 가공 화면 컨테이너 -->
       <div class="container">
-        
-         <things-search-form id="search-form" class="margin-zero" title="[[menuInfo.title]]" form-fields="[[searchFormFields]]" select-fields="[[selectFields]]" sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]" page="{{page}}" limit="{{limit}}" last-response="{{lastResponse}}">
+        <!-- 검색 폼 -->
+         <things-search-form id="search-form" class="margin-zero" title="[[menuInfo.title]]" form-fields="[[searchFormFields]]" select-fields="[[selectFields]]"
+            sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]" page="{{page}}" limit="{{limit}}" last-response="{{lastResponse}}">
          </things-search-form>
 
-         
-         <things-resource-grid id="group-summary-grid" class="padding-zero" config="[[sumGridConfig]]" model="[[sumGridModel]]" columns="[[sumGridColumns]]" fixed-column-count="0" data="[[groupSummaryData]]" buttons="[[emptyButtons]]">
+         <!-- 상단 좌측 서머리 그리드 -->
+         <things-resource-grid id="group-summary-grid" class="padding-zero" config="[[sumGridConfig]]" model="[[sumGridModel]]" columns="[[sumGridColumns]]"
+            fixed-column-count="0" data="[[groupSummaryData]]" buttons="[[emptyButtons]]">
          </things-resource-grid>
 
-         
-         <things-resource-grid id="summary-grid" class="padding-zero" config="[[sumGridConfig]]" model="[[sumGridModel]]" columns="[[sumGridColumns]]" fixed-column-count="0" data="[[summaryData]]" buttons="[[emptyButtons]]">
+         <!-- 상단 우측 서머리 그리드 -->
+         <things-resource-grid id="summary-grid" class="padding-zero" config="[[sumGridConfig]]" model="[[sumGridModel]]" columns="[[sumGridColumns]]"
+            fixed-column-count="0" data="[[summaryData]]" buttons="[[emptyButtons]]">
          </things-resource-grid>
 
-         
-         <things-resource-grid id="region-grid" class="padding-zero" config="[[regionGridConfig]]" model="[[regionGridModel]]" columns="[[regionGridColumns]]" fixed-column-count="0" data="[[regionItems]]" buttons="[[emptyButtons]]">
+         <!-- 우측 호기 서머리 그리드 -->
+         <things-resource-grid id="region-grid" class="padding-zero" config="[[regionGridConfig]]" model="[[regionGridModel]]" columns="[[regionGridColumns]]"
+            fixed-column-count="0" data="[[regionItems]]" buttons="[[emptyButtons]]">
          </things-resource-grid>
 
-         
-         <things-resource-grid id="order-group-grid" class="padding-zero" config="[[groupGridConfig]]" model="[[groupGridModel]]" columns="[[groupGridColumns]]" fixed-column-count="0" data="[[groupItems]]" buttons="[[emptyButtons]]">
+         <!-- 주문 그룹 그리드 -->
+         <things-resource-grid id="order-group-grid" class="padding-zero" config="[[groupGridConfig]]" model="[[groupGridModel]]"
+            columns="[[groupGridColumns]]" fixed-column-count="0" data="[[groupItems]]" buttons="[[emptyButtons]]">
          </things-resource-grid>
 
-         
-         <things-resource-grid id="grid" class="padding-zero" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]" data="[[items]]" fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]" buttons="[[emptyButtons]]" export-file-name="[[menuInfo.title]]" export-sheet-name="[[menuInfo.title]]">
+         <!-- 좌측 상품별 서머리 그리드 -->
+         <things-resource-grid id="grid" class="padding-zero" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]"
+            data="[[items]]" fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]" buttons="[[emptyButtons]]"
+            export-file-name="[[menuInfo.title]]" export-sheet-name="[[menuInfo.title]]">
          </things-resource-grid>
       </div>
 
       <paper-toolbar>
-        
+        <!-- 하단 버튼 그룹 -->
          <div class="bottom">
             <things-button-bar id="button-group" buttons="[[buttons]]"></things-button-bar>
          </div>
@@ -551,7 +566,7 @@
                      fieldName: 'class_cd',
                      width: 100,
                      header: {
-                        text: Things.DataGlobal.t('label.order_group')
+                        text: Things.DataGlobal.t('label.class_cd')
                      },
                      editable: false
                   }];
@@ -592,7 +607,6 @@
           */
          ready: function () {
             this.limit = 100000;
-          
          },
 
          /**
@@ -624,9 +638,9 @@
          _onSearchFormBeforeSubmit: function (event) {
             var form = event.detail;
             var query = form.request.params.query;
-          
             var queryArr = (typeof (query) == 'string') ? JSON.parse(query) : query ? query : [];
-            var realQuery = queryArr.filter(function (query) { 
+            var realQuery = queryArr.filter(function (query) {
+               //          return (query.name == 'batch_id' || query.name == 'rack_cd');
                return (query.name == 'rack_cd' || query.name == 'id');
             });
             form.request.params.query = JSON.stringify(realQuery);
@@ -727,10 +741,13 @@
           **************
           * @param {Object} event
           */
-         _preprocessListChanged: function (event) {
-            var items = event && event.detail && event.detail.preprocesses;// && event.detail.preprocesses.items;
+         _preprocessListChanged: function (event) { 
+            this.items = event.detail.items;
+            /*
+            var items = event && event.detail && event.detail.preprocesses ;//&& event.detail.preprocesses.items;
             var summ = event && event.detail && event.detail.group_summary;
             this._preprocessItemsChanged(items, summ);
+            */
          },
 
          /**
@@ -776,7 +793,6 @@
           * @param {Object} e 버튼 탭 이벤트
           */
          autoAssignment: function (e) {
-
             // 1. 현재 배치 작업 상태 체크
             if (!this._checkTransactionEnabled()) return;
 
@@ -835,7 +851,6 @@
                         self.assignRegion(selectedRegion, toAssignItems);
                      });
                   } else {
-                     
                      this.assignRegion(selectedRegion, toAssignItems);
                   }
                }
@@ -941,7 +956,7 @@
             this.openConfirmMsg({
                type: 'info', title: title, text: text, showCancelButton: true
             }, function () {
-               ajax.resourceUrl = 'rtn_preprocess/' + batchId + '/complete';
+               ajax.resourceUrl = 'order_preprocesses/' + batchId + '/complete';
                ajax.generateRequest();
             });
          },
@@ -954,12 +969,12 @@
           * @param {Array} selectedItems
           * @return 호기 지정 팝업 화면
           */
-         createAssignRegionPopup: function (regionCd, regionNm, selectedItems) {
+         createAssignRegionPopup: function (equipCd, equipNm, selectedItems) {
             var batchId = this.batchId;
             // 1. 호기 지정 팝업 생성
             var assignPopup = document.createElement('rtn-preprocess-assign-region-popup');
-            assignPopup.regionCd = regionCd;
-            assignPopup.regionNm = regionNm;
+            assignPopup.equipCd = equipCd;
+            assignPopup.equipNm = equipNm;
             // 2. 그리드 구성
             assignPopup.title = Things.DataGlobal.t('button.assign_region');
             assignPopup.batchId = batchId;
