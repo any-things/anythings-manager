@@ -76,12 +76,7 @@ rtn 주문 가공 화면
       </things-ajax>
 
       <!-- 주문 가공 데이터 호기 자동 지정 Ajax -->
-      <things-ajax id="auto-region-assign-ajax" resource-url="order_preprocesses/:id/auto_assign/regions" resource-id="[[batchId]]"
-         resource-action="update">
-      </things-ajax>
-
-      <!-- 주문 가공 데이터 로케이션 자동 지정 Ajax -->
-      <things-ajax id="auto-location-assign-ajax" resource-url="order_preprocesses/:id/auto_assign/locations" resource-id="[[batchId]]"
+      <things-ajax id="auto-region-assign-ajax" resource-url="order_preprocesses/:id/assign/equip_level" resource-id="[[batchId]]"
          resource-action="update">
       </things-ajax>
 
@@ -90,7 +85,11 @@ rtn 주문 가공 화면
       </things-ajax>
 
       <!-- 주문 가공 데이터 호기 지정 리셋 Ajax -->
-      <things-ajax id="reset-assignment-ajax" resource-url="order_preprocesses/:id/reset_assignment" resource-action="update">
+      <things-ajax id="reset-assignment-ajax" resource-url="order_preprocesses/:id/reset_preprocess" resource-action="update">
+      </things-ajax>
+
+      <!-- 주문 가공 데이터 호기 지정 Ajax -->
+      <things-ajax id="assign-region-ajax" method="PUT" content-type="application/json">
       </things-ajax>
 
       <!-- 주문 가공 데이터 완료 Ajax -->
@@ -599,7 +598,8 @@ rtn 주문 가공 화면
             'assign-preprocessing-ajax.things-ajax-response': 'refreshData',
             'reset-assignment-ajax.things-ajax-response': '_onResetAssignResponse',
             'complete-preprocessing-ajax.things-ajax-response': '_preprocessingCompleted',
-            'instruct-jobs-ajax.things-ajax-response': 'goBack'
+            'instruct-jobs-ajax.things-ajax-response': 'goBack',
+            'assign-region-ajax.things-ajax-response': 'refreshData'
          },
 
          /**
@@ -805,7 +805,7 @@ rtn 주문 가공 화면
             var targetCusts = (!checkedCusts || checkedCusts.length == 0) ? this.items : checkedCusts;
 
             // 서버에 자동할당 요청
-            var params = { regions: checkedRegions.map(row => row.rack_cd).join(',') };
+            var params = { equip_cds: checkedRegions.map(row => row.rack_cd).join(','), auto_assign : true  };
             var title = Things.DataGlobal.t(event.detail.text);
             this._confirmTransaction('auto-region-assign-ajax', title, params, targetCusts);
          },
@@ -832,10 +832,19 @@ rtn 주문 가공 화면
 
                } else {
                   var selectedRegion = checkedRows[0];
-
+                  var chkCount = selectedRegion.remain_cells;
                   // 3. 거래처 선택 항목이 없다면 리턴
                   var toAssignItems = this._checkedGridRows(this.$.grid, Things.DataGlobal.t('label.customer'), true);
                   if (!toAssignItems || toAssignItems.length == 0) return;
+
+                  if(chkCount < toAssignItems.length) {
+                     this.openInfoMsg({
+                        type: 'info',
+                        title: '잔여셀보다 주문을 많게 지정했습니다.',
+                        closeOnConfirm: true
+                     });
+                     return ;
+                  }
 
                   // 4. 호기 지정이 이미 완료된 항목이 있다면 제거
                   var selectedItems = toAssignItems.filter(function (item) { return !item['rack_nm']; });
@@ -847,11 +856,12 @@ rtn 주문 가공 화면
                         text: Things.DataGlobal.t('text.assigned_region_in_list') + ' '
                            + Things.DataGlobal.t('text.Sure to X', { x: Things.DataGlobal.t('text.continue') }),
                         showCancelButton: true
-                     }, function () {
-                        self.assignRegion(selectedRegion, toAssignItems);
+                     }, function () { 
+
+                        self.assignRegion(selectedRegion, toAssignItems); 
                      });
                   } else {
-                     this.assignRegion(selectedRegion, toAssignItems);
+                     this.assignRegion(selectedRegion, toAssignItems);  
                   }
                }
             }
@@ -879,21 +889,16 @@ rtn 주문 가공 화면
          },
 
          /**
-          * 팝업을 띄워서 수동으로 호기를 지정한다.
+          * 호기를 지정한다.
           **************
           * @param {Object} region 선택된 호기 오브젝트
           * @param {Object} selectedCusts 선택된 거래처 리스트
           */
-         assignRegion: function (region, selectedCusts) {
-            // 선택한 그리드가 있다면 팝업 표시
-            var assignPopup = this.createAssignRegionPopup(region.rack_cd, region.rack_nm, selectedCusts);
-            // 주문 가공 완료 팝업을 표시
-            this.fire('things-open-custom-size-dialog', {
-               view: assignPopup,
-               modal: true,
-               dialogSize: 'large',
-               closeCallback: function () { this.refreshData(); }.bind(this)
-            });
+         assignRegion: function (selectedRegion, toAssignItems) {
+            var assignRegionAjax = this.$['assign-region-ajax'];   
+            var params = { equip_cds: selectedRegion.rack_cd, auto_assign : false };
+            var title = Things.DataGlobal.t(event.detail.text);
+            this._confirmTransaction('auto-region-assign-ajax', title, params, toAssignItems);
          },
 
          /**
@@ -904,39 +909,19 @@ rtn 주문 가공 화면
          resetAssignment: function (e) {
             // 1. 현재 배치 작업 상태 체크
             if (!this._checkTransactionEnabled()) return;
-
+            
             var resetAssignAjax = this.$['reset-assignment-ajax'];
             resetAssignAjax.resourceId = this.batchId;
 
-            this.openConfirmMsg({
-               type: 'info',
-               title: Things.DataGlobal.t('button.reset_assign'),
-               text: Things.DataGlobal.t('text.Sure to X', { x: Things.DataGlobal.t('text.reset_order_preprocess') }),
-               showCancelButton: true,
-               showConfirmButton: true,
-               closeOnConfirm: false
-
-            }, function () {
-               this.openConfirmMsg({
-                  type: 'info',
-                  title: Things.DataGlobal.t('button.reset_assign'),
-                  text: Things.DataGlobal.t('text.reset_region_assignment_also'),
-                  showCancelButton: true,
-                  showConfirmButton: true//, confirmButtonText: 'Yes', cancelButtonText: 'No'
-
-               }, function () {
-                  resetAssignAjax.resourceId = this.batchId + '/true';
-                  resetAssignAjax.generateRequest();
-                  // 서치 폼 호기 코드 입력란 비움
-                  this.initialSearchParams.rack_cd = '';
-
-               }.bind(this), function () {
-                  resetAssignAjax.resourceId = this.batchId + '/false';
-                  resetAssignAjax.generateRequest();
-
-               }.bind(this));
-
-            }.bind(this));
+            var checkedRows = this._checkedGridRows(this.$['region-grid'], Things.DataGlobal.t('label.region'), true);
+            var toAssignItems = this.$['grid'].getGridDataSet;
+            var params = { equipCds: checkedRows.map(row => row.rack_cd).join(',')};
+            
+            var assignRestAjax = this.$['assign-region-ajax'];   
+            assignRestAjax.resourceUrl = 'order_preprocesses/' + this.batchId + '/assign/equip_level';
+            assignRestAjax.params = params;
+            assignRestAjax.body = toAssignItems;
+            assignRestAjax.generateRequest();
          },
 
          /**
@@ -1192,6 +1177,8 @@ rtn 주문 가공 화면
              }.bind(this));
            }
          },
+
+        
       });
    </script>
 </dom-module>
