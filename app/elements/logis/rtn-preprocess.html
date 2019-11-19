@@ -64,7 +64,7 @@ rtn 주문 가공 화면
       </things-ajax>
 
       <!-- 여러 배치 한꺼번에 작업 지시 Ajax -->
-      <things-ajax id="instruct-jobs-ajax" resource-url="job_batch/b2b/instruct_jobs" resource-action="create">
+      <things-ajax id="instruct-jobs-ajax" resource-url="job_batches/instruct/batches" resource-action="create">
       </things-ajax>
 
       <!-- 주문 가공 데이터 조회 Ajax -->
@@ -72,8 +72,8 @@ rtn 주문 가공 화면
       </things-ajax>
 
       <!-- 주문 가공 데이터 초기화 (삭제 후 생성) Ajax -->
-      <things-ajax id="generate-preprocessing-ajax" resource-url="order_preprocesses/:id/regenerate" resource-action="create">
-      </things-ajax>
+      <things-ajax id="generate-preprocessing-ajax" resource-url="order_preprocesses/:id/reset_preprocess" resource-action="update">
+      </things-ajax> 
 
       <!-- 주문 가공 데이터 호기 자동 지정 Ajax -->
       <things-ajax id="auto-region-assign-ajax" resource-url="order_preprocesses/:id/assign/equip_level" resource-id="[[batchId]]"
@@ -86,14 +86,10 @@ rtn 주문 가공 화면
 
       <!-- 주문 가공 데이터 호기 지정 리셋 Ajax -->
       <things-ajax id="reset-assignment-ajax" resource-url="order_preprocesses/:id/reset_preprocess" resource-action="update">
-      </things-ajax>
-
-      <!-- 주문 가공 데이터 호기 지정 Ajax -->
-      <things-ajax id="assign-region-ajax" method="PUT" content-type="application/json">
-      </things-ajax>
+      </things-ajax> 
 
       <!-- 주문 가공 데이터 완료 Ajax -->
-      <things-ajax id="complete-preprocessing-ajax" resource-url="order_preprocesses/:id/complete" resource-action="update">
+      <things-ajax id="complete-preprocessing-ajax" resource-url="order_preprocesses/:id/complete_preprocess" resource-action="update">
       </things-ajax>
 
       <!-- 반품 가공 화면 컨테이너 -->
@@ -596,10 +592,9 @@ rtn 주문 가공 화면
             'generate-preprocessing-ajax.things-ajax-response': 'refreshData',
             'auto-region-assign-ajax.things-ajax-response': 'refreshData',
             'assign-preprocessing-ajax.things-ajax-response': 'refreshData',
-            'reset-assignment-ajax.things-ajax-response': '_onResetAssignResponse',
+            'reset-assignment-ajax.things-ajax-response': 'refreshData',
             'complete-preprocessing-ajax.things-ajax-response': '_preprocessingCompleted',
-            'instruct-jobs-ajax.things-ajax-response': 'goBack',
-            'assign-region-ajax.things-ajax-response': 'refreshData'
+            'instruct-jobs-ajax.things-ajax-response': 'goBack' 
          },
 
          /**
@@ -782,9 +777,11 @@ rtn 주문 가공 화면
           **************
           * @param {Object} e 버튼 탭 이벤트
           */
-         generatePreprocessing: function (e) {
+         generatePreprocessing: function (e) {  
+            if (!this._checkTransactionEnabled()) return;
+            var params = {reset_all : true};
             var title = Things.DataGlobal.t(event.detail.text);
-            this._confirmTransaction('generate-preprocessing-ajax', title);
+            this._confirmTransaction('reset-assignment-ajax', title, params, this.regionItems);
          },
 
          /**
@@ -796,18 +793,10 @@ rtn 주문 가공 화면
             // 1. 현재 배치 작업 상태 체크
             if (!this._checkTransactionEnabled()) return;
 
-            // 2. 할당할 호기가 호기 그리드에 체크되어 있는지 체크
-            var checkedRegions = this._checkedGridRows(this.$['region-grid'], Things.DataGlobal.t('label.region'), true);
-            if (!checkedRegions || checkedRegions.length == 0) return;
-
-            // 3. 대상 상품들이 체크되어 있다면 체크된 개수 만큼만 자동 할당 대상이 되고 체크가 없다면 모든 상품들이 자동 할당 대상이 된다.
-            var checkedCusts = this._checkedGridRows(this.$['grid'], Things.DataGlobal.t('label.customer'), false);
-            var targetCusts = (!checkedCusts || checkedCusts.length == 0) ? this.items : checkedCusts;
-
             // 서버에 자동할당 요청
-            var params = { equip_cds: checkedRegions.map(row => row.rack_cd).join(','), auto_assign : true  };
+            var params = {  auto_assign : true  };
             var title = Things.DataGlobal.t(event.detail.text);
-            this._confirmTransaction('auto-region-assign-ajax', title, params, targetCusts);
+            this._confirmTransaction('auto-region-assign-ajax', title, params,  this.items);
          },
 
          /**
@@ -894,8 +883,7 @@ rtn 주문 가공 화면
           * @param {Object} region 선택된 호기 오브젝트
           * @param {Object} selectedCusts 선택된 거래처 리스트
           */
-         assignRegion: function (selectedRegion, toAssignItems) {
-            var assignRegionAjax = this.$['assign-region-ajax'];   
+         assignRegion: function (selectedRegion, toAssignItems) { 
             var params = { equip_cds: selectedRegion.rack_cd, auto_assign : false };
             var title = Things.DataGlobal.t(event.detail.text);
             this._confirmTransaction('auto-region-assign-ajax', title, params, toAssignItems);
@@ -910,18 +898,10 @@ rtn 주문 가공 화면
             // 1. 현재 배치 작업 상태 체크
             if (!this._checkTransactionEnabled()) return;
             
-            var resetAssignAjax = this.$['reset-assignment-ajax'];
-            resetAssignAjax.resourceId = this.batchId;
-
-            var checkedRows = this._checkedGridRows(this.$['region-grid'], Things.DataGlobal.t('label.region'), true);
-            var toAssignItems = this.$['grid'].getGridDataSet;
-            var params = { equipCds: checkedRows.map(row => row.rack_cd).join(',')};
-            
-            var assignRestAjax = this.$['assign-region-ajax'];   
-            assignRestAjax.resourceUrl = 'order_preprocesses/' + this.batchId + '/assign/equip_level';
-            assignRestAjax.params = params;
-            assignRestAjax.body = toAssignItems;
-            assignRestAjax.generateRequest();
+            var toAssignItems = this._checkedGridRows(this.$['region-grid'], Things.DataGlobal.t('label.region'), true);
+            var params = { reset_all : false };
+            var title = Things.DataGlobal.t(event.detail.text);
+            this._confirmTransaction('reset-assignment-ajax', title, params, toAssignItems);
          },
 
          /**
@@ -938,10 +918,10 @@ rtn 주문 가공 화면
             var ajax = this.$['complete-preprocessing-ajax'];
             var text = Things.DataGlobal.t('text.Sure to X', { x: title });
 
-            this.openConfirmMsg({
+            this.openConfirmMsg({ 
                type: 'info', title: title, text: text, showCancelButton: true
             }, function () {
-               ajax.resourceUrl = 'order_preprocesses/' + batchId + '/complete';
+               ajax.resourceUrl = 'order_preprocesses/' + batchId + '/complete_preprocess';
                ajax.generateRequest();
             });
          },
@@ -1136,13 +1116,6 @@ rtn 주문 가공 화면
             return true;
          },
 
-         /**
-          * 할당 리셋 시 배치 화면으로 돌아감
-          **************
-          */
-         _onResetAssignResponse: function() {
-           this.goBack();
-         },
 
          /**
           * 주문 가공 완료 처리 후
@@ -1173,7 +1146,6 @@ rtn 주문 가공 화면
 
              }.bind(this) , function() {
                this.goBack();
-
              }.bind(this));
            }
          },
