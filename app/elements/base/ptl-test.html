@@ -194,7 +194,7 @@ Copyright © HatioLab Inc. All rights reserved.
 		<things-ajax
 			auto
 			id="first-grid-ajax"
-	  		limit=1000
+	  	limit=1000
 			resource-url="[[resourceUrls.rack]]"
 			resource-action="index"
 			last-response="{{firstGridData}}">
@@ -752,6 +752,17 @@ Copyright © HatioLab Inc. All rights reserved.
           type: Array,
           value: function() {
             return [{
+              name: 'ind_config_set_id',
+              description: Things.DataGlobal.t('menu.IndConfigSet'),
+              formFields: [{
+                type: 'resource-code',
+                properties: {
+                  resourceUrl: '/ind_config_set',
+                  nameField: 'id',
+                  descriptionField: 'conf_set_nm'
+                }
+              }]
+            }, {
               name: 'job_type',
               description: Things.DataGlobal.t('label.job_type'),
               formFields: [{
@@ -1206,6 +1217,7 @@ Copyright © HatioLab Inc. All rights reserved.
           };
 
           var body = {
+            ind_config_set_id: option.ind_config_set_id,
             job_type: option.job_type,
             target: target,
             action: action
@@ -1403,6 +1415,7 @@ Copyright © HatioLab Inc. All rights reserved.
       _setResourceCodeItems: function(e) {
         e.target.comboElement.items = e.detail.items.map(function(item, index) {
           return {
+            id: item[e.target.id],
             name: item[e.target.nameField],
             description: item[e.target.descriptionField]
           };
