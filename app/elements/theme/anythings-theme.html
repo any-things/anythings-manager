@@ -7,426 +7,484 @@ Copyright © HatioLab Inc. All rights reserved.
 <script type="text/javascript" src="anythings-theme-grid.js"></script>
 
 <dom-module id="anythings-theme">
-  <template>
-    <style>
-        :root {
-            /* reset polymer style */
-            --paper-toolbar-background: transparent;
-            --paper-toolbar-height: 50px;
-            --paper-input-container-underline: {
-                background-color: rgba(0, 0, 0, .3);
-            }
-            --paper-button: {
-                font-family: 'Noto Sans KR';
-            }
-            --paper-item: {
-                font-family: 'Noto Sans KR';
-            }
-            --paper-input-container-underline-focus: {
-                background-color: var(--things-secondary-background-color);
-            }
-            --paper-input-container-label-focus: {
-                color: var(--things-secondary-background-color);
-                font-weight: bold;
-            }
-            --paper-tabs-content:{
-                color: var(--things-sidebar-text-color);
-            }
-            --paper-dialog-background-color: var(--things-primary-background-color);
-            --paper-card-background-color:#fff;
+    <template>
+        <style>
+            :root {
+                /* reset polymer style */
+                --paper-toolbar-background: transparent;
+                --paper-toolbar-height: 50px;
 
-            /* brand btn */
-            --things-brand-btn:{
-              width:45px;height:45px;
-              min-width:initial;
-              margin:0;
-              padding:0;
-              position:fixed;
-              top:15px;left:10px;
-              z-index:1;
-              @apply(--border-radius-clear);
-            }
+                --paper-input-container-underline: {
+                    background-color: rgba(0, 0, 0, .3);
+                }
 
+                --paper-button: {
+                    font-family: 'Noto Sans KR';
+                }
 
-            /* common style */
-            --border-radius-clear: {
-                -webkit-border-radius: 0px;
-                -moz-border-radius: 0px;
-                border-radius: 0px;
-            }
-            --things-default-padding: {
-                padding: 15px;
-            }
-            --things-tight-padding: {
-                padding: 7px;
-            }
-            --things-loose-padding: {
-                padding: 30px;
-            }
-            --things-table-padding: {
-                padding: 15px 15px 0 15px;
-            }
-            --things-padding-clear: {
-                padding: 0
-            }
-            --things-default-margin: {
-                margin: 15px;
-            }
-            --things-margin-clear: {
-                margin: 0
-            }
-            --things-default-border-radius: {
-                -webkit-border-radius: 4px;
-                -moz-border-radius: 4px;
-                border-radius: 4px;
-            }
-            --things-subtitle-icon: {
-                display: inline-block;
-                width: 8px;
-                height: 8px;
-                position: relative;
-                top: 1px;
-                border: 2px solid var(--things-focus-background-color);
-                @apply(--things-default-border-radius);
-                margin-right:4px;
-            }
-            --things-subtitle: {
-                display: inline-block;
-                font-size: 13px;
-                color: #fff;
-            }
+                --paper-item: {
+                    font-family: 'Noto Sans KR';
+                }
 
-            /* color style */
-          --things-primary-background-color: #252222; /*darkgray*/
-          --things-secondary-background-color: #f7af01; /*yellow*/
-          --things-primary-color: #e6b84b; /*pastel yellow*/
-          --things-secondary-color: #f7af01; /*yellow*/
-          --things-focus-background-color: #f7af01;
-          --things-whitegrey-background-color:#3c3c3c;
-          --things-lightgrey-background-color:rgba(0, 0, 0, .1);
-          /* --things-white-background-color:#fff; */
-          --things-white-background-color:transparent;
-          --things-error-color:var(--paper-deep-orange-700);
-          --things-primary-text-color: #ababab;
-          --things-dark-text-color: #585858;
-          --things-sidebar-text-color:#fff;
-          --things-button-text-color:#1d1e21;
-          --things-dark-desc-text-color:#aaacaf;
-          --things-sidebar-background-color:#312e2e;
+                --paper-input-container-underline-focus: {
+                    background-color: var(--things-secondary-background-color);
+                }
 
+                --paper-input-container-label-focus: {
+                    color: var(--things-secondary-background-color);
+                    font-weight: bold;
+                }
 
+                --paper-tabs-content: {
+                    color: var(--things-dark-text-color);
+                    /* color: var(--things-sidebar-text-color); */
+                }
 
-            /* sidebar style */
-            --things-tiny-icon: {
-                padding: 0;
-                width: 12px;
-                height: 12px;
-            }
-            --things-small-icon: {
-                padding: 0;
-                width: 16px;
-                height: 16px;
-            }
-            --things-icon: {
-                padding: 0;
-                width: 19px;
-                height: 19px;
-            }
-            --things-user-menu:{
-              margin-top:-105px;margin-right:-15px;
-              z-index:10;
-              opacity:.7;
-              padding:2px 5px;
-              font-size:13px;
-            }
-            /* list style */
-            --things-dot-lightgrey: {
-                width: 3px;
-                height: 3px;
-                min-width: 3px;
-                margin-right: 3px;
-                border-radius: 50%;
-                background-color: var(--things-lightgrey-background-color);
-            }
-            /* form style */
-            --things-search-fab: {
-                background-color: transparent;
-                width: 30px;
-                height: 30px;
-                position: relative;
-                z-index: 5;
-                float: right;
-                top: -37px;
-                margin-right:-20px;margin-bottom: -45px;
-                padding:0 !important;
-                box-shadow:none;
-                border-radius:0;
-            }
-            --things-label: {
-                width: 25%;
-                min-height: 19px;
-                display: inline-block;
-                margin-bottom: 10px;
-                padding-right: 5px;
-                color: var(--things-primary-text-color);
-                font-size: 14px;
-                text-align: right;
-            }
-            --things-input: {
-                width: 65%;
-                margin-bottom: 10px;
-                padding: 3px 5px;
-                @apply(--things-default-border-radius);
-                border: 1px solid rgba(0, 0, 0, .2);
-                font-size: 15px;
-                font-weight: 300;
-            }
-            --things-input-readonly-important:{
-                background-color:transparent;
-               padding:0 0 0 3px;
-               position:relative;
-               top:-2px;
-               border-color:transparent;
-               font-weight:600;
-               color:var(--things-primary-text-color)
-            }
-            --things-textarea-label-width: 12.25%;
-            --things-textarea-width : 100%;
-            --things-autogrow-textarea-width: 82%;
-            --things-textarea: {
-                @apply(--things-default-border-radius);
-                border: 1px solid rgba(0, 0, 0, .2);
-                color: var(--things-primary-text-color);
-                font-size: 13px;
-                width: 100%;
-                height: 84%;
-                padding: 1%;
-            }
-            --things-picker-button: {
-                width: 30px;
-                height: 25px;
-                display: inline-block;
-                margin-left: 2px;
-                top: -2px;
-                @apply(--things-default-border-radius);
-            }
-            --things-dropdown-item: {
-                min-height: 30px;
-                border-bottom: 1px solid rgba(0, 0, 0, .1);
-                padding: 0 10px;
-                font-size: 13px;
-                color: var(--things-primary-text-color);
-            }
-            --things-dropdown-arrow: {
-                content: "";
-                position: absolute;
-                margin-top: -9px;
-                margin-left: -10px;
-                width: 0;
-                height: 0;
-                border-left: 6px solid transparent;
-                border-right: 6px solid transparent;
-                border-bottom: 7px solid rgba(0, 0, 0, .2);
-            }
-            --things-tristate-size:18px;
-            --things-tristate-unchecked-background-color:transparent;
-            --things-hint-arrow: {
-                content: "";
-                position: absolute;
-                margin-top: -7px;
-                margin-left: -10px;
-                margin-left: 5%;
-                width: 0;
-                height: 0;
-                border-left: 6px solid transparent;
-                border-right: 6px solid transparent;
-                border-bottom: 7px solid var(--things-error-color);
-            }
-            --things-hint: {
-                background-color: var(--things-error-color);
-                @apply(--things-default-border-radius);
-                position: absolute;
-                margin-top: -8px;
-                margin-left: 13%;
-                display: block;
-                padding: 1px 5px;
-                color: #fff;
-                font-size: 12px;
-                line-height: initial;
-            }
-            /* tab style */
-            --paper-tabs-selection-bar-color:var(--things-secondary-background-color);
-            --things-tab-size:35px;
-            --paper-tabs: {
-                background-color: rgba(0, 0, 0, .05);
-                color: var(--things-dark-text-color);
-                font-weight: 400;
-            }
-            --things-content-tabs:{
-              height:30px;
-            }
-            --things-content-tab:{
-              border:1px solid rgba(0,0,0,.1);
-              border-width:1px 1px 1px 0;
-              font-size:13px;
-            }
-            --things-content-tab-selected:{
-              background:#fff;
-              font-weight:bold;
-              color:var(--things-primary-background-color);
-            }
-            /* profile style */
-            --things-profile-dialog: {
-                -webkit-border-radius: 7px;
-                -moz-border-radius: 7px;
-                border-radius: 7px;
-                -webkit-box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.2);
-                -moz-box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.2);
-                box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.2);
-            }
-            --things-profile-img: {
-                background-color: #fff;
-                width: 100px;
-                height: 100px;
-                position: absolute;
-                margin-top: -60px;
-                margin-left: 35%;
-                border-radius: 50%;
-                border: 4px solid var(--things-secondary-background-color);
-                -webkit-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2);
-                -moz-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2);
-                box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2);
-            }
-            --things-profile-logout: {
-                background-color: var(--things-secondary-background-color);
-                position: absolute;
-                margin:7% 0 0 59%;
-                width: 23px;
-                height: 23px;
-                border: none;
-                padding: 0;
-                -webkit-border-radius: 50%;
-                -moz-border-radius: 50%;
-                border-radius: 50%;
-                color: #fff;
-            }
-            /* login style */
-            --things-login: {
-                background: #fff;
-                width: 45%;
-                margin: auto;
-                margin-top: 12%;
-                -webkit-border-radius: 7px;
-                -moz-border-radius: 7px;
-                border-radius: 7px;
-            }
-            --things-mobile-login: {
-        	    background: #fff;
-        	    margin: auto;
-              width:100%;height:100%;
-            }
-            /* button style */
-            --things-header-button: {
-                width: 45px;
-                height: 45px;
-                display: block;
-                border: none;
-                border-left: 1px solid rgba(0, 0, 0, .1);
-            }
-            --things-button: {
-                background: #505050; /* Old browsers */
-                /* background: linear-gradient(to bottom, #d0d7db 0%,#92a1a8 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-                @apply(--things-default-border-radius);
-                min-width: initial;
-                max-height:35px;
-                padding: 9px 22px;
-                font-size: 14px;
-                font-family: 'Noto Sans KR';
-                color: #fff;
-                font-weight: bold;
-                box-shadow: none;
-                /* text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.6); */
-            }
+                --paper-card-background-color:#fff;
 
-            --things-button-hover: {
-                @apply(--things-button);
-                background: #666666;
-                color: #fff;
-                font-weight:bold;
-            }
-            --things-button-active: {
-                @apply(--things-button);
-                background: #615a5a;
-                color: #fff;
-                font-weight:bold;
-            }
+                /* brand btn */
+                --things-brand-btn: {
+                    width: 45px;
+                    height: 45px;
+                    min-width: initial;
+                    margin: 0;
+                    padding: 0;
+                    position: fixed;
+                    top: 15px;
+                    left: 10px;
+                    z-index: 1;
+                    @apply(--border-radius-clear);
+                }
 
+                /* common style */
+                --border-radius-clear: {
+                    -webkit-border-radius: 0px;
+                    -moz-border-radius: 0px;
+                    border-radius: 0px;
+                }
 
-            /* things label card */
-            --things-label-card-container:{
-                background-color:#fff;
-                width:22.5%;
-                margin:10px 1%;
-                @apply(--things-default-border-radius);
-                -webkit-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.2);
-                -moz-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.2);
-                box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.2);
+                --things-default-padding: {
+                    padding: 15px;
+                }
+
+                --things-tight-padding: {
+                    padding: 7px;
+                }
+
+                --things-loose-padding: {
+                    padding: 30px;
+                }
+
+                --things-table-padding: {
+                    padding: 15px 15px 0 15px;
+                }
+
+                --things-padding-clear: {
+                    padding: 0
+                }
+
+                --things-default-margin: {
+                    margin: 15px;
+                }
+
+                --things-margin-clear: {
+                    margin: 0
+                }
+
+                --things-default-border-radius: {
+                    -webkit-border-radius: 4px;
+                    -moz-border-radius: 4px;
+                    border-radius: 4px;
+                }
+
+                --things-subtitle-icon: {
+                    display: inline-block;
+                    width: 8px;
+                    height: 8px;
+                    position: relative;
+                    top: 1px;
+                    border: 2px solid var(--things-focus-background-color);
+                    @apply(--things-default-border-radius);
+                    margin-right: 4px;
+                }
+
+                --things-subtitle: {
+                    display: inline-block;
+                    font-size: 13px;
+                    color: #fff;
+                }
+
+                /* color style */
+                --things-primary-background-color: #252222;
+                /*darkgray*/
+                --things-secondary-background-color: #f7af01;
+                /*yellow*/
+                --things-primary-color: #e6b84b;
+                /*pastel yellow*/
+                --things-secondary-color: #f7af01;
+                /*yellow*/
+                --things-focus-background-color: #f7af01;
+                --things-whitegrey-background-color:#3c3c3c;
+                --things-lightgrey-background-color:rgba(0, 0, 0, .1);
+                --things-white-background-color:#fff;
+                --things-error-color:var(--paper-deep-orange-700);
+                --things-primary-text-color: #ababab;
+                --things-dark-text-color: #585858;
+                --things-sidebar-text-color:#fff;
+                --things-button-text-color:#1d1e21;
+                --things-dark-desc-text-color:#aaacaf;
+                --things-sidebar-background-color:#312e2e;
+
+                /* sidebar style */
+                --things-tiny-icon: {
+                    padding: 0;
+                    width: 12px;
+                    height: 12px;
+                }
+
+                --things-small-icon: {
+                    padding: 0;
+                    width: 16px;
+                    height: 16px;
+                }
+
+                --things-icon: {
+                    padding: 0;
+                    width: 19px;
+                    height: 19px;
+                }
+
+                --things-user-menu: {
+                    margin-top: -105px;
+                    margin-right: -15px;
+                    z-index: 10;
+                    opacity: .7;
+                    padding: 2px 5px;
+                    font-size: 13px;
+                }
+
+                /* list style */
+                --things-dot-lightgrey: {
+                    width: 3px;
+                    height: 3px;
+                    min-width: 3px;
+                    margin-right: 3px;
+                    border-radius: 50%;
+                    background-color: var(--things-lightgrey-background-color);
+                }
+
+                /* form style */
+                --things-search-fab: {
+                    background-color: transparent;
+                    width: 30px;
+                    height: 30px;
+                    position: relative;
+                    z-index: 5;
+                    float: right;
+                    top: -37px;
+                    margin-right: -20px;
+                    margin-bottom: -45px;
+                    padding: 0 !important;
+                    box-shadow: none;
+                    border-radius: 0;
+                }
+
+                --things-label: {
+                    width: 25%;
+                    min-height: 19px;
+                    display: inline-block;
+                    margin-bottom: 10px;
+                    padding-right: 5px;
+                    color: var(--things-primary-text-color);
+                    font-size: 14px;
+                    text-align: right;
+                }
+
+                --things-input: {
+                    width: 65%;
+                    margin-bottom: 10px;
+                    padding: 3px 5px;
+                    @apply(--things-default-border-radius);
+                    border: 1px solid rgba(0, 0, 0, .2);
+                    font-size: 15px;
+                    font-weight: 300;
+                }
+
+                --things-input-readonly-important: {
+                    background-color: transparent;
+                    padding: 0 0 0 3px;
+                    position: relative;
+                    top: -2px;
+                    border-color: transparent;
+                    font-weight: 600;
+                    color: var(--things-primary-text-color)
+                }
+
+                --things-textarea-label-width: 12.25%;
+                --things-textarea-width : 100%;
+                --things-autogrow-textarea-width: 82%;
+
+                --things-textarea: {
+                    @apply(--things-default-border-radius);
+                    border: 1px solid rgba(0, 0, 0, .2);
+                    color: var(--things-primary-text-color);
+                    font-size: 13px;
+                    width: 100%;
+                    height: 84%;
+                    padding: 1%;
+                }
+
+                --things-picker-button: {
+                    width: 30px;
+                    height: 25px;
+                    display: inline-block;
+                    margin-left: 2px;
+                    top: -2px;
+                    @apply(--things-default-border-radius);
+                }
+
+                --things-dropdown-item: {
+                    min-height: 30px;
+                    border-bottom: 1px solid rgba(0, 0, 0, .1);
+                    padding: 0 10px;
+                    font-size: 13px;
+                    color: var(--things-primary-text-color);
+                }
+
+                --things-dropdown-arrow: {
+                    content: "";
+                    position: absolute;
+                    margin-top: -9px;
+                    margin-left: -10px;
+                    width: 0;
+                    height: 0;
+                    border-left: 6px solid transparent;
+                    border-right: 6px solid transparent;
+                    border-bottom: 7px solid rgba(0, 0, 0, .2);
+                }
+
+                --things-tristate-size:18px;
+                --things-tristate-unchecked-background-color:transparent;
+
+                --things-hint-arrow: {
+                    content: "";
+                    position: absolute;
+                    margin-top: -7px;
+                    margin-left: -10px;
+                    margin-left: 5%;
+                    width: 0;
+                    height: 0;
+                    border-left: 6px solid transparent;
+                    border-right: 6px solid transparent;
+                    border-bottom: 7px solid var(--things-error-color);
+                }
+
+                --things-hint: {
+                    background-color: var(--things-error-color);
+                    @apply(--things-default-border-radius);
+                    position: absolute;
+                    margin-top: -8px;
+                    margin-left: 13%;
+                    display: block;
+                    padding: 1px 5px;
+                    color: #fff;
+                    font-size: 12px;
+                    line-height: initial;
+                }
+
+                /* tab style */
+                --paper-tabs-selection-bar-color:var(--things-secondary-background-color);
+                --things-tab-size:35px;
+
+                --paper-tabs: {
+                    background-color: rgba(0, 0, 0, .05);
+                    color: var(--things-dark-text-color);
+                    font-weight: 400;
+                }
+
+                --things-content-tabs: {
+                    height: 30px;
+                }
+
+                --things-content-tab: {
+                    border: 1px solid rgba(0, 0, 0, .1);
+                    border-width: 1px 1px 1px 0;
+                    font-size: 13px;
+                }
+
+                --things-content-tab-selected: {
+                    background: #fff;
+                    font-weight: bold;
+                    color: var(--things-primary-background-color);
+                }
+
+                /* profile style */
+                --things-profile-dialog: {
+                    -webkit-border-radius: 7px;
+                    -moz-border-radius: 7px;
+                    border-radius: 7px;
+                    -webkit-box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.2);
+                    -moz-box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.2);
+                    box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.2);
+                }
+
+                --things-profile-img: {
+                    background-color: #fff;
+                    width: 100px;
+                    height: 100px;
+                    position: absolute;
+                    margin-top: -60px;
+                    margin-left: 35%;
+                    border-radius: 50%;
+                    border: 4px solid var(--things-secondary-background-color);
+                    -webkit-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2);
+                    -moz-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2);
+                    box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2);
+                }
+
+                --things-profile-logout: {
+                    background-color: var(--things-secondary-background-color);
+                    position: absolute;
+                    margin: 7% 0 0 59%;
+                    width: 23px;
+                    height: 23px;
+                    border: none;
+                    padding: 0;
+                    -webkit-border-radius: 50%;
+                    -moz-border-radius: 50%;
+                    border-radius: 50%;
+                    color: #fff;
+                }
+
+                /* login style */
+                --things-login: {
+                    background: #fff;
+                    width: 45%;
+                    margin: auto;
+                    margin-top: 12%;
+                    -webkit-border-radius: 7px;
+                    -moz-border-radius: 7px;
+                    border-radius: 7px;
+                }
+
+                --things-mobile-login: {
+                    background: #fff;
+                    margin: auto;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                /* button style */
+                --things-header-button: {
+                    width: 45px;
+                    height: 45px;
+                    display: block;
+                    border: none;
+                    border-left: 1px solid rgba(0, 0, 0, .1);
+                }
+
+                --things-button: {
+                    background: #505050;
+                    /* Old browsers */
+                    /* background: linear-gradient(to bottom, #d0d7db 0%,#92a1a8 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+                    @apply(--things-default-border-radius);
+                    min-width: initial;
+                    max-height: 35px;
+                    padding: 9px 22px;
+                    font-size: 14px;
+                    font-family: 'Noto Sans KR';
+                    color: #fff;
+                    font-weight: bold;
+                    box-shadow: none;
+                    /* text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.6); */
+                }
+
+                --things-button-hover: {
+                    @apply(--things-button);
+                    background: #666666;
+                    color: #fff;
+                    font-weight: bold;
+                }
+
+                --things-button-active: {
+                    @apply(--things-button);
+                    background: #615a5a;
+                    color: #fff;
+                    font-weight: bold;
+                }
+
+                /* things label card */
+                --things-label-card-container: {
+                    background-color: #fff;
+                    width: 22.5%;
+                    margin: 10px 1%;
+                    @apply(--things-default-border-radius);
+                    -webkit-box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.2);
+                    -moz-box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.2);
+                    box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.2);
+                }
+
+                --things-fab-text: {
+                    position: absolute;
+                    margin-top: 18px;
+                    margin-left: -55px;
+                    padding: 2px 3px;
+                    width: 50px;
+                    background-color: rgba(0, 0, 0, .5);
+                    -moz-border-radius: 3px;
+                    -webkit-border-radius: 3px;
+                    border-radius: 3px;
+                    color: #fff;
+                    font-size: 9px;
+                    text-align: center;
+                    -webkit-box-shadow: 0px 2px 1px 0px rgba(0, 0, 0, 0.2);
+                    -moz-box-shadow: 0px 2px 1px 0px rgba(0, 0, 0, 0.2);
+                    box-shadow: 0px 2px 1px 0px rgba(0, 0, 0, 0.2);
+                }
+
+                --things-fab-text-arrow: {
+                    content: "";
+                    position: absolute;
+                    left: 100%;
+                    top: 5px;
+                    width: 0;
+                    height: 0;
+                    border-top: 3px solid transparent;
+                    border-left: 4px solid rgba(0, 0, 0, .5);
+                    border-bottom: 3px solid transparent;
+                }
+
+                --things-login-link-button: {
+                    background-color: transparent;
+                    min-width: initial;
+                    max-height: 31px;
+                    margin-top: 15px;
+                    padding: 2px 5px 2px 0;
+                    font-size: 12px;
+                    color: var(--things-primary-text-color);
+                }
+
+                --things-login-button: {
+                    background-color: var(--things-primary-background-color);
+                    min-width: initial;
+                    width: 100%;
+                    max-height: 31px;
+                    margin-right: 0;
+                    margin-left: 0;
+                    padding: 15px 20px 17px 20px;
+                    font-size: 18px;
+                    color: #fff;
+                }
+
+                --things-home-image-url : url(/images/bg-rail.png);
+                --things-home-image-position: 50% 100%;
+
+                --things-home-image: {
+                    background-color: transparent;
+                    background-size: cover;
+                    background-repeat: no-repeat;
+                }
             }
-
-            --things-fab-text:{
-                position:absolute;
-                margin-top:18px;margin-left:-55px;
-                padding:2px 3px;
-                width:50px;
-                background-color:rgba(0,0,0,.5);
-                -moz-border-radius:3px;-webkit-border-radius:3px;border-radius:3px;
-                color:#fff;
-                font-size:9px;
-                text-align:center;
-                -webkit-box-shadow: 0px 2px 1px 0px rgba(0,0,0,0.2);
-                -moz-box-shadow: 0px 2px 1px 0px rgba(0,0,0,0.2);
-                box-shadow: 0px 2px 1px 0px rgba(0,0,0,0.2);
-            }
-
-            --things-fab-text-arrow:{
-                content:"";
-                position: absolute;
-                left: 100%;
-                top: 5px;
-                width: 0;
-                height: 0;
-                border-top: 3px solid transparent;border-left: 4px solid rgba(0,0,0,.5);
-                border-bottom: 3px solid transparent;
-            }
-            --things-login-link-button: {
-              background-color:transparent;
-              min-width: initial;
-              max-height:31px;
-              margin-top:15px;padding: 2px 5px 2px 0;
-              font-size: 12px;
-              color: var(--things-primary-text-color);
-             }
-            --things-login-button: {
-              background-color: var(--things-primary-background-color);
-              min-width: initial;
-              width:100%;
-              max-height:31px;
-              margin-right:0;margin-left:0;
-              padding: 15px 20px 17px 20px;
-              font-size: 18px;
-              color: #fff;
-            }
-            --things-home-image-url : url(/images/bg-rail.png);
-            --things-home-image-position: 50% 100%;
-            --things-home-image:{
-              background-color: transparent;
-              background-size:cover;
-              background-repeat: no-repeat;
-            }
-
-
-
-        }
-    </style>
-  </template>
+        </style>
+    </template>
 </dom-module>
