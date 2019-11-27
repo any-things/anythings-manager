@@ -9,7 +9,7 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
 <link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
 
-<dom-module id="dps-region-assignment">
+<dom-module id="dps-rack-assignment">
    <template>
       <style>
          :host {
@@ -24,43 +24,27 @@ Copyright © HatioLab Inc. All rights reserved.
       </style>
 
       <!-- Get Menu Meta Ajax -->
-      <things-ajax auto id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index" last-response="{{metaData}}">
+      <things-ajax id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index"
+         last-response="{{metaData}}">
       </things-ajax>
 
-      <things-ajax
-         auto 
-         query-support
-         id="assignable-dps-region-ajax"
-         method="GET"
-         resource-url="[[menuInfo.resource_url]]"
-         params="[[params]]"
-         last-response="{{lastResponse}}">
+      <things-ajax auto query-support id="assignable-dps-rack-ajax" method="GET"
+         resource-url="[[menuInfo.resource_url]]" last-response="{{lastResponse}}">
       </things-ajax>
 
-      <things-ajax
-         id="instruct-job-ajax"
-         method="POST"
-         content-type="application/json"
-         resource-url="job_batch/:id/instruct_job"
-         resource-id="[[batchId]]">
+      <things-ajax id="instruct-job-ajax" method="POST" content-type="application/json"
+         resource-url="job_batch/:id/instruct_job">
       </things-ajax>
 
-      <things-resource-grid 
-         id="grid" 
-         config="[[gridConfig]]" 
-         model="[[gridModel]]" 
-         columns="[[gridColumns]]" 
-         buttons="[[buttons]]"
-         data="[[lastResponse.items]]" 
-         total-count="[[lastResponse.total]]" 
-         fixed-column-count="[[menuInfo.fixed_columns]]" 
-         grid-save-action="[[menuInfo.grid_save_url]]">
+      <things-resource-grid id="grid" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]"
+         buttons="[[buttons]]" data="[[lastResponse.items]]" total-count="[[lastResponse.total]]"
+         fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]">
       </things-resource-grid>
    </template>
 
    <script>
       Polymer({
-         is: 'dps-region-assignment',
+         is: 'dps-rack-assignment',
 
          behaviors: [
             Things.MsgBoxBehavior,
@@ -81,23 +65,27 @@ Copyright © HatioLab Inc. All rights reserved.
                }
             },
 
-            params: {
+            /**
+             * 작업 배치 화면에서 선택된 배치 
+             */
+            batch: {
                type: Object,
-               computed: '_paramMaker(selectFields, sortFields, queryFields)'
+               observer: '_batchChanged'
             },
+
 
             selectFields: {
                type: String,
                value: function () {
-                  return "region_cd,region_nm";
+                  return "rack_cd,rack_nm,batch_id";
                }
             },
 
             sortFields: {
                type: Array,
                value: function () {
-                  return [{ 
-                     field: "region_cd", 
+                  return [{
+                     field: "rack_cd",
                      ascending: true
                   }];
                }
@@ -106,17 +94,14 @@ Copyright © HatioLab Inc. All rights reserved.
             queryFields: {
                type: Array,
                value: function () {
-                  return [{ 
-                     name: "job_type", 
-                     operator: "eq", 
+                  return [{
+                     name: "job_type",
+                     operator: "eq",
                      value: "DPS"
-                  }, { 
-                     name: "virtual_flag", 
-                     operator: "eq", 
-                     value: "false" 
                   }, {
-                     name: "batch_id",
-                     operator: "is_null"
+                     name: "active_flag",
+                     operator: "eq",
+                     value: true
                   }];
                }
             }
@@ -129,13 +114,20 @@ Copyright © HatioLab Inc. All rights reserved.
          },
 
          _paramMaker: function (select, sort, query) {
+
+            query.push({ name: "area_cd", operator: "eq", value: this.batch.area_cd });
+            query.push({ name: "stage_cd", operator: "eq", value: this.batch.stage_cd });
+
             return {
                select: select,
                sort: JSON.stringify(sort),
                query: JSON.stringify(query)
             };
          },
-         
+
+         /**
+          * 작업 지시 버튼 처리 
+          */
          _onJobInstructBtnTap: function (event) {
             var ajax = this.$['instruct-job-ajax'];
             var grid = this.$['grid'].grid;
@@ -146,7 +138,7 @@ Copyright © HatioLab Inc. All rights reserved.
             event.target.disabled = true;
             grid.setOptions({
                checkBar: {
-                  checkableCallback: function() { return false; },
+                  checkableCallback: function () { return false; },
                   draggable: false
                }
             });
@@ -156,7 +148,20 @@ Copyright © HatioLab Inc. All rights reserved.
 
          _onInstructResponse: function () {
             this.fire('things-dialog-close');
-         }
+         },
+
+         /**
+          * 배치가 변경 되면 배치에 해당하는 Rack 리스트 조회 
+          */
+         _batchChanged: function (batch) {
+            if (batch) {
+               var rackListAjax = this.$['assignable-dps-rack-ajax'];
+               rackListAjax.params = this._paramMaker(this.selectFields, this.sortFields, this.queryFields);
+
+               var resourceMetaAjax = this.$['resource-meta'];
+               resourceMetaAjax.generateRequest();
+            }
+         },
       });
    </script>
 </dom-module>

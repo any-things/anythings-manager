@@ -18,7 +18,7 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="./job-batch-instruct-popup.html">
 <link rel="import" href="./job-batch-rtn-instruct-popup.html">
 
-<link rel="import" href="./dps-region-assignment.html">
+<link rel="import" href="./dps-rack-assignment.html">
 
 <!--
   주문 및 작업 > 작업 배치 화면
@@ -106,7 +106,7 @@ Copyright © HatioLab Inc. All rights reserved.
          */
         gridConfig: {
           type: Object,
-          value: function() {
+          value: function () {
             return {
               options: {
                 checkBar: {
@@ -158,7 +158,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _onGridDataChanged: function(event) {
+      _onGridDataChanged: function (event) {
         var grid = this.$['grid'].getGridObject();
 
         if (grid) {
@@ -174,10 +174,10 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _onGridConfigure: function(event) {
+      _onGridConfigure: function (event) {
         var grid = this.$['grid'];
 
-        grid._onGridCheckCellClicked = function(grid, rowIndex) {
+        grid._onGridCheckCellClicked = function (grid, rowIndex) {
           var cRow = grid.getCheckedRows();
 
           // 어떤 행이 체크된 상태에서 다른 행의 체크셀을 체크하지않고 그 주변 영역을 클릭했을 때는 반응하지 않도록
@@ -200,7 +200,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _gridColumnDoubleClicked: function(event) {
+      _gridColumnDoubleClicked: function (event) {
         var index = event.detail.index;
 
         if (index.column.name() == 'id') {
@@ -226,9 +226,9 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {String} status 작업 배치 상태
        * @param {String} jobType 작업 배치의 작업 유형
        */
-      changeButtonStatus: function(status, jobType) {
+      changeButtonStatus: function (status, jobType) {
 
-        var btns = this.buttons.map(function(b) {
+        var btns = this.buttons.map(function (b) {
           if (!status || status === '') {
             b.hidden = false;
             return Object.assign(new Object(), b);
@@ -259,7 +259,7 @@ Copyright © HatioLab Inc. All rights reserved.
           }
         });
 
-        btns.map(function(b) {
+        btns.map(function (b) {
           if (jobType === 'RTN' || jobType === 'RTN3') {
             if (b.id === 'copy_region-btn' || b.id === 'merge_batch-btn') {
               b.hidden = true;
@@ -282,7 +282,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event 라우트 변경 이벤트
        */
-      _handlerRouteChange: function(event) {
+      _handlerRouteChange: function (event) {
         this.refreshData();
       },
 
@@ -291,7 +291,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _onReceiveOrderTap: function(event) {
+      _onReceiveOrderTap: function (event) {
         console.log(this.searchFormFields);
 
         var title = Things.DataGlobal.t(event.detail.text);
@@ -345,7 +345,7 @@ Copyright © HatioLab Inc. All rights reserved.
             title: title,
             text: text,
             showCancelButton: true
-          }, function() {
+          }, function () {
             ajax.resourceId = areaCd + '/' + stageCd + '/' + comCd + '/' + jobDate;
             ajax.generateRequest();
           });
@@ -357,7 +357,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _onCancelBatchTap: function(event) {
+      _onCancelBatchTap: function (event) {
         var row = this._checkedGridRow();
 
         if (row) {
@@ -373,7 +373,7 @@ Copyright © HatioLab Inc. All rights reserved.
             title: title,
             text: text,
             showCancelButton: true
-          }, function() {
+          }, function () {
             ajax.resourceId = batchId;
             ajax.generateRequest();
           }.bind(this));
@@ -385,7 +385,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _onOrderPreprocessTap: function(event) {
+      _onOrderPreprocessTap: function (event) {
         var title = Things.DataGlobal.t(event.detail.text);
         var row = this._checkedGridRow();
 
@@ -412,7 +412,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _onJobInstructTap: function(event) {
+      _onJobInstructTap: function (event) {
         var title = Things.DataGlobal.t(event.detail.text);
         var checkedRow = this._checkedGridRow();
 
@@ -425,27 +425,44 @@ Copyright © HatioLab Inc. All rights reserved.
               case 'QPS':
                 {
                   //호기 지정 불필요시 아래 로직 사용
-                  var props = {
-                    id: "check-running-job-ajax",
-                    method: "GET",
-                    contentType: "application/json",
-                    resourceUrl: "job_batches/running_batch/:id",
-                    resourceId: checkedRow.stage_cd + "/" + checkedRow.equip_type + "/" + (checkedRow.equip_cd ? checkedRow.equip_cd : "null")
-                  };
+                  // var props = {
+                  //   id: "check-running-job-ajax",
+                  //   method: "GET",
+                  //   contentType: "application/json",
+                  //   resourceUrl: "job_batches/running_batch/:id",
+                  //   resourceId: checkedRow.stage_cd + "/" + checkedRow.equip_type + "/" + (checkedRow.equip_cd ? checkedRow.equip_cd : "null")
+                  // };
 
-                  var runningJobAjax = this.create('things-ajax', props);
-                  runningJobAjax.checkedRow = checkedRow;
-                  this.listen(runningJobAjax, 'things-ajax-response', '_checkAndRequestInstructJob');
-                  runningJobAjax.generateRequest();
+                  // var runningJobAjax = this.create('things-ajax', props);
+                  // runningJobAjax.checkedRow = checkedRow;
+                  // this.listen(runningJobAjax, 'things-ajax-response', '_checkAndRequestInstructJob');
+                  // runningJobAjax.generateRequest();
+                  // 호기 지정 필요시 아래 로직 사용
+                  var props = {
+                    resourceName: 'DpsRackAssignment',
+                    title: Things.DataGlobal.t("menu.DpsRackAssignment"),
+                    batch: checkedRow,
+                    parent: this
+                  };
+                  let view = this.create('dps-rack-assignment', props);
+                  // DPS 호기 할당 팝업 표시
+                  this.fire('things-open-custom-size-dialog', {
+                    view: view,
+                    modal: true,
+                    dialogSize: 'small',
+                    closeCallback: function () {
+                      this.$['search-form'].submitMyForm();
+                    }.bind(this)
+                  });
                 }
                 break;
 
               case 'DAS':
               case 'RTN':
                 {
-                //  var ajax = this.$['instruct-job-rack-check-ajax'];
-                //  ajax.resourceId = checkedRow.id;
-                //  ajax.generateRequest();
+                  //  var ajax = this.$['instruct-job-rack-check-ajax'];
+                  //  ajax.resourceId = checkedRow.id;
+                  //  ajax.generateRequest();
                   this._transactionInstructRackCheckCompleted();
                 }
                 break;
@@ -459,7 +476,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _checkAndRequestInstructJob: function(event) {
+      _checkAndRequestInstructJob: function (event) {
         var checkedRow = event.target.checkedRow;
         var msg = (event.detail && event.detail.id) ?
           Things.DataGlobal.t('text.does_sure_to_merge') :
@@ -471,7 +488,7 @@ Copyright © HatioLab Inc. All rights reserved.
           type: 'warning',
           title: msg,
           showCancelButton: true
-        }, function() {
+        }, function () {
           this._requestDpsQpsInstructJob(checkedRow);
         }.bind(this));
       },
@@ -481,7 +498,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _requestDpsQpsInstructJob: function(checkedRow) {
+      _requestDpsQpsInstructJob: function (checkedRow) {
         var props = {
           id: "instruct-job-ajax",
           method: "POST",
@@ -520,7 +537,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _onMergeBatchTap: function(event) {
+      _onMergeBatchTap: function (event) {
         var checkedRow = this._checkedGridRow();
 
         if (checkedRow) {
@@ -538,7 +555,7 @@ Copyright © HatioLab Inc. All rights reserved.
             this.fire('things-open-popup-view', {
               view: mergePopup,
               modal: true,
-              closeCallback: function() {
+              closeCallback: function () {
                 this.$['search-form'].submitMyForm();
               }.bind(this)
             });
@@ -551,7 +568,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _onCancelInstructJobTap: function(event) {
+      _onCancelInstructJobTap: function (event) {
         var title = Things.DataGlobal.t(event.detail.text);
         this._confirmTransaction(event.detail.id, 'cancel-instruct-job-ajax', title);
       },
@@ -561,7 +578,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _onJobCompleteTap: function(event) {
+      _onJobCompleteTap: function (event) {
         var checkedRow = this._checkedGridRow();
         var title = checkedRow ? '[' + checkedRow.region_nm + '] ' : '';
         title += Things.DataGlobal.t(event.detail.text);
@@ -574,7 +591,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _onGroupCompleteTap: function(event) {
+      _onGroupCompleteTap: function (event) {
         var checkedRow = this._checkedGridRow();
         var title = Things.DataGlobal.t(event.detail.text);
         this._showButton('group_complete-btn', false);
@@ -587,7 +604,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {String} btnId
        * @param {Boolean} enabled
        */
-      _showButton: function(btnId, enabled) {
+      _showButton: function (btnId, enabled) {
         var button = this._getButtonElement(btnId);
         if (button) {
           button.hidden = !enabled;
@@ -600,7 +617,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {String} btnId
        * @return 그룹 완료 버튼 엘리먼트
        */
-      _getButtonElement: function(btnId) {
+      _getButtonElement: function (btnId) {
         return this.querySelector('#' + btnId);
       },
 
@@ -609,7 +626,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} e
        */
-      _onCopyRegion: function(e) {
+      _onCopyRegion: function (e) {
         e.preventDefault();
         var checkedRow = this._checkedGridRow();
 
@@ -625,7 +642,7 @@ Copyright © HatioLab Inc. All rights reserved.
               view: copyRegionPopup,
               modal: true,
               dialogSize: 'large',
-              closeCallback: function() {
+              closeCallback: function () {
                 this.refreshData();
               }.bind(this)
             });
@@ -643,12 +660,12 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _openReceiveOrderPopup: function(event) {
+      _openReceiveOrderPopup: function (event) {
         var receiptSummary = event.detail;
 
         // 1. 수신할 주문이 없는 경우
         if (receiptSummary.status == 'F') {
-          setTimeout(function() {
+          setTimeout(function () {
             this.openInfoMsg({
               type: 'info',
               title: '수신할 주문이 없습니다.',
@@ -675,7 +692,7 @@ Copyright © HatioLab Inc. All rights reserved.
           this.fire('things-open-popup-view', {
             view: simpleReceiveOrderPopup,
             modal: true,
-            closeCallback: function() {
+            closeCallback: function () {
               searchForm.submitMyForm();
             }
           });
@@ -695,7 +712,7 @@ Copyright © HatioLab Inc. All rights reserved.
           this.fire('things-open-popup-view', {
             view: receiveOrderPopup,
             modal: true,
-            closeCallback: function() {
+            closeCallback: function () {
               searchForm.submitMyForm();
             }
           });
@@ -707,7 +724,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _transactionCompleted: function(event) {
+      _transactionCompleted: function (event) {
         var text = Things.DataGlobal.t('text.processed_msg');
         this.openInfoMsg({
           type: 'info',
@@ -722,7 +739,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _transactionFailed: function(event) {
+      _transactionFailed: function (event) {
         this.openConfirmMsg({
           type: 'error',
           title: Things.DataGlobal.t('title.error'),
@@ -735,7 +752,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _jobCompleteResponsed: function(event) {
+      _jobCompleteResponsed: function (event) {
         this._showButton('job_complete-btn', true);
 
         if (event.detail.result === 'ng') {
@@ -745,7 +762,7 @@ Copyright © HatioLab Inc. All rights reserved.
             text: Things.DataGlobal.t('text.Sure to Complete'),
             showCancelButton: true
 
-          }, function() {
+          }, function () {
             var checkedRow = this._checkedGridRow();
             var ajax = document.createElement('things-ajax');
             ajax.resourceId = checkedRow.id;
@@ -753,7 +770,7 @@ Copyright © HatioLab Inc. All rights reserved.
             ajax.resourceAction = 'update';
             ajax.resourceUrl = 'job_batch/:id/force_complete_batch';
 
-            ajax.addEventListener('things-ajax-response', function(event) {
+            ajax.addEventListener('things-ajax-response', function (event) {
               if (event.detail.result === 'ok') {
                 this._transactionCompleted(event);
               } else {
@@ -772,7 +789,7 @@ Copyright © HatioLab Inc. All rights reserved.
       /**
        * @description 작업 완료 요청 에러 발생시 작업 완료 버튼을 다시 활성화 함
        */
-      _jobCompleteError: function() {
+      _jobCompleteError: function () {
         this._showButton('job_complete-btn', true);
       },
 
@@ -781,7 +798,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _groupCompleteResponsed: function(event) {
+      _groupCompleteResponsed: function (event) {
         this._showButton('group_complete-btn', true);
 
         if (event.detail.result === 'ng') {
@@ -791,7 +808,7 @@ Copyright © HatioLab Inc. All rights reserved.
             text: Things.DataGlobal.t('text.Sure to Complete'),
             showCancelButton: true
 
-          }, function() {
+          }, function () {
             var checkedRow = this._checkedGridRow();
             var ajax = this.$['group-complete-batch-ajax'];
             ajax.resourceId = checkedRow.id;
@@ -810,7 +827,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _groupCompleteError: function(event) {
+      _groupCompleteError: function (event) {
         this._showButton('group_complete-btn', true);
       },
 
@@ -820,11 +837,11 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _transactionInstructRackCheckCompleted: function(event) { 
+      _transactionInstructRackCheckCompleted: function (event) {
         var checkedRow = this._checkedGridRow();
         var jobInstructPopup = this.createBatchInstructPopup(checkedRow);
 
-        var closeCallback = function() {
+        var closeCallback = function () {
           this.refreshData();
         }.bind(this);
 
@@ -834,7 +851,7 @@ Copyright © HatioLab Inc. All rights reserved.
           modal: true,
           dialogSize: 'large',
           closeCallback: closeCallback
-        });    
+        });
       },
 
       /**
@@ -844,7 +861,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {String} ajaxId Ajax Id
        * @param {String} title 트랜잭션 확인용 타이틀
        */
-      _confirmTransaction: function(buttonId, ajaxId, title) {
+      _confirmTransaction: function (buttonId, ajaxId, title) {
         var checkedRow = this._checkedGridRow();
         if (checkedRow) {
           if (this._checkTransactionEnabled(buttonId, checkedRow.status)) {
@@ -861,7 +878,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 showCancelButton: true,
                 closeOnConfirm: false
 
-              }, function() {
+              }, function () {
                 this.openConfirmMsg({
                   type: 'info',
                   title: Things.DataGlobal.t('text.Server Processing'),
@@ -872,7 +889,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 ajax.resourceId = checkedRow.id;
                 ajax.generateRequest();
 
-              }.bind(this), function() {
+              }.bind(this), function () {
                 if (buttonId === 'job_complete-btn' || buttonId === 'group_complete-btn') {
                   this._showButton(buttonId, true);
                 }
@@ -888,7 +905,7 @@ Copyright © HatioLab Inc. All rights reserved.
        *****************
        * @return {Object} 그리드에 체크된 행 데이터
        */
-      _checkedGridRow: function() {
+      _checkedGridRow: function () {
         var resourceGrid = this.$.grid;
         var rows = resourceGrid.getGridObject().getCheckedRows();
 
@@ -904,7 +921,7 @@ Copyright © HatioLab Inc. All rights reserved.
             closeOnConfirm: true,
             showCancelButton: false
 
-          }, function() {
+          }, function () {
             this._showButton('job_complete-btn', true);
             this._showButton('group_complete-btn', true);
 
@@ -921,7 +938,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {String} title
        * @return {Object} 작업 병합 팝업
        */
-      newMergeBatchPopup: function(batch, title) {
+      newMergeBatchPopup: function (batch, title) {
         var mergeBatchPopup = document.createElement('job-batch-detail');
         mergeBatchPopup.title = title + ' (' + batch.job_id + ')';
         mergeBatchPopup.sourceBatch = batch;
@@ -937,7 +954,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {String} status 배치 상태
        * @return {Boolean} 작업 처리 가능 여부
        */
-      _checkTransactionEnabled: function(buttonId, status) {
+      _checkTransactionEnabled: function (buttonId, status) {
         // '주문 수신', '주문 가공', '작업 지시' 시 작업 배치 상태 체크
         if (buttonId == 'receive_order-btn' || buttonId == 'order_preprocess-btn' || buttonId == 'job_instruct-btn') {
           // 이미 완료되었습니다.
@@ -1006,7 +1023,7 @@ Copyright © HatioLab Inc. All rights reserved.
             this.openInfoMsg({
               title: Things.DataGlobal.t('title.info'),
               text: Things.DataGlobal.t('text.process_is_not_running')
-            }, function() {
+            }, function () {
               this._showButton('job_complete-btn', true);
               this._showButton('group_complete-btn', true);
             }.bind(this));
@@ -1024,7 +1041,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Object} jobBatch
        * @return 주문 가공 완료 팝업 화면
        */
-      createBatchInstructPopup: function(jobBatch) {
+      createBatchInstructPopup: function (jobBatch) {
         var completePopup = null;
 
         // 1. 작업 지시 팝업 생성
@@ -1052,7 +1069,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @description 데이터 새로 조회
        * ***********************
        */
-      refreshData: function() {
+      refreshData: function () {
         if (this.initialSearchFlag) {
           var searchForm = this.getResourceSearchForm();
           if (this.initialSearchParams) {
