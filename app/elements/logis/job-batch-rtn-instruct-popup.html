@@ -40,8 +40,8 @@ Copyright © HatioLab Inc. All rights reserved.
 
 		<!-- 주문 가공 완료 정보 조회 Ajax -->
 		<things-ajax
-			id="job-list-ajax"
-			resource-url="job_batch/:id/preprocess"
+			id="job-list-ajax" 
+			resource-url="job_batches/:id/instruction_data "
 			resource-id="[[batchId]]"
 			content-type="application/json">
 		</things-ajax>
@@ -147,24 +147,24 @@ Copyright © HatioLab Inc. All rights reserved.
 						}, {
 							fieldName: 'com_cd'
 						}, {
-							fieldName: 'sku_cd'
+							fieldName: 'cell_assgn_cd'
 						}, {
-							fieldName: 'sku_nm'
+							fieldName: 'cell_assgn_nm'
 						}, {
-							fieldName: 'region_cd'
+							fieldName: 'equip_cd'
 						}, {
-							fieldName: 'region_nm'
+							fieldName: 'equip_nm'
 						}, {
-							fieldName: 'loc_cd'
+							fieldName: 'rack_cd'
 						}, {
 							fieldName: 'zone_cd'
 						}, {
-							fieldName: 'order_group'
+							fieldName: 'class_cd'
 						}, {
-							fieldName: 'order_cust_qty',
+							fieldName: 'sku_qty',
 							dataType: 'number'
 						}, {
-							fieldName: 'order_pcs_qty',
+							fieldName: 'total_pcs',
 							dataType: 'number'
 						}, {
 							fieldName: 'job_data_count',
@@ -198,27 +198,27 @@ Copyright © HatioLab Inc. All rights reserved.
 							},
 							editable: false
 						}, {
-							name: 'sku_cd',
-							fieldName: 'sku_cd',
+							name: 'cell_assgn_cd',
+							fieldName: 'cell_assgn_cd',
 							width: 120,
 							header: {
-								text: Things.DataGlobal.t('label.sku_cd')
+								text: Things.DataGlobal.t('label.cell_assgn_cd')
 							},
 							editable: false
 						}, {
-							name: 'sku_nm',
-							fieldName: 'sku_nm',
+							name: 'cell_assgn_nm',
+							fieldName: 'cell_assgn_nm',
 							width: 250,
 							header: {
-								text: Things.DataGlobal.t('label.sku_nm')
+								text: Things.DataGlobal.t('label.cell_assgn_nm')
 							},
 							editable: false
 						}, {
-							name: 'order_cust_qty',
-							fieldName: 'order_cust_qty',
+							name: 'sku_qty',
+							fieldName: 'sku_qty',
 							width: 60,
 							header: {
-								text: Things.DataGlobal.t('label.cust_qty')
+								text: Things.DataGlobal.t('label.sku_qty')
 							},
 							styles: {
 								textAlignment: 'far',
@@ -226,11 +226,11 @@ Copyright © HatioLab Inc. All rights reserved.
 							},
 							editable: false
 						}, {
-							name: 'order_pcs_qty',
-							fieldName: 'order_pcs_qty',
+							name: 'total_pcs',
+							fieldName: 'total_pcs',
 							width: 60,
 							header: {
-								text: Things.DataGlobal.t('label.pcs')
+								text: Things.DataGlobal.t('label.total_pcs')
 							},
 							styles: {
 								textAlignment: 'far',
@@ -238,33 +238,33 @@ Copyright © HatioLab Inc. All rights reserved.
 							},
 							editable: false
 						}, {
-							name: 'region_nm',
-							fieldName: 'region_nm',
+							name: 'equip_nm',
+							fieldName: 'equip_nm',
 							width: 65,
 							header: {
-								text: Things.DataGlobal.t('label.region_nm')
+								text: Things.DataGlobal.t('label.equip_nm')
 							},
 							styles: {
 								textAlignment: 'center'
 							},
 							editable: false
 						}, {
-							name: 'loc_cd',
-							fieldName: 'loc_cd',
+							name: 'equip_cd',
+							fieldName: 'equip_cd',
 							width: 75,
 							header: {
-								text: Things.DataGlobal.t('label.loc_cd')
+								text: Things.DataGlobal.t('label.equip_cd')
 							},
 							styles: {
 								textAlignment: 'center'
 							},
 							editable: false
 						}, {
-							name: 'order_group',
-							fieldName: 'order_group',
+							name: 'class_cd',
+							fieldName: 'class_cd',
 							width: 80,
 							header: {
-								text: Things.DataGlobal.t('label.order_group')
+								text: Things.DataGlobal.t('label.class_cd')
 							},
 							styles: {
 								textAlignment: 'center'
@@ -400,8 +400,8 @@ Copyright © HatioLab Inc. All rights reserved.
 					name: 'total_sku_qty',
 					type: 'text'
 				}, {
-					label: Things.DataGlobal.t('label.total_pcs_qty'),
-					name: 'total_pcs_qty',
+					label: Things.DataGlobal.t('label.total_pcs'),
+					name: 'total_pcs',
 					type: 'text'
 				}];
 
@@ -491,12 +491,12 @@ Copyright © HatioLab Inc. All rights reserved.
 			 ***************
 			 */
 			_showJobInstructionProgress: function() {
-				if(parseInt(this.progressRate) < 100) {
-					this.progressMessage = '(' + Things.DataGlobal.t('text.please_wait') + ')';
-					var progressAjax = this.$['progress-instruction-ajax'];
-					progressAjax.resourceId = this.batchId;
-					progressAjax.generateRequest();
-				}
+				// if(parseInt(this.progressRate) < 100) {
+				// 	this.progressMessage = '(' + Things.DataGlobal.t('text.please_wait') + ')';
+				// 	var progressAjax = this.$['progress-instruction-ajax'];
+				// 	progressAjax.resourceId = this.batchId;
+				// 	progressAjax.generateRequest();
+				// }
 			},
 
 			/**
