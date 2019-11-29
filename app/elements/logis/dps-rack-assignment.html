@@ -33,7 +33,7 @@ Copyright © HatioLab Inc. All rights reserved.
       </things-ajax>
 
       <things-ajax id="instruct-job-ajax" method="POST" content-type="application/json"
-         resource-url="job_batch/:id/instruct_job">
+         resource-url="job_batches/:id/instruct/batch">
       </things-ajax>
 
       <things-resource-grid id="grid" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]"
@@ -77,7 +77,7 @@ Copyright © HatioLab Inc. All rights reserved.
             selectFields: {
                type: String,
                value: function () {
-                  return "rack_cd,rack_nm,batch_id";
+                  return "id,rack_cd,rack_nm,batch_id";
                }
             },
 
@@ -102,6 +102,9 @@ Copyright © HatioLab Inc. All rights reserved.
                      name: "active_flag",
                      operator: "eq",
                      value: true
+                  }, {
+                     name: "batch_id",
+                     operator: "is_null"
                   }];
                }
             }
@@ -132,8 +135,19 @@ Copyright © HatioLab Inc. All rights reserved.
             var ajax = this.$['instruct-job-ajax'];
             var grid = this.$['grid'].grid;
             ajax.body = grid.getCheckedRows().map(function (row) {
-               return row.getRowObject();
+               return row.getRowObject().id;
             });
+
+            if (!ajax.body || ajax.body.length == 0) {
+               this.openConfirmMsg({
+                  type: 'error',
+                  title: Things.DataGlobal.t('text.rack_is_not_selected'),
+                  text: Things.DataGlobal.t('text.rack_is_not_selected')
+               });
+               return;
+            }
+
+            ajax.resourceId = this.batch.id;
 
             event.target.disabled = true;
             grid.setOptions({

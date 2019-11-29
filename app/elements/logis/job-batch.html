@@ -269,6 +269,8 @@ Copyright © HatioLab Inc. All rights reserved.
           } else if (jobType === 'DPS' || jobType === 'QPS') {
             if (b.id == 'order_preprocess-btn') {
               b.hidden = true;
+            } else if (b.id === 'merge_batch-btn' && status === 'READY') {
+              b.hidden = false;
             }
             return Object.assign(new Object(), b);
           }
@@ -424,47 +426,60 @@ Copyright © HatioLab Inc. All rights reserved.
               case 'DPS':
               case 'QPS':
                 {
-                  //호기 지정 불필요시 아래 로직 사용
-                  // var props = {
-                  //   id: "check-running-job-ajax",
-                  //   method: "GET",
-                  //   contentType: "application/json",
-                  //   resourceUrl: "job_batches/running_batch/:id",
-                  //   resourceId: checkedRow.stage_cd + "/" + checkedRow.equip_type + "/" + (checkedRow.equip_cd ? checkedRow.equip_cd : "null")
-                  // };
-
-                  // var runningJobAjax = this.create('things-ajax', props);
-                  // runningJobAjax.checkedRow = checkedRow;
-                  // this.listen(runningJobAjax, 'things-ajax-response', '_checkAndRequestInstructJob');
-                  // runningJobAjax.generateRequest();
-                  // 호기 지정 필요시 아래 로직 사용
-                  var props = {
-                    resourceName: 'DpsRackAssignment',
-                    title: Things.DataGlobal.t("menu.DpsRackAssignment"),
-                    batch: checkedRow,
-                    parent: this
-                  };
-                  let view = this.create('dps-rack-assignment', props);
-                  // DPS 호기 할당 팝업 표시
-                  this.fire('things-open-custom-size-dialog', {
-                    view: view,
-                    modal: true,
-                    dialogSize: 'small',
-                    closeCallback: function () {
-                      this.$['search-form'].submitMyForm();
-                    }.bind(this)
-                  });
+                  this._instructB2CBatchProcess(checkedRow);
                 }
                 break;
-
               case 'DAS':
               case 'RTN':
-                { 
+                {
                   this._transactionInstructRackCheckCompleted();
                 }
                 break;
             }
           }
+        }
+      },
+
+      /**
+       * @description 상위 시스템에서 Rack 이 지정 되었는지 체크 
+       *              상위 시스템 Rack 지정 여부에 따라 랙 선택 팝업 또는 작업 지시 
+       **************
+       * @param {Object} rowData
+       */
+      _instructB2CBatchProcess: function (rowData) {
+        // TODO 상위 시스템 랙 지정 여부 판별 해서 랙 지정 팝업 사용할지 않할지 체크 
+        if (rowData.equip_cd) {
+          // 설비 코드가 지정된 배치는 작업 지시 ... 
+          var props = {
+            id: "check-running-job-ajax",
+            method: "GET",
+            contentType: "application/json",
+            resourceUrl: "job_batches/running_batch/:id",
+            resourceId: rowData.stage_cd + "/" + rowData.equip_type + "/" + (rowData.equip_cd ? rowData.equip_cd : "null")
+          };
+
+          var runningJobAjax = this.create('things-ajax', props);
+          runningJobAjax.checkedRow = checkedRow;
+          this.listen(runningJobAjax, 'things-ajax-response', '_checkAndRequestInstructJob');
+          runningJobAjax.generateRequest();
+        } else {
+          // 설비 코드가 지정 안된 배치는 호기 선택 popup
+          var props = {
+            resourceName: 'DpsRackAssignment',
+            title: Things.DataGlobal.t("menu.DpsRackAssignment"),
+            batch: rowData,
+            parent: this
+          };
+          let view = this.create('dps-rack-assignment', props);
+          // DPS 호기 할당 팝업 표시
+          this.fire('things-open-custom-size-dialog', {
+            view: view,
+            modal: true,
+            dialogSize: 'small',
+            closeCallback: function () {
+              this.$['search-form'].submitMyForm();
+            }.bind(this)
+          });
         }
       },
 
@@ -538,12 +553,16 @@ Copyright © HatioLab Inc. All rights reserved.
         var checkedRow = this._checkedGridRow();
 
         if (checkedRow) {
-          if (checkedRow.status != 'WAIT') {
+          if (checkedRow.job_type != 'DPS' && checkedRow.status != 'WAIT') { // DPS 외 작업은 가공 대기 상태에서 가능 
             this.openInfoMsg({
               type: 'warning',
               title: Things.DataGlobal.t('text.is_not_wait_state')
             });
-
+          } else if (checkedRow.job_type == 'DPS' && checkedRow.status != 'READY') { // DPS 는 작업지시 대기 상태에서 가능 
+            this.openInfoMsg({
+              type: 'warning',
+              title: Things.DataGlobal.t('text.is_not_ready_state')
+            });
           } else {
             var title = Things.DataGlobal.t(event.detail.text);
             var mergePopup = this.newMergeBatchPopup(checkedRow, title);
