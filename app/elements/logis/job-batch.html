@@ -69,7 +69,7 @@ Copyright © HatioLab Inc. All rights reserved.
     </things-ajax>
 
     <!-- 작업 완료 Ajax -->
-    <things-ajax id="complete-job-ajax" resource-url="job_batch/:id/complete_batch" resource-action="update">
+    <things-ajax id="complete-job-ajax" resource-url="job_batches/:id/close_batch" resource-action="update">
     </things-ajax>
 
     <!-- 배치 그룹 전체 작업 완료 Ajax -->
@@ -459,10 +459,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
               case 'DAS':
               case 'RTN':
-                {
-                  //  var ajax = this.$['instruct-job-rack-check-ajax'];
-                  //  ajax.resourceId = checkedRow.id;
-                  //  ajax.generateRequest();
+                { 
                   this._transactionInstructRackCheckCompleted();
                 }
                 break;
@@ -580,7 +577,7 @@ Copyright © HatioLab Inc. All rights reserved.
        */
       _onJobCompleteTap: function (event) {
         var checkedRow = this._checkedGridRow();
-        var title = checkedRow ? '[' + checkedRow.region_nm + '] ' : '';
+        var title = checkedRow ? '[' + checkedRow.equip_nm + '] ' : '';
         title += Things.DataGlobal.t(event.detail.text);
         this._showButton('job_complete-btn', false);
         this._confirmTransaction(event.detail.id, 'complete-job-ajax', title);
