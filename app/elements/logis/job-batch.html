@@ -56,15 +56,15 @@ Copyright © HatioLab Inc. All rights reserved.
     </things-ajax>
 
     <!-- 작업 지시 Ajax -->
-    <things-ajax id="instruct-job-ajax" resource-url="job_batch/:id/instruct_job" resource-action="create">
+    <things-ajax id="instruct-job-ajax" resource-url="job_batches/:id/instruct_job" resource-action="create">
     </things-ajax>
 
     <!-- 작업 지시 전 호기 상태 확인  -->
-    <things-ajax id="instruct-job-rack-check-ajax" resource-url="job_batch/:id/check_region" resource-action="index">
+    <things-ajax id="instruct-job-rack-check-ajax" resource-url="job_batches/:id/check_region" resource-action="index">
     </things-ajax>
 
     <!-- 작업 지시 취소 Ajax -->
-    <things-ajax id="cancel-instruct-job-ajax" resource-url="job_batch/:id/cancel_job_instruction"
+    <things-ajax id="cancel-instruct-job-ajax" resource-url="job_batches/:id/cancel_job_instruction"
       resource-action="delete">
     </things-ajax>
 
@@ -73,7 +73,7 @@ Copyright © HatioLab Inc. All rights reserved.
     </things-ajax>
 
     <!-- 배치 그룹 전체 작업 완료 Ajax -->
-    <things-ajax id="group-complete-batch-ajax" resource-url="job_batch/:id/complete_batch_group"
+    <things-ajax id="group-complete-batch-ajax" resource-url="job_batches/:id/complete_batch_group"
       resource-action="update">
     </things-ajax>
 
@@ -903,6 +903,7 @@ Copyright © HatioLab Inc. All rights reserved.
                   showConfirmButton: false
                 });
                 ajax.resourceId = checkedRow.id;
+                ajax.params =  {id:checkedRow.id};
                 ajax.generateRequest();
 
               }.bind(this), function () {
