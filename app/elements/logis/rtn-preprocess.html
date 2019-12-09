@@ -899,6 +899,9 @@ rtn 주문 가공 화면
             if (!this._checkTransactionEnabled()) return;
             
             var toAssignItems = this._checkedGridRows(this.$['region-grid'], Things.DataGlobal.t('label.region'), true);
+            
+            if (!toAssignItems || toAssignItems.length == 0) return;
+
             var params = { reset_all : false };
             var title = Things.DataGlobal.t(event.detail.text);
             this._confirmTransaction('reset-assignment-ajax', title, params, toAssignItems);
