@@ -8,13 +8,14 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/things-form/things-search-form.html">
 <link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
 <link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+<link rel="import" href="../base/barcode-popup.html">
 
 <!--
 	작업 실행 관리 화면
 -->
 
 <dom-module id="job-instances">
-	<template>
+  <template>
 		<style>
 			:host {
 				display: block;
@@ -28,7 +29,7 @@ Copyright © HatioLab Inc. All rights reserved.
 		</style>
 
 		<!-- Data Ajax -->
-		<things-ajax id="search-for-sku-barcode" method="GET" content-type="application/json"
+		<things-ajax id="find-sku" method="GET" content-type="application/json"
 			last-response="{{skuObj}}">
 		</things-ajax>
 
@@ -47,97 +48,96 @@ Copyright © HatioLab Inc. All rights reserved.
 		</things-resource-grid>
 	</template>
 
-	<script>
-		Polymer({
-			is: 'job-instances',
+  <script>
+    Polymer({
+      is: 'job-instances',
 
-			behaviors: [
-				Things.ResourceMenuContentBehavior
-			],
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
 
-			properties: {
-			},
+      properties: {},
 
-			listeners: {
-				'grid.show-sku-barcd-btn-tap': '_showBarcode',
-				'search-for-sku-barcode.things-ajax-response': '_responseSku'
-			},
+      listeners: {
+        'grid.show-sku-barcd-btn-tap': '_showBarcode',
+        'find-sku.things-ajax-response': '_responseSku'
+      },
 
-			/**
-			   * @description 상품/박스 코드 or 바코드 보기 버튼 이벤트 핸들러
-			   ************
-			   * @param {Object} event
-			   */
-			_showBarcode: function (event) {
-				var checkedSkuRow = this._getCheckedRow();
-				if (!checkedSkuRow) return;
+      /**
+       * @description 상품/박스 코드 or 바코드 보기 버튼 이벤트 핸들러
+       ************
+       * @param {Object} event
+       */
+      _showBarcode: function(event) {
+        var checkedSkuRow = this._getCheckedRow();
+        if (!checkedSkuRow) return;
 
-				var sku = checkedSkuRow.getRowObject();
-				var url = '/sku/search/';
-				if ((!sku.com_cd && typeof sku.com_cd === 'object') || (typeof !sku.com_cd === 'undefined')) {
-					url += '0/'
-				} else {
-					url += sku.com_cd + '/'
-				}
+        var sku = checkedSkuRow.getRowObject();
+        var url = 'sku/find/';
+        if ((!sku.com_cd && typeof sku.com_cd === 'object') || (typeof !sku.com_cd === 'undefined')) {
+          url += '0/'
+        } else {
+          url += sku.com_cd + '/'
+        }
 
-				if ((!sku.sku_cd && typeof sku.sku_cd === 'object') || (typeof !sku.sku_cd === 'undefined')) {
-					url += '0'
-				} else {
-					url += sku.sku_cd
-				}
+        if ((!sku.sku_cd && typeof sku.sku_cd === 'object') || (typeof !sku.sku_cd === 'undefined')) {
+          url += '0'
+        } else {
+          url += sku.sku_cd
+        }
 
-				var searchAjax = this.$['search-for-sku-barcode'];
-				searchAjax.resourceUrl = url;
-				searchAjax.generateRequest();
-			},
+        var searchAjax = this.$['find-sku'];
+        searchAjax.resourceUrl = url;
+        searchAjax.generateRequest();
+      },
 
-			/**
-			   * @description 체크한 그리드의 로우 오브젝트를 리턴함
-			   * 하나의 로우만 체크해야하며 복수 혹은 체크하지 않을 경우 팝업 출력
-			   *******************
-			   * @return
-			   */
-			_getCheckedRow: function () {
-				var gridObj = this.$['grid'].getGridObject();
-				var checkedRows = gridObj.getCheckedRows();
+      /**
+       * @description 체크한 그리드의 로우 오브젝트를 리턴함
+       * 하나의 로우만 체크해야하며 복수 혹은 체크하지 않을 경우 팝업 출력
+       *******************
+       * @return
+       */
+      _getCheckedRow: function() {
+        var gridObj = this.$['grid'].getGridObject();
+        var checkedRows = gridObj.getCheckedRows();
 
-				if (checkedRows && checkedRows.length != 1) {
-					this.openConfirmMsg({
-						type: 'info',
-						title: Things.DataGlobal.t('tooltip.select'),
-						text: Things.DataGlobal.t('text.select_item')
-					});
-				} else {
-					return checkedRows[0];
-				}
-			},
+        if (checkedRows && checkedRows.length != 1) {
+          this.openConfirmMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('tooltip.select'),
+            text: Things.DataGlobal.t('text.select_item')
+          });
+        } else {
+          return checkedRows[0];
+        }
+      },
 
-			/**
- 			* @description SKU 바코드 응답
- 			*******************
- 			* @return
- 			*/
-			_responseSku(e) {
-				var target = 'sku_barcd';
-				var popupView = document.createElement('mps-sku-barcd-popup');
-				var sku = {};
-				sku.sku_barcd = e.detail.sku_barcd;
-				sku.sku_nm = e.detail.sku_nm;
-				popupView.title = Things.DataGlobal.t('label.' + target);
-				popupView.sku = sku;
-				popupView.target = target;
+      /**
+       * @description SKU 바코드 응답
+       *******************
+       * @return
+       */
+      _responseSku(e) {
+        var target = 'sku_barcd';
+        var popupView = document.createElement('barcode-popup');
+        var sku = {};
+        sku.sku_barcd = e.detail.sku_barcd;
+        sku.sku_nm = e.detail.sku_nm;
+        popupView.title = Things.DataGlobal.t('label.' + target);
+        popupView.sku = sku;
+        popupView.target = target;
 
-				this.fire('things-open-custom-size-dialog', {
-					view: popupView,
-					dialogSize: 'small',
-					modal: true
-				});
+        this.fire('things-open-custom-size-dialog', {
+          view: popupView,
+          dialogSize: 'small',
+          modal: true
+        });
 
-				var checkedSkuRow = this._getCheckedRow();
-				if (!checkedSkuRow) return;
-				var gridObj = this.$['grid'].getGridObject();
-				gridObj.setChecked(checkedSkuRow, false);
-			}
-		});
-	</script>
+        var checkedSkuRow = this._getCheckedRow();
+        if (!checkedSkuRow) return;
+        var gridObj = this.$['grid'].getGridObject();
+        gridObj.setChecked(checkedSkuRow, false);
+      }
+    });
+  </script>
 </dom-module>

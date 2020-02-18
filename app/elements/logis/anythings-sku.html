@@ -3,7 +3,7 @@
 Copyright © HatioLab Inc. All rights reserved.
 -->
 
-<link rel="import" href="./anythings-sku-barcd-popup.html">
+<link rel="import" href="../base/barcode-popup.html">
 
 <!--
 	마스터 > 상품
@@ -209,7 +209,7 @@ Copyright © HatioLab Inc. All rights reserved.
           target = 'box_barcd';
         }
 
-        var popupView = document.createElement('anythings-sku-barcd-popup');
+        var popupView = document.createElement('barcode-popup');
         popupView.title = Things.DataGlobal.t('label.' + target);
         popupView.sku = sku;
         popupView.target = target;
