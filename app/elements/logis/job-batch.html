@@ -398,7 +398,7 @@ Copyright © HatioLab Inc. All rights reserved.
               var jobType = row.job_type.toLowerCase();
               if (jobType === 'rtn3') {
                 jobType = 'rtn';
-              } else if(jobType === 'sms') {
+              } else if(jobType === 'srtn' || jobType === 'sdas') {
                 jobType = 'sms';
               }
               
@@ -440,9 +440,32 @@ Copyright © HatioLab Inc. All rights reserved.
                   this._transactionInstructRackCheckCompleted();
                 }
                 break;
+              case 'SDAS':
+                {
+                  this._instructSDASBatchProcess(checkedRow);
+                }
+                break;
+              case 'SRTN':
+                {
+
+                }
+                break;
             }
           }
         }
+      },
+
+      _instructSDASBatchProcess: function(rowData) {
+        var props = {
+          id: "instruct-job-ajax",
+          method: "POST",
+          contentType: "application/json",
+          resourceUrl: "job_batches/:id/instruct/batch",
+          resourceId: rowData.id
+        };
+        var instructJobAjax = this.create('things-ajax', props);
+        this.listen(instructJobAjax, 'things-ajax-response', 'refreshData');
+        instructJobAjax.generateRequest();
       },
 
       /**
