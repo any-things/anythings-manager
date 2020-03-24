@@ -442,12 +442,12 @@ Copyright © HatioLab Inc. All rights reserved.
                 break;
               case 'SDAS':
                 {
-                  this._instructSDASBatchProcess(checkedRow);
+                  this._instructSMSBatchProcess(checkedRow);
                 }
                 break;
               case 'SRTN':
                 {
-                  this._instructSDASBatchProcess(checkedRow);
+                  this._instructSMSBatchProcess(checkedRow);
                 }
                 break;
             }
@@ -455,7 +455,7 @@ Copyright © HatioLab Inc. All rights reserved.
         }
       },
 
-      _instructSDASBatchProcess: function(rowData) {
+      _instructSMSBatchProcess: function(rowData) {
         var props = {
           id: "instruct-job-ajax",
           method: "POST",
