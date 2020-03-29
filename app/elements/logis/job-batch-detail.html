@@ -86,7 +86,7 @@ MPS 작업 배치 상세 화면
       properties: {
         gridConfig: {
           type: Object,
-          value: function () {
+          value: function() {
             return {
               options: {
                 checkBar: {
@@ -102,7 +102,7 @@ MPS 작업 배치 상세 화면
          */
         comboSelectFields: {
           type: Array,
-          value: function () {
+          value: function() {
             return ['id', 'region_cd', 'region_nm'];
           }
         },
@@ -112,7 +112,7 @@ MPS 작업 배치 상세 화면
          */
         regionComboLabel: {
           type: String,
-          value: function () {
+          value: function() {
             return Things.DataGlobal.t('label.region');
           }
         },
@@ -137,7 +137,7 @@ MPS 작업 배치 상세 화면
          */
         searchButton: {
           type: Array,
-          value: function () {
+          value: function() {
             return [{
               id: 'search-btn',
               text: 'search'
@@ -150,7 +150,7 @@ MPS 작업 배치 상세 화면
          */
         buttons: {
           type: Array,
-          value: function () {
+          value: function() {
             return [{
               id: 'merge_batch-btn',
               text: 'merge_batch'
@@ -164,31 +164,46 @@ MPS 작업 배치 상세 화면
         'job-btn-group.merge_batch-btn-tap': '_mergeBtnTapped',
         'merge-batch-ajax.things-ajax-request': '_mergeRequest',
         'merge-batch-ajax.things-ajax-response': '_mergeResponse'
-        //'search-btn-group.search-btn-tap': '_searchBtnTapped',
-        //'job-btn-group.assign-region-btn-tap': '_assignRegionBtnTapped',
-        //'job-btn-group.job-instruct-btn-tap': '_jobInstructBtnTapped',
-        //'job-btn-group.job-complete-btn-tap': '_jobCompleteBtnTapped'
+          //'search-btn-group.search-btn-tap': '_searchBtnTapped',
+          //'job-btn-group.assign-region-btn-tap': '_assignRegionBtnTapped',
+          //'job-btn-group.job-instruct-btn-tap': '_jobInstructBtnTapped',
+          //'job-btn-group.job-complete-btn-tap': '_jobCompleteBtnTapped'
       },
 
-      _mergeRequest: function () {
+      /**
+       * 병합 요청시 
+       **************
+       * @param {Object} event
+       */
+      _mergeRequest: function(event) {
         this.openConfirmMsg({
           type: 'info',
-          title: Things.DataGlobal.t("button.merge_batch"),
-          text: Things.DataGlobal.t("text.Server Processing"),
+          title: Things.DataGlobal.t('button.merge_batch'),
+          text: Things.DataGlobal.t('text.Server Processing'),
           showConfirmButton: false
         });
       },
 
-      _mergeResponse: function () {
+      /**
+       * 병합 완료시
+       **************
+       * @param {Object} event
+       */
+      _mergeResponse: function(event) {
         var title = Things.DataGlobal.t('text.Success to Process');
         var text = Things.DataGlobal.t('button.merge_batch') + ' ' + Things.DataGlobal.t('text.processed');
         var view = this;
 
-        var closeView = function () {
+        var closeView = function() {
           view.fire('things-dialog-close');
         };
 
-        this.openConfirmMsg({ type: 'info', title: title, text: text, showCancelButton: false }, closeView);
+        this.openConfirmMsg({
+          type: 'info',
+          title: title,
+          text: text,
+          showCancelButton: false
+        }, closeView);
       },
 
       /**
@@ -196,29 +211,19 @@ MPS 작업 배치 상세 화면
        **************
        * @param {Object} event
        */
-      _onGridConfigured: function (event) {
+      _onGridConfigured: function(event) {
         var ajax = this.$['search-batch-ajax'];
         ajax.resourceId = this.sourceBatch.id;
+        var jobType = this.sourceBatch.job_type;
 
-        if (this.sourceBatch.job_type == 'RTN') {
+        if (jobType == 'DAS' || jobType == 'RTN' || jobType == 'DPS') {
           ajax.queryFields = [{
-            name: 'status', value: 'RUN'
+            name: 'status',
+            value: 'RUN'
           }, {
-            name: 'job_type', operator: 'eq', value: this.sourceBatch.job_type
-          }];
-        } else if (this.sourceBatch.job_type == 'DAS') {
-          ajax.queryFields = [{
-            name: 'status', value: 'RUN'
-          }, {
-            name: 'job_type', operator: 'eq', value: this.sourceBatch.job_type
-          }/*, {
-            name:'batch_group_id', operator: 'noteq', value: this.sourceBatch.batch_group_id
-          }*/ ];
-        } else if (this.sourceBatch.job_type == 'DPS') {
-          ajax.queryFields = [{
-            name: 'status', value: 'RUN'
-          }, {
-            name: 'job_type', operator: 'eq', value: this.sourceBatch.job_type
+            name: 'job_type',
+            operator: 'eq',
+            value: this.sourceBatch.job_type
           }];
         }
 
@@ -228,9 +233,9 @@ MPS 작업 배치 상세 화면
       /**
        * 배치 조회 결과 변경시
        **************
-       * @param {Object} event
+       * @param {Object} batchResult
        */
-      _batchResultChanged: function (batchResult) {
+      _batchResultChanged: function(batchResult) {
         this.items = (batchResult && batchResult.items) ? batchResult.items : [];
       },
 
@@ -241,18 +246,24 @@ MPS 작업 배치 상세 화면
        *******************
        * @param {Object} event
        */
-      _mergeBtnTapped: function (event) {
+      _mergeBtnTapped: function(event) {
         try {
           var row = this._checkedGridRows();
           if (row) {
             var title = Things.DataGlobal.t('button.merge_batch');
-            var text = Things.DataGlobal.t('text.Sure to X', { x: title });
+            var text = Things.DataGlobal.t('text.Sure to X', {
+              x: title
+            });
             var ajax = this.$['merge-batch-ajax'];
             ajax.resourceUrl = `job_batches/${this.sourceBatch.id}/instruct/merge_batch/${row.id}`;
 
             this.openConfirmMsg({
-              type: 'info', title: title, text: text, showCancelButton: true, closeOnConfirm: false
-            }, function () {
+              type: 'info',
+              title: title,
+              text: text,
+              showCancelButton: true,
+              closeOnConfirm: false
+            }, function() {
               ajax.generateRequest();
             });
           }
@@ -266,7 +277,7 @@ MPS 작업 배치 상세 화면
        *****************
        * @return {Object} 그리드에 체크된 행 데이터
        */
-      _checkedGridRows: function () {
+      _checkedGridRows: function() {
         var resourceGrid = this.$.grid;
         var checkedRows = resourceGrid.getGridObject().getCheckedRows();
 
@@ -299,7 +310,7 @@ MPS 작업 배치 상세 화면
        * 조회 버튼 클릭시 실행되며 validateBeforeSeach를 통과하면
        * 조회를 수행 실패하면 showInvalidMessage를 통해 메시지 출력
        */
-      _searchBtnTapped: function () {
+      _searchBtnTapped: function() {
         try {
           this.validateBeforeSeach();
           console.log('Do search');
@@ -313,7 +324,7 @@ MPS 작업 배치 상세 화면
        * 호기지정 버튼 클릭시 실행되며 validateBeforeAssign 통과하면
        * 호기지정을 수행 실패하면 showInvalidMessage를 통해 메시지 출력
        */
-      _assignRegionBtnTapped: function () {
+      _assignRegionBtnTapped: function() {
         try {
           this.validateBeforeAssign();
           console.log('Do assign');
@@ -327,7 +338,7 @@ MPS 작업 배치 상세 화면
        * 작업지시 버튼 클릭시 실행되며 validateBeforeJobInstruct 통과하면
        * 작업지시를 수행 실패하면 showInvalidMessage를 통해 메시지 출력
        */
-      _jobInstructBtnTapped: function () {
+      _jobInstructBtnTapped: function() {
         try {
           this.validateBeforeJobInstruct();
           console.log('Do job instruct');
@@ -341,10 +352,9 @@ MPS 작업 배치 상세 화면
        * 작업완료 버튼 클릭시 실행되며 validateBeforeJobInstruct 통과하면
        * 작업완료를 수행 실패하면 showInvalidMessage를 통해 메시지 출력
        */
-      _jobCompleteBtnTapped: function () {
+      _jobCompleteBtnTapped: function() {
         try {
           this.validateBeforeJobComplte();
-          console.log('Do job complete');
         } catch (error) {
           this.showInvalidMessage(error);
         }
@@ -354,7 +364,7 @@ MPS 작업 배치 상세 화면
        * 조회 전 실행하는 validation
        * validation 실패시 화면에 출력할 title, text를 throw
        */
-      validateBeforeSeach: function () {
+      validateBeforeSeach: function() {
         throw {
           title: Things.DataGlobal.t('title.failure'),
           text: Things.DataGlobal.t('text.region_is_not_selected')
@@ -366,10 +376,12 @@ MPS 작업 배치 상세 화면
        * validation 실패시 화면에 출력할 title, text를 throw
        *
        */
-      validateBeforeMerge: function () {
+      validateBeforeMerge: function() {
         throw {
           title: Things.DataGlobal.t('title.failure'),
-          text: Things.DataGlobal.t('text.failed_to_x', { x: Things.DataGlobal.t('text.merge') })
+          text: Things.DataGlobal.t('text.failed_to_x', {
+            x: Things.DataGlobal.t('text.merge')
+          })
         }
       },
 
@@ -377,10 +389,12 @@ MPS 작업 배치 상세 화면
        * 호기지정 전 실행하는 validation
        * validation 실패시 화면에 출력할 title, text를 throw
        */
-      validateBeforeAssign: function () {
+      validateBeforeAssign: function() {
         throw {
           title: Things.DataGlobal.t('title.failure'),
-          text: Things.DataGlobal.t('text.failed_to_x', { x: Things.DataGlobal.t('text.assign') })
+          text: Things.DataGlobal.t('text.failed_to_x', {
+            x: Things.DataGlobal.t('text.assign')
+          })
         }
       },
 
@@ -388,10 +402,12 @@ MPS 작업 배치 상세 화면
        * 작업지시 전 실행하는 validation
        * validation 실패시 화면에 출력할 title, text를 throw
        */
-      validateBeforeJobInstruct: function () {
+      validateBeforeJobInstruct: function() {
         throw {
           title: Things.DataGlobal.t('title.failure'),
-          text: Things.DataGlobal.t('text.failed_to_x', { x: Things.DataGlobal.t('text.instruct_job') })
+          text: Things.DataGlobal.t('text.failed_to_x', {
+            x: Things.DataGlobal.t('text.instruct_job')
+          })
         }
       },
 
@@ -399,7 +415,7 @@ MPS 작업 배치 상세 화면
        * 작업완료 전 실행하는 validation
        * validation 실패시 화면에 출력할 title, text를 throw
        */
-      validateBeforeJobComplte: function () {
+      validateBeforeJobComplte: function() {
         throw {
           title: Things.DataGlobal.t('title.failure'),
           text: Things.DataGlobal.t('text.process_did_not_complete')
@@ -409,7 +425,7 @@ MPS 작업 배치 상세 화면
       /**
        * validation에서 발생한 error를 통해 메시지를 출력함
        */
-      showInvalidMessage: function (config) {
+      showInvalidMessage: function(config) {
         this.openInfoMsg({
           type: 'error',
           title: config.title,

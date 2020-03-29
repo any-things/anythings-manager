@@ -1,0 +1,393 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-input-field/things-input-field.html">
+<link rel="import" href="../../bower_components/things-resource-combo/things-code-combo.html">
+<link rel="import" href="../../bower_components/things-tristate-radio/things-tristate-radio.html">
+<link rel="import" href="../../bower_components/things-button/things-button-bar.html">
+<link rel="import" href="../../bower_components/things-upload/things-file-upload.html">
+
+<!--
+## das-preprocess-complete-popup
+출고, 반품 주문 가공 완료 팝업
+-->
+
+<dom-module id="das-preprocess-complete-popup">
+  <template>
+      <style>:host{@apply(--layout-flex);@apply(--layout-vertical);display:grid;grid-template-rows:auto auto auto 1fr}#progress-bar{padding:2px;padding-left:20px;padding-right:20px;width:unset;--paper-progress-active-color:var(--paper-light-blue-500);--paper-progress-secondary-color:var(--paper-light-blue-100)}#progress-rate{padding-left:25px}</style>
+
+      
+      <things-ajax id="complete-preprocessing-ajax" resource-url="rtn_preprocess/:id/complete" resource-action="update">
+      </things-ajax>
+
+      
+      <things-ajax id="job-instruction-ajax" resource-url="job_batch/:id/instruct_job" resource-action="create">
+      </things-ajax>
+
+      
+      <things-ajax id="progress-instruction-ajax" resource-url="job_batch/:id/instruct_job/progress" resource-action="get">
+      </things-ajax>
+
+      <things-resource-form id="resource-form" form-fields="[[searchFormFields]]" column-count="3" buttons="[[emptyButton]]">
+      </things-resource-form>
+
+      <div id="progress-rate">[[progressRate]]% [[progressMessage]]</div>
+      <paper-progress id="progress-bar" value="[[progressRate]]"></paper-progress>
+
+      <things-resource-grid id="grid" model="[[gridModel]]" columns="[[gridColumns]]" data="[[items]]" buttons="[[buttons]]">
+      </things-resource-grid>
+   </template>
+
+  <script>
+    Polymer({
+      is: 'das-preprocess-complete-popup',
+
+      behaviors: [
+        Things.MsgBoxBehavior
+      ],
+
+      properties: {
+        /**
+         * Job Batch ID
+         *******
+         *@type {Array}
+         */
+        batchId: {
+          type: String
+        },
+
+        /**
+         * buttons of grid
+         *******
+         * @type {Array}
+         */
+        buttons: {
+          type: Array,
+          value: function() {
+            return [{
+              id: 'end_preprocess',
+              text: 'end_preprocess'
+            }, {
+              id: 'job_instruct',
+              text: 'job_instruct'
+            }];
+          }
+        },
+
+        /**
+         * buttons of form
+         *******
+         * @type {Array}
+         */
+        emptyButton: {
+          type: Array,
+          value: []
+        },
+
+        /**
+         * 초기화 여부
+         *******
+         * @type {Boolean}
+         */
+        isInitialized: {
+          type: Boolean,
+          value: false
+        },
+
+        /**
+         * 완료 여부
+         *******
+         * @type {Boolean}
+         */
+        isFinished: {
+          type: Boolean,
+          value: false
+        },
+
+        /**
+         * 진행율
+         *******
+         * @type {Boolean}
+         */
+        progressRate: {
+          type: Number,
+          value: 0,
+          observer: '_progressRateChanged'
+        },
+
+        /**
+         * 진행 메시지
+         *******
+         * @type {Boolean}
+         */
+        progressMessage: {
+          type: String,
+          value: ''
+        }
+      },
+
+      listeners: {
+        'resource-form.things-form-configure': '_infoFormConfigure',
+        'resource-form.things-form-configured': '_infoFormConfigured',
+        'grid.things-grid-configure': '_onGridConfigure',
+        'grid.things-grid-configured': '_onGridConfigured',
+        'complete-preprocessing-ajax.things-ajax-response': '_onPreprocessSuccess',
+        'job-instruction-ajax.things-ajax-response': '_onJobInstructionSuccess',
+        'job-instruction-ajax.things-ajax-error': '_onJobInstructionError',
+        'progress-instruction-ajax.things-ajax-response': '_jobInstructionProgressing',
+        'end_preprocess-tap': 'completePreprocessing',
+        'job_instruct-tap': 'instructJob'
+      },
+
+      /**
+       * 정보 폼 구성 시작 시 ...
+       ***************
+       * @param {Object} event
+       */
+      _infoFormConfigure: function(event) {
+        this.searchFormFields.pop();
+        this.searchFormFields.pop();
+
+        var newFormFields = [{
+          codeName: 'RTN_ASSIGN_METHOD',
+          label: Things.DataGlobal.t('label.assign_method'),
+          name: 'assign_method',
+          type: 'code-combo'
+        }, {
+          label: Things.DataGlobal.t('label.total_customers'),
+          name: 'total_customers',
+          type: 'text'
+        }, {
+          label: Things.DataGlobal.t('text.processed'),
+          name: 'processed',
+          type: 'text'
+        }];
+
+        this.searchFormFields = this.searchFormFields.concat(newFormFields);
+      },
+
+      /**
+       * 정보 폼 구성 완료 시 ...
+       ***************
+       * @param {Object} event
+       */
+      _infoFormConfigured: function(event) {
+        this.batchId = this.formData['batch_id'];
+        this.$['resource-form'].setFormData(this.formData);
+      },
+
+      /**
+       * 그리드 구성 시작 전 ...
+       * gridColumns에서 필요없는 컬럼 제거, 필요한 컬럼 추가
+       ***************
+       * @param {Object} event
+       */
+      _onGridConfigure: function(event) {
+        this.gridColumns.forEach(function(col) {
+          if (col.name == 'batch_id') {
+            col.width = 1;
+          } else if (col.name == 'job_data_count') {
+            col.width = 90;
+          }
+        });
+      },
+
+      /**
+       * 그리드 구성 완료 후 ...
+       ***************
+       * @param {Object} event
+       */
+      _onGridConfigured: function(event) {
+        if (!this.isInitialized) {
+          this.initialized = true;
+          this.formData['assign_method'] = 'by_loc';
+          this.formData['total_customers'] = this.items.length;
+          this.formData['processed'] = 0;
+          this.$['resource-form'].setFormData(this.formData);
+        }
+
+        // 주문 가공 완료시 로우 색상을 변경하기 위한 grid 설정 추가
+        this.setGridDynamicRowStyle(event.target);
+      },
+
+      /**
+       * 주문 가공 완료시 로우 색상을 변경하기 위한 grid 설정 추가
+       */
+      setGridDynamicRowStyle: function(grid) {
+        var gridObject = grid.getGridObject();
+        var gridBody = gridObject.body();
+        gridBody.setCellDynamicStyles({
+          expression: "values['job_data_count'] > 0",
+          styles: {
+            background: "#65D18A",
+            color: "#FFFFFF"
+          }
+        })
+      },
+
+      /**
+       * 주문 가공 완료 트랜잭션 처리
+       *******
+       */
+      completePreprocessing: function() {
+        this.formData = this.$['resource-form'].serializeMyForm();
+        var option = this.formData['assign_method'].toUpperCase();
+        var title = Things.DataGlobal.t('button.end_preprocess');
+        var ajax = this.$['complete-preprocessing-ajax'];
+        var text = Things.DataGlobal.t('text.Sure to X', {
+          x: title
+        });
+        var batchId = this.batchId;
+
+        this.openConfirmMsg({
+          type: 'info',
+          title: title,
+          text: text,
+          showCancelButton: true
+        }, function() {
+          ajax.resourceUrl = 'rtn_preprocess/' + batchId + '/complete?assign_option=' + option;
+          ajax.generateRequest();
+        });
+      },
+
+      /**
+       * 주문 가공 완료 트랜잭션 처리 완료
+       *******
+       */
+      _onPreprocessSuccess: function(event) {
+        this.items = event.detail;
+        var self = this;
+
+        var txt = {
+          order_preprocess: Things.DataGlobal.t('text.order_preprocess'),
+          instruct_job: Things.DataGlobal.t('text.instruct_job')
+        };
+
+        // Change given strings' first letter to upper case
+        var capitalize = function(string) {
+          return string.charAt(0).toUpperCase() + string.slice(1);
+        };
+
+        this.openConfirmMsg({
+          type: 'info',
+          title: Things.DataGlobal.t('button.complete'),
+          text: Things.DataGlobal.t('text.x_is_done', {
+              x: capitalize(txt.order_preprocess)
+            }) + ' ' +
+            Things.DataGlobal.t('text.Sure to X', {
+              x: txt.instruct_job
+            }),
+          showCancelButton: true
+        }, function() {
+          self.async(self.instructJob, 500);
+        });
+      },
+
+      /**
+       * 작업 지시 트랜잭션 처리
+       *******
+       */
+      instructJob: function(event) {
+        var title = Things.DataGlobal.t('button.job_instruct')
+        var ajax = this.$['job-instruction-ajax'];
+        var text = Things.DataGlobal.t('text.Sure to X', {
+          x: title
+        });
+        var self = this;
+
+        this.openConfirmMsg({
+          type: 'info',
+          title: title,
+          text: text,
+          showCancelButton: true
+        }, function() {
+          self.isFinished = false;
+          ajax.resourceId = self.batchId;
+          ajax.generateRequest();
+          self.async(self._showJobInstructionProgress, 500);
+        });
+      },
+
+      /**
+       * 작업 지시 진행 상황 업데이트 ...
+       *******
+       * @param {Object} event
+       */
+      _jobInstructionProgressing: function(event) {
+        this.items = event.detail;
+        // 전체 거래처 개수에 처리 완료 카운트로 현재 진행율 계산하여 프로그레스 바 표시
+        var totalOrdCnt = this.items.length; // 처리 대상 주문 개수
+        var processedOrders = this.items.filter(order => order.job_data_count > 0);
+        // job_data_count가 0 이상인 order의 개수 (주문 가공이 완료 된 오더)
+        var processedCnt = processedOrders.length;
+        // 상단 form의 처리 완료 필드를 업데이트
+        this._updateFormField(processedCnt);
+        // 전체 중 완료된 백분위 계산 후 progressRate에 초기화하여 progress-bar 상태 변경
+        this.progressRate = (processedCnt / totalOrdCnt * 100).toFixed(2);
+
+        if (!this.isFinished) {
+          this.async(this._showJobInstructionProgress, 1500);
+        }
+      },
+
+      /**
+       * 가공 완료된 수량을 상단 form 필드에 업데이트 함
+       */
+      _updateFormField: function(processedCnt) {
+        if (processedCnt === 0) return;
+        this.formData['processed'] = processedCnt;
+        this.$['resource-form'].setFormData(this.formData);
+      },
+
+      /**
+       * 주문 가공 진행 상황 요청
+       *******
+       */
+      _showJobInstructionProgress: function() {
+        if (this.progressRate < 100) {
+          this.progressMessage = '(' + Things.DataGlobal.t('text.please_wait') + ')';
+          var progressAjax = this.$['progress-instruction-ajax'];
+          progressAjax.resourceId = this.batchId;
+          progressAjax.generateRequest();
+        }
+      },
+
+      /**
+       * 주문 가공 완료 후
+       *******
+       * @param {Object} event
+       */
+      _onJobInstructionSuccess: function(event) {
+        this.isFinished = true;
+        var title = Things.DataGlobal.t('text.Success to Process');
+        var text = Things.DataGlobal.t('button.job_instruct') + ' ' + Things.DataGlobal.t('text.processed');
+        this.openInfoMsg({
+          type: 'info',
+          title: title,
+          text: text
+        });
+      },
+
+      /**
+       * 주문 가공 실패 후
+       *******
+       * @param {Object} event
+       */
+      _onJobInstructionError: function(event) {
+        this.isFinished = true;
+      },
+
+      /**
+       * progressRate가 변경될 경우
+       *******
+       * @param {Number} progressRate
+       */
+      _progressRateChanged: function(progressRate) {
+        if (progressRate > 99.99) {
+          this.progressMessage = '(' + Things.DataGlobal.t('text.processed') + ')';
+        }
+      }
+    })
+  </script>
+</dom-module>

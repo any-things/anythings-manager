@@ -5,11 +5,11 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <!--
-## rtn-preprocess-assign-region-popup
-RTN 주문 가공 호기 지정 팝업
+## das-preprocess-assign-rack-popup
+출고, 반품 주문 가공 랙 지정 팝업
 -->
 
-<dom-module id="rtn-preprocess-assign-region-popup">
+<dom-module id="das-preprocess-assign-rack-popup">
   <template>
     <style>
       :host {
@@ -91,7 +91,7 @@ RTN 주문 가공 호기 지정 팝업
 
   <script>
     Polymer({
-      is: 'rtn-preprocess-assign-region-popup',
+      is: 'das-preprocess-assign-rack-popup',
 
       behaviors: [
         Things.MsgBoxBehavior
@@ -100,21 +100,25 @@ RTN 주문 가공 호기 지정 팝업
       properties: {
         global: {
           type: Object,
-          value: function () {
+          value: function() {
             return {
-              total_assigned_sku: Things.DataGlobal.t('text.total_assigned_x', { x: Things.DataGlobal.t('label.sku') }),
-              total_to_assign_sku: Things.DataGlobal.t('text.total_to_assign_x', { x: Things.DataGlobal.t('label.sku') })
+              total_assigned_sku: Things.DataGlobal.t('text.total_assigned_x', {
+                x: Things.DataGlobal.t('label.sku')
+              }),
+              total_to_assign_sku: Things.DataGlobal.t('text.total_to_assign_x', {
+                x: Things.DataGlobal.t('label.sku')
+              })
             };
           }
         },
         /**
-          * 폼 필드
-          *****************
-          * @type {Array}
-          */
+         * 폼 필드
+         *****************
+         * @type {Array}
+         */
         formFields: {
           type: Array,
-          value: function () {
+          value: function() {
             return [{
               label: Things.DataGlobal.t('label.equip_cd'),
               name: 'equip_cd',
@@ -128,40 +132,40 @@ RTN 주문 가공 호기 지정 팝업
         },
 
         /**
-          * Job Batch ID
-          *******
-          * @type {Array}
-          */
+         * Job Batch ID
+         *******
+         * @type {Array}
+         */
         batchId: {
           type: String
         },
 
         /**
-          * 호기 코드
-          ************
-          * @type {Array}
-          */
+         * 호기 코드
+         ************
+         * @type {Array}
+         */
         equipCd: {
           type: String
         },
 
-				/**
- 				* 호기 명
- 				************
- 				* @type {Array}
- 				*/
+        /**
+         * 호기 명
+         ************
+         * @type {Array}
+         */
         equipNm: {
           type: String
         },
 
         /**
-          * 지정할 그리드의 버튼
-          *******
-          * @type {Array}
-          */
+         * 지정할 그리드의 버튼
+         *******
+         * @type {Array}
+         */
         buttons: {
           type: Array,
-          value: function () {
+          value: function() {
             return [{
               id: 'assign_region',
               text: 'assign_region'
@@ -170,49 +174,49 @@ RTN 주문 가공 호기 지정 팝업
         },
 
         /**
-          * 빈 버튼
-          *******
-          * @type {Array}
-          */
+         * 빈 버튼
+         *******
+         * @type {Array}
+         */
         emptyButtons: {
           type: Array,
           value: []
         },
 
         /**
-          * 그리드 모델
-          *******
-          * @type {Array}
-          */
+         * 그리드 모델
+         *******
+         * @type {Array}
+         */
         gridModel: {
           type: Array,
           value: []
         },
 
         /**
-          * 호기를 지정한 그리드 컬럼
-          *******
-          * @type {Array}
-          */
+         * 호기를 지정한 그리드 컬럼
+         *******
+         * @type {Array}
+         */
         assignedGridColumns: {
           type: Array
         },
 
         /**
-          * 호기를 지정할 그리드 컬럼
-          *******
-          * @type {Array}
-          */
+         * 호기를 지정할 그리드 컬럼
+         *******
+         * @type {Array}
+         */
         toAssignGridColumns: {
           type: Array,
           value: []
         },
 
         /**
-          * 호기를 지정할 그리드의 데이터
-          *******
-          * @type {Array}
-          */
+         * 호기를 지정할 그리드의 데이터
+         *******
+         * @type {Array}
+         */
         toAssignItems: {
           type: Array
         }
@@ -228,14 +232,14 @@ RTN 주문 가공 호기 지정 팝업
       },
 
       /**
-             * 지정한 호기 그리드 구성 이후 ...
-             **********
-             * @param {Object} event
-             */
-      _onAssignedGridConfigure: function (event) {
+       * 지정한 호기 그리드 구성 이후 ...
+       **********
+       * @param {Object} event
+       */
+      _onAssignedGridConfigure: function(event) {
         if (!this.assignedGridColumns) return;
 
-        this.assignedGridColumns.forEach(function (column) {
+        this.assignedGridColumns.forEach(function(column) {
           if (column.name == 'batch_id' || column.name == 'equip_nm' || column.name == 'loc_cd' || column.name == 'zone_cd') {
             column.width = 0;
           }
@@ -243,14 +247,14 @@ RTN 주문 가공 호기 지정 팝업
       },
 
       /**
-             * 지정할 호기 그리드 구성 이후 ...
-             **********
-             * @param {Object} event
-             */
-      _onToAssignGridConfigure: function (event) {
+       * 지정할 호기 그리드 구성 이후 ...
+       **********
+       * @param {Object} event
+       */
+      _onToAssignGridConfigure: function(event) {
         if (!this.toAssignGridColumns) return;
 
-        this.toAssignGridColumns.forEach(function (column) {
+        this.toAssignGridColumns.forEach(function(column) {
           if (column.name == 'batch_id' || column.name == 'equip_nm' || column.name == 'loc_cd' || column.name == 'zone_cd') {
             column.width = 0;
           }
@@ -258,47 +262,54 @@ RTN 주문 가공 호기 지정 팝업
       },
 
       /**
-        * 지정한 호기 그리드 구성 이후 ...
-        **********
-        * @param {Object} event
-        */
-      _onAssignedGridConfigured: function (event) {
+       * 지정한 호기 그리드 구성 이후 ...
+       **********
+       * @param {Object} event
+       */
+      _onAssignedGridConfigured: function(event) {
         this.searchAssignedItems();
-        var formData = { equip_cd: this.equipCd, equip_nm: this.equipNm };
+        var formData = {
+          equip_cd: this.equipCd,
+          equip_nm: this.equipNm
+        };
         this.$['resource-form'].setFormData(formData);
       },
 
       /**
-        * 지정할 호기 그리드 구성 이후 ...
-        **********
-        * @param {Object} event
-        */
-      _onToAssignGridConfigured: function (event) {
+       * 지정할 호기 그리드 구성 이후 ...
+       **********
+       * @param {Object} event
+       */
+      _onToAssignGridConfigured: function(event) {
         var grid = this.$['grid-to-assign'];
         grid.getGridObject().checkAll();
       },
 
       /**
-        * 지정한 호기 거래처 리스트 조회
-        **********
-        * @param {Object} event
-        */
-      searchAssignedItems: function () {
+       * 지정한 호기 거래처 리스트 조회
+       **********
+       * @param {Object} event
+       */
+      searchAssignedItems: function() {
         var searchAjax = this.$['search-preprocessing-ajax'];
         searchAjax.queryFields = [{
-          name: 'batch_id', operator: 'eq', value: this.batchId
+          name: 'batch_id',
+          operator: 'eq',
+          value: this.batchId
         }, {
-          name: 'equip_cd', operator: 'eq', value: this.equipCd
+          name: 'equip_cd',
+          operator: 'eq',
+          value: this.equipCd
         }];
         searchAjax.generateRequest();
       },
 
       /**
-        * 호기 지정 버튼 탭 핸들러
-        **********
-        * @param {Object} event
-        */
-      _assignBtnTapped: function (event) {
+       * 호기 지정 버튼 탭 핸들러
+       **********
+       * @param {Object} event
+       */
+      _assignBtnTapped: function(event) {
         var assignRegionAjax = this.$['assign-region-ajax'];
         assignRegionAjax.resourceUrl = 'rtn_preprocess/' + this.batchId + '/assign_region/' + this.equipCd;
         assignRegionAjax.body = this.getCheckedOrders();
@@ -306,32 +317,32 @@ RTN 주문 가공 호기 지정 팝업
       },
 
       /**
-        * 호기 지정 완료 이 후
-        **********
-        * @param {Object} event
-        */
-      _assignResponsed: function (event) {
+       * 호기 지정 완료 이 후
+       **********
+       * @param {Object} event
+       */
+      _assignResponsed: function(event) {
         this.openConfirmMsg({
           type: 'info',
           title: Things.DataGlobal.t('button.assign_region'),
           text: Things.DataGlobal.t('text.Success to Process')
-        }, function () {
+        }, function() {
           this.fire('things-dialog-close');
         }.bind(this));
       },
 
       /**
-        * 호기 지정 요청 데이터
-        **********
-        * @param {Object} event
-        */
-      getCheckedOrders: function () {
-				/*var grid = this.$['grid-to-assign'];
-					var rows = grid.getGridObject().getCheckedRows();
-					var rowObjects = rows.map(function(row) {
-					return row.getRowObject();
-				});
-				return rowObjects;*/
+       * 호기 지정 요청 데이터
+       **********
+       * @param {Object} event
+       */
+      getCheckedOrders: function() {
+        /*var grid = this.$['grid-to-assign'];
+        	var rows = grid.getGridObject().getCheckedRows();
+        	var rowObjects = rows.map(function(row) {
+        	return row.getRowObject();
+        });
+        return rowObjects;*/
         return this.toAssignItems;
       }
     });
