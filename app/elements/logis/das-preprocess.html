@@ -31,16 +31,15 @@ Copyright © HatioLab Inc. All rights reserved.
         display: grid;
         grid-template:
             "sea sea sea" auto
-            "gsm sum sum" 57px
+            "gsm gsm gsm" 57px
             "gri ord reg" 1fr
             / 1fr minmax(80px, 0.2fr) 0.8fr;
         grid-gap: 15px;
       }
 
       #search-form {grid-area: sea;}
-      #group-summary-grid {grid-area: gsm;}
-      #summary-grid {grid-area: sum;}
-      #region-grid {grid-area: reg;}
+      #summary-grid {grid-area: gsm;}
+      #rack-grid {grid-area: reg;}
       #order-group-grid {grid-area: ord;}
       #grid {grid-area: gri;}
 
@@ -60,69 +59,129 @@ Copyright © HatioLab Inc. All rights reserved.
     </style>
 
     <!-- 메뉴 메타 정보 수신 Ajax -->
-    <things-ajax auto id="resource-meta" method="GET" resource-url="[[menuMetaUrl]]" last-response="{{metaData}}">
+    <things-ajax 
+      auto 
+      id="resource-meta" 
+      method="GET" 
+      resource-url="[[menuMetaUrl]]" 
+      last-response="{{metaData}}">
     </things-ajax>
 
     <!-- 여러 배치 한꺼번에 작업 지시 Ajax -->
-    <things-ajax id="instruct-jobs-ajax" resource-url="job_batches/instruct/batches" resource-action="create">
+    <things-ajax 
+      id="instruct-jobs-ajax" 
+      resource-url="job_batches/instruct/batches" 
+      resource-action="create">
     </things-ajax>
 
     <!-- 주문 가공 데이터 조회 Ajax -->
-    <things-ajax id="search-preprocessing-ajax" resource-url="order_preprocesses" resource-action="index">
+    <things-ajax 
+      id="search-preprocessing-ajax" 
+      resource-url="order_preprocesses" 
+      resource-action="index">
     </things-ajax>
 
     <!-- 주문 가공 데이터 초기화 (삭제 후 생성) Ajax -->
-    <things-ajax id="generate-preprocessing-ajax" resource-url="order_preprocesses/:id/reset_preprocess" resource-action="update">
+    <things-ajax 
+      id="generate-preprocessing-ajax" 
+      resource-url="order_preprocesses/:id/reset_preprocess" 
+      resource-action="update">
     </things-ajax> 
 
     <!-- 주문 가공 데이터 호기 자동 지정 Ajax -->
-    <things-ajax id="auto-region-assign-ajax" resource-url="order_preprocesses/:id/assign/equip_level" resource-id="[[batchId]]"
-        resource-action="update">
+    <things-ajax 
+      id="auto-rack-assign-ajax" 
+      resource-url="order_preprocesses/:id/assign/equip_level" 
+      resource-id="[[batchId]]"
+      resource-action="update">
     </things-ajax>
 
     <!-- 주문 가공 데이터 호기 지정 Ajax -->
-    <things-ajax id="assign-preprocessing-ajax" resource-url="order_preprocesses/:id/assign_region/:rack_cd" resource-action="update">
+    <things-ajax 
+      id="assign-preprocessing-ajax" 
+      resource-url="order_preprocesses/region/:rack_cd" 
+      resource-action="update">
     </things-ajax>
 
     <!-- 주문 가공 데이터 호기 지정 리셋 Ajax -->
-    <things-ajax id="reset-assignment-ajax" resource-url="order_preprocesses/:id/reset_preprocess" resource-action="update">
+    <things-ajax 
+      id="reset-assignment-ajax" 
+      resource-url="order_preprocesses/:id/reset_preprocess" 
+      resource-action="update">
     </things-ajax> 
 
     <!-- 주문 가공 데이터 완료 Ajax -->
-    <things-ajax id="complete-preprocessing-ajax" resource-url="order_preprocesses/:id/complete_preprocess" resource-action="update">
+    <things-ajax 
+      id="complete-preprocessing-ajax" 
+      resource-url="order_preprocesses/:id/complete_preprocess" 
+      resource-action="update">
     </things-ajax>
 
     <!-- 반품 가공 화면 컨테이너 -->
     <div class="container">
       <!-- 검색 폼 -->
-      <things-search-form id="search-form" class="margin-zero" title="[[menuInfo.title]]" form-fields="[[searchFormFields]]" select-fields="[[selectFields]]"
-        sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]" page="{{page}}" limit="{{limit}}" last-response="{{lastResponse}}">
+      <things-search-form 
+        id="search-form" 
+        class="margin-zero" 
+        title="[[menuInfo.title]]" 
+        form-fields="[[searchFormFields]]" 
+        select-fields="[[selectFields]]"
+        sort-fields="[[sortFields]]" 
+        action-url="[[menuInfo.resource_url]]" 
+        page="{{page}}" 
+        limit="{{limit}}" 
+        last-response="{{lastResponse}}">
       </things-search-form>
 
-      <!-- 상단 좌측 서머리 그리드 -->
-      <things-resource-grid id="group-summary-grid" class="padding-zero" config="[[sumGridConfig]]" model="[[sumGridModel]]" columns="[[sumGridColumns]]"
-        fixed-column-count="0" data="[[groupSummaryData]]" buttons="[[emptyButtons]]">
-      </things-resource-grid>
-
-      <!-- 상단 우측 서머리 그리드 -->
-      <things-resource-grid id="summary-grid" class="padding-zero" config="[[sumGridConfig]]" model="[[sumGridModel]]" columns="[[sumGridColumns]]"
-        fixed-column-count="0" data="[[summaryData]]" buttons="[[emptyButtons]]">
+      <!-- 상단 서머리 그리드 -->
+      <things-resource-grid 
+        id="summary-grid" 
+        class="padding-zero" 
+        config="[[sumGridConfig]]" 
+        model="[[sumGridModel]]" 
+        columns="[[sumGridColumns]]"
+        fixed-column-count="0" 
+        data="[[summaryData]]" 
+        buttons="[[emptyButtons]]">
       </things-resource-grid>
 
       <!-- 우측 호기 서머리 그리드 -->
-      <things-resource-grid id="region-grid" class="padding-zero" config="[[regionGridConfig]]" model="[[regionGridModel]]" columns="[[regionGridColumns]]"
-        fixed-column-count="0" data="[[regionItems]]" buttons="[[emptyButtons]]">
+      <things-resource-grid 
+        id="rack-grid" 
+        class="padding-zero" 
+        config="[[rackGridConfig]]" 
+        model="[[rackGridModel]]" 
+        columns="[[rackGridColumns]]"
+        fixed-column-count="0" 
+        data="[[rackItems]]" 
+        buttons="[[emptyButtons]]">
       </things-resource-grid>
 
       <!-- 주문 그룹 그리드 -->
-      <things-resource-grid id="order-group-grid" class="padding-zero" config="[[groupGridConfig]]" model="[[groupGridModel]]"
-        columns="[[groupGridColumns]]" fixed-column-count="0" data="[[groupItems]]" buttons="[[emptyButtons]]">
+      <things-resource-grid 
+        id="order-group-grid" 
+        class="padding-zero" 
+        config="[[groupGridConfig]]" 
+        model="[[groupGridModel]]"
+        columns="[[groupGridColumns]]" 
+        fixed-column-count="0" 
+        data="[[groupItems]]" 
+        buttons="[[emptyButtons]]">
       </things-resource-grid>
 
       <!-- 좌측 상품별 서머리 그리드 -->
-      <things-resource-grid id="grid" class="padding-zero" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]"
-        data="[[items]]" fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]" buttons="[[emptyButtons]]"
-        export-file-name="[[menuInfo.title]]" export-sheet-name="[[menuInfo.title]]">
+      <things-resource-grid 
+        id="grid" 
+        class="padding-zero" 
+        config="[[gridConfig]]" 
+        model="[[gridModel]]" 
+        columns="[[gridColumns]]"
+        data="[[items]]" 
+        fixed-column-count="[[menuInfo.fixed_columns]]" 
+        grid-save-action="[[menuInfo.grid_save_url]]" 
+        buttons="[[emptyButtons]]"
+        export-file-name="[[menuInfo.title]]" 
+        export-sheet-name="[[menuInfo.title]]">
       </things-resource-grid>
     </div>
 
@@ -153,11 +212,20 @@ Copyright © HatioLab Inc. All rights reserved.
         },
 
         /**
+         * @description 작업 유형
+         ***************
+         * @type {String}
+         */
+        jobType: {
+          type: String
+        },
+
+        /**
          * @description 선택된 호기 코드
          ***************
          * @type {String}
          */
-        selectRegion: {
+        selectedRack: {
           type: String
         },
 
@@ -180,20 +248,11 @@ Copyright © HatioLab Inc. All rights reserved.
         },
 
         /**
-         * @description 그룹 서머리 그리드 데이터
-         ***************
-         * @type {Array}
-         */
-        groupSummaryData: {
-          type: Array
-        },
-
-        /**
          * @description 호기 그리드 데이터
          ***************
          * @type {Array}
          */
-        regionItems: {
+        rackItems: {
           type: Array
         },
 
@@ -298,7 +357,7 @@ Copyright © HatioLab Inc. All rights reserved.
          ***************
          * @type {Object}
          */
-        regionGridConfig: {
+        rackGridConfig: {
           type: Object,
           value: function() {
             return {
@@ -327,10 +386,19 @@ Copyright © HatioLab Inc. All rights reserved.
           type: Array,
           value: function() {
             return [{
+              fieldName: 'total_cell_cnt',
+              dataType: 'number'
+            }, {
               fieldName: 'total_order_cnt',
               dataType: 'number'
             }, {
+              fieldName: 'assigned_cell_cnt',
+              dataType: 'number'
+            }, {
               fieldName: 'assigned_order_cnt',
+              dataType: 'number'
+            }, {
+              fieldName: 'remain_cell_cnt',
               dataType: 'number'
             }, {
               fieldName: 'remain_order_cnt',
@@ -357,11 +425,35 @@ Copyright © HatioLab Inc. All rights reserved.
           type: Array,
           value: function() {
             return [{
+              name: 'total_cell_cnt',
+              fieldName: 'total_cell_cnt',
+              width: 60,
+              header: {
+                text: Things.DataGlobal.t('label.total_cells')
+              },
+              styles: {
+                textAlignment: 'far',
+                numberFormat: '0,000'
+              },
+              editable: false
+            }, {
               name: 'total_order_cnt',
               fieldName: 'total_order_cnt',
               width: 60,
               header: {
-                text: Things.DataGlobal.t('label.total_sku')
+                text: Things.DataGlobal.t('label.total_orders')
+              },
+              styles: {
+                textAlignment: 'far',
+                numberFormat: '0,000'
+              },
+              editable: false
+            }, {
+              name: 'assigned_cell_cnt',
+              fieldName: 'assigned_cell_cnt',
+              width: 60,
+              header: {
+                text: Things.DataGlobal.t('label.assigned_cells')
               },
               styles: {
                 textAlignment: 'far',
@@ -373,7 +465,19 @@ Copyright © HatioLab Inc. All rights reserved.
               fieldName: 'assigned_order_cnt',
               width: 60,
               header: {
-                text: Things.DataGlobal.t('label.assigned_sku')
+                text: Things.DataGlobal.t('label.assigned_orders')
+              },
+              styles: {
+                textAlignment: 'far',
+                numberFormat: '0,000'
+              },
+              editable: false
+            }, {
+              name: 'remain_cell_cnt',
+              fieldName: 'remain_cell_cnt',
+              width: 60,
+              header: {
+                text: Things.DataGlobal.t('label.remain_cells')
               },
               styles: {
                 textAlignment: 'far',
@@ -385,7 +489,7 @@ Copyright © HatioLab Inc. All rights reserved.
               fieldName: 'remain_order_cnt',
               width: 60,
               header: {
-                text: Things.DataGlobal.t('label.remain_sku')
+                text: Things.DataGlobal.t('label.remain_orders')
               },
               styles: {
                 textAlignment: 'far',
@@ -437,7 +541,7 @@ Copyright © HatioLab Inc. All rights reserved.
          ***************
          * @type {Array}
          */
-        regionGridModel: {
+        rackGridModel: {
           type: Array,
           value: function() {
             return [{
@@ -451,10 +555,7 @@ Copyright © HatioLab Inc. All rights reserved.
               fieldName: 'assigned_cells',
               dataType: 'number'
             }, {
-              fieldName: 'assigned_order_cnt',
-              dataType: 'number'
-            }, {
-              fieldName: 'assigned_order_pcs',
+              fieldName: 'assigned_pcs',
               dataType: 'number'
             }];
           }
@@ -465,7 +566,7 @@ Copyright © HatioLab Inc. All rights reserved.
          ***************
          * @type {Array}
          */
-        regionGridColumns: {
+        rackGridColumns: {
           type: Array,
           value: function() {
             return [{
@@ -542,8 +643,8 @@ Copyright © HatioLab Inc. All rights reserved.
               },
               editable: false
             }, {
-              name: 'assigned_order_pcs',
-              fieldName: 'assigned_order_pcs',
+              name: 'assigned_pcs',
+              fieldName: 'assigned_pcs',
               width: 80,
               header: {
                 text: Things.DataGlobal.t('label.assigned_pcs')
@@ -602,18 +703,18 @@ Copyright © HatioLab Inc. All rights reserved.
         'button-group.back-btn-tap': 'goBack',
         'button-group.reset-btn-tap': 'generatePreprocessing',
         'button-group.auto_assign-btn-tap': 'autoAssignment',
-        'button-group.assign_region-btn-tap': 'manualAssignRegion',
+        'button-group.assign_region-btn-tap': 'manualAssignRack',
         'button-group.reset_assign-btn-tap': 'resetAssignment',
         'button-group.swap-btn-tap': 'popupSwapView',
         'button-group.end_preprocess-btn-tap': 'completePreprocessing',
 
         'search-form.things-form-submit-configured': '_onSearchFormBeforeSubmit',
-        'region-grid.things-grid-cell-data-select': '_regionGridSelected',
+        'rack-grid.things-grid-cell-data-select': '_rackGridSelected',
         'order-group-grid.things-grid-row-data-select': '_selectedGroupChanged',
 
         'search-preprocessing-ajax.things-ajax-response': '_preprocessListChanged',
         'generate-preprocessing-ajax.things-ajax-response': 'refreshData',
-        'auto-region-assign-ajax.things-ajax-response': 'refreshData',
+        'auto-rack-assign-ajax.things-ajax-response': 'refreshData',
         'assign-preprocessing-ajax.things-ajax-response': 'refreshData',
         'reset-assignment-ajax.things-ajax-response': 'refreshData',
         'complete-preprocessing-ajax.things-ajax-response': '_preprocessingCompleted',
@@ -639,7 +740,7 @@ Copyright © HatioLab Inc. All rights reserved.
         // 아이디로 그리드를 찾아 개별 설정
         switch (e.target.id) {
           // 호기 그리드의 [ALL]행과 빈 행은 체크할 필요 없음
-          case 'region-grid':
+          case 'rack-grid':
             {
               e.target.grid.checkBar().setCheckableCallback(function(grid, row) {
                 var rackCd = row.getValue('rack_cd')
@@ -660,34 +761,35 @@ Copyright © HatioLab Inc. All rights reserved.
         var query = form.request.params.query;
         var queryArr = (typeof(query) == 'string') ? JSON.parse(query) : query ? query : [];
         var realQuery = queryArr.filter(function(query) {
-          return (query.name == 'rack_cd' || query.name == 'id');
+          return (query.name == 'equip_cd' || query.name == 'id' || query.name == 'cell_assgn_cd');
         });
 
         form.request.params.query = JSON.stringify(realQuery);
         this.batchId = this._getCurrentBatchId();
+        this.jobType = this._getCurrentJobType();
       },
 
       /**
        * @description 랙 그리드에서 아이템 선택시 
-       * 1. 선택한 호기의 코드를 this.selectedRegion에 할당
+       * 1. 선택한 호기의 코드를 this.selectedRack에 할당
        * 2. 선택한 컬럼이 assign_icon/non_assign_icon 이라면 해당 호기에 대한 작업 정보를 조회
        **************
        * @param {Object} event
        */
-      _regionGridSelected: function(event) {
+      _rackGridSelected: function(event) {
         var selectedRack = event.detail.row;
 
         if (selectedRack) {
-          this.selectedRegion = selectedRack.rack_cd;
+          this.selectedRack = selectedRack.rack_cd;
           var cellName = event.detail.cell.column.name();
 
           if (cellName === 'assign_icon') { // 할당 리스트 조회
-            if (this.selectedRegion == '') {
+            if (this.selectedRack == '') {
               this._searchPreprocessList('equip_cd', null, 'is_blank');
-            } else if (this.selectedRegion == '[ALL]') {
+            } else if (this.selectedRack == '[ALL]') {
               this._searchPreprocessList(null, null, null);
             } else {
-              this._searchPreprocessList('equip_cd', this.selectedRegion, 'eq');
+              this._searchPreprocessList('equip_cd', this.selectedRack, 'eq');
             }
           } else if (cellName === 'non_assign_icon') { // 비할당 리스트 조회
             this._searchPreprocessList('equip_cd', null, 'is_blank');
@@ -767,37 +869,39 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
+       * @description 현재 설정된 작업 유형 
+       **************
+       * @return {String} 현재 설정된 배치의 작업 유형
+       */
+      _getCurrentJobType: function() {
+        var searchForm = this.getResourceSearchForm();
+        var formData = searchForm.serializeMyForm();
+        return formData.job_type;
+      },
+
+      /**
        * @description 주문 가공 정보가 변경된 경우
        **************
        * @param {Object} event
        */
       _preprocessListChanged: function(event) {
         this.items = event.detail.items;
-        /*
-        var items = event && event.detail && event.detail.preprocesses ;//&& event.detail.preprocesses.items;
-        var summ = event && event.detail && event.detail.group_summary;
-        this._preprocessItemsChanged(items, summ);
-        */
       },
 
       /**
        * @description 주문 가공 데이터 가공
        **************
        * @param {Array} items
+       * @param {Object} summary
        */
       _preprocessItemsChanged: function(items, summary) {
-        if (items && items.length > 0) {
-          this.items = items.map(function(item) {
-            item.sku_nm = '(' + item.sku_cd + ') ' + item.sku_nm;
-            return item;
-          });
-        } else {
-          this.items = [];
-        }
+        this.items = (items && items.length > 0) ? items : [];
+        var cellAssgnType = this.items.length > 0 ? this.items[0].cell_assgn_type : '';
 
-        this.groupSummaryData = [summary];
+        this.summaryData = [summary];
         this.$['search-form'].setFormData({
-          id: this.batchId
+          id: this.batchId,
+          cell_assgn_type: cellAssgnType
         });
       },
 
@@ -821,7 +925,7 @@ Copyright © HatioLab Inc. All rights reserved.
           reset_all: true
         };
         var title = Things.DataGlobal.t(event.detail.text);
-        this._confirmTransaction('reset-assignment-ajax', title, params, this.regionItems);
+        this._confirmTransaction('reset-assignment-ajax', title, params, this.rackItems);
       },
 
       /**
@@ -838,7 +942,7 @@ Copyright © HatioLab Inc. All rights reserved.
           auto_assign: true
         };
         var title = Things.DataGlobal.t(event.detail.text);
-        this._confirmTransaction('auto-region-assign-ajax', title, params, this.items);
+        this._confirmTransaction('auto-rack-assign-ajax', title, params, this.items);
       },
 
       /**
@@ -846,24 +950,24 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} e 버튼 탭 이벤트
        */
-      manualAssignRegion: function(e) {
+      manualAssignRack: function(e) {
         // 1. 현재 배치 작업 상태 체크
         if (!this._checkTransactionEnabled()) return;
 
         // 2. 호기 체크 항목 확인
-        var checkedRows = this._checkedGridRows(this.$['region-grid'], Things.DataGlobal.t('label.region'), true);
+        var checkedRows = this._checkedGridRows(this.$['rack-grid'], Things.DataGlobal.t('label.rack'), true);
         if (checkedRows) {
           if (checkedRows.length > 1) {
             this.openInfoMsg({
               type: 'info',
               title: Things.DataGlobal.t('title.info'),
-              text: Things.DataGlobal.t('text.must_select_one_region'),
+              text: Things.DataGlobal.t('text.must_select_one_rack'),
               closeOnConfirm: true
             });
 
           } else {
-            var selectedRegion = checkedRows[0];
-            var chkCount = selectedRegion.remain_cells;
+            var selectedRack = checkedRows[0];
+            var chkCount = selectedRack.remain_cells;
             // 3. 거래처 선택 항목이 없다면 리턴
             var toAssignItems = this._checkedGridRows(this.$.grid, Things.DataGlobal.t('label.customer'), true);
             if (!toAssignItems || toAssignItems.length == 0) return;
@@ -886,17 +990,17 @@ Copyright © HatioLab Inc. All rights reserved.
               this.openConfirmMsg({
                 type: 'info',
                 title: Things.DataGlobal.t('title.confirm'),
-                text: Things.DataGlobal.t('text.assigned_region_in_list') + ' ' +
+                text: Things.DataGlobal.t('text.assigned_rack_already_exist') + ' ' +
                   Things.DataGlobal.t('text.Sure to X', {
                     x: Things.DataGlobal.t('text.continue')
                   }),
                 showCancelButton: true
               }, function() {
 
-                self.assignRegion(selectedRegion, toAssignItems);
+                self.assignRack(selectedRack, toAssignItems);
               });
             } else {
-              this.assignRegion(selectedRegion, toAssignItems);
+              this.assignRack(selectedRack, toAssignItems);
             }
           }
         }
@@ -926,16 +1030,16 @@ Copyright © HatioLab Inc. All rights reserved.
       /**
        * @description 호기를 지정한다.
        **************
-       * @param {Object} region 선택된 호기 오브젝트
-       * @param {Object} selectedCusts 선택된 거래처 리스트
+       * @param {Object} selectedRack 선택된 호기 오브젝트
+       * @param {Object} toAssignItems 선택된 거래처 리스트
        */
-      assignRegion: function(selectedRegion, toAssignItems) {
+      assignRack: function(selectedRack, toAssignItems) {
         var params = {
-          equip_cds: selectedRegion.rack_cd,
+          equip_cds: selectedRack.rack_cd,
           auto_assign: false
         };
         var title = Things.DataGlobal.t(event.detail.text);
-        this._confirmTransaction('auto-region-assign-ajax', title, params, toAssignItems);
+        this._confirmTransaction('auto-rack-assign-ajax', title, params, toAssignItems);
       },
 
       /**
@@ -947,7 +1051,7 @@ Copyright © HatioLab Inc. All rights reserved.
         // 1. 현재 배치 작업 상태 체크
         if (!this._checkTransactionEnabled()) return;
 
-        var toAssignItems = this._checkedGridRows(this.$['region-grid'], Things.DataGlobal.t('label.region'), true);
+        var toAssignItems = this._checkedGridRows(this.$['rack-grid'], Things.DataGlobal.t('label.rack'), true);
 
         if (!toAssignItems || toAssignItems.length == 0) return;
 
@@ -967,7 +1071,6 @@ Copyright © HatioLab Inc. All rights reserved.
         if (!this._checkTransactionEnabled()) return;
 
         var batchId = this.batchId;
-
         var title = Things.DataGlobal.t('button.end_preprocess');
         var ajax = this.$['complete-preprocessing-ajax'];
         var text = Things.DataGlobal.t('text.Sure to X', {
@@ -993,7 +1096,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Array} selectedItems
        * @return 호기 지정 팝업 화면
        */
-      createAssignRegionPopup: function(equipCd, equipNm, selectedItems) {
+      createAssignRackPopup: function(equipCd, equipNm, selectedItems) {
         var batchId = this.batchId;
         // 1. 호기 지정 팝업 생성
         var assignPopup = document.createElement('das-preprocess-assign-rack-popup');
@@ -1077,48 +1180,36 @@ Copyright © HatioLab Inc. All rights reserved.
        */
       _searchDataChanged: function(lastResponse) {
         if (lastResponse) {
-          var sumGridNoData = function(sumGridModel) {
-            let r = {};
-            for (let i = 0, n = sumGridModel.length; i < n; i++) {
-              r[sumGridModel[i].fieldName] = 0;
-            }
-            return [r];
-          }
-          this.summaryData = lastResponse.summary && lastResponse.summary[0] ? lastResponse.summary : sumGridNoData(this.sumGridModel);
-          this.groupSummaryData = [lastResponse.group_summary];
+          this.summaryData = [lastResponse.summary];
 
-          var regionItems = lastResponse.regions;
-          regionItems = (regionItems && regionItems.length > 0) ? regionItems : [];
+          var rackItems = lastResponse.racks;
+          rackItems = (rackItems && rackItems.length > 0) ? rackItems : [];
           var totalAssigned = 0;
           var totalRemained = 0;
-          var totalAssignedSku = 0;
           var totalAssignedPcs = 0;
 
-          regionItems.forEach(function(item) {
+          rackItems.forEach(function(item) {
             totalAssigned += isNaN(item.assigned_cells) ? 0 : item.assigned_cells;
             totalRemained += isNaN(item.remain_cells) ? 0 : item.remain_cells;
-            totalAssignedSku += isNaN(item.assigned_order_cnt) ? 0 : item.assigned_order_cnt;
-            totalAssignedPcs += isNaN(item.assigned_order_pcs) ? 0 : item.assigned_order_pcs;
+            totalAssignedPcs += isNaN(item.assigned_pcs) ? 0 : item.assigned_pcs;
           });
 
-          regionItems.unshift({
+          rackItems.unshift({
             rack_cd: '',
             rack_nm: '',
             assigned_cells: null,
             remain_cells: null,
-            assigned_order_cnt: null,
-            assigned_order_pcs: null
+            assigned_pcs: null
           });
 
-          regionItems.unshift({
+          rackItems.unshift({
             rack_cd: '[ALL]',
             rack_nm: '[ALL]',
             assigned_cells: totalAssigned,
             remain_cells: totalRemained,
-            assigned_order_cnt: totalAssignedSku,
-            assigned_order_pcs: totalAssignedPcs
+            assigned_pcs: totalAssignedPcs
           });
-          this.regionItems = regionItems;
+          this.rackItems = rackItems;
 
           var groupItems = lastResponse.groups;
           groupItems = (groupItems && groupItems.length > 0) ? groupItems : [];
@@ -1130,7 +1221,7 @@ Copyright © HatioLab Inc. All rights reserved.
           });
           this.groupItems = groupItems;
 
-          this._preprocessItemsChanged(lastResponse.preprocesses, lastResponse.group_summary);
+          this._preprocessItemsChanged(lastResponse.preprocesses, lastResponse.summary);
         }
       },
 
