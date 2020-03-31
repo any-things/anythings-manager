@@ -968,8 +968,8 @@ Copyright © HatioLab Inc. All rights reserved.
           } else {
             var selectedRack = checkedRows[0];
             var chkCount = selectedRack.remain_cells;
-            // 3. 거래처 선택 항목이 없다면 리턴
-            var toAssignItems = this._checkedGridRows(this.$.grid, Things.DataGlobal.t('label.customer'), true);
+            // 3. 좌측 그리드에서 선택 항목이 없다면 리턴
+            var toAssignItems = this._checkedGridRows(this.$.grid, '좌측', true);
             if (!toAssignItems || toAssignItems.length == 0) return;
 
             if (chkCount < toAssignItems.length) {

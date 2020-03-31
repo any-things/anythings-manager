@@ -17,7 +17,7 @@ Copyright © HatioLab Inc. All rights reserved.
 -->
 
 <dom-module id="job-batch-rtn-instruct-popup">
-	<template>
+  <template>
 		<style>
 			:host {
 				@apply(--layout-flex);
@@ -73,447 +73,458 @@ Copyright © HatioLab Inc. All rights reserved.
 		</things-resource-grid>
 	</template>
 
-	<script>
-		Polymer({
-			is: 'job-batch-rtn-instruct-popup',
+  <script>
+    Polymer({
+      is: 'job-batch-rtn-instruct-popup',
 
-			behaviors: [
-				Things.MsgBoxBehavior
-			],
+      behaviors: [
+        Things.MsgBoxBehavior
+      ],
 
-			properties: {
-				/**
-				 * Job Batch ID
-				 ****************
-				 *@type {Array}
-				 */
-				batchId: {
-					type: String,
-					observer: '_batchIdChanged'
-				},
+      properties: {
+        /**
+         * Job Batch ID
+         ****************
+         *@type {Array}
+         */
+        batchId: {
+          type: String,
+          observer: '_batchIdChanged'
+        },
 
-				/**
-				 * Job Instruction Grid Configuration
-				 ****************
-				 * @type {Object}
-				 */
-				gridConfig: {
-					type: Object,
-					value: function () {
-						return {
-							options: {
-								checkBar: {
-									visible: false
-								}
-							},
+        /**
+         * Job Instruction Grid Configuration
+         ****************
+         * @type {Object}
+         */
+        gridConfig: {
+          type: Object,
+          value: function() {
+            return {
+              options: {
+                checkBar: {
+                  visible: false
+                }
+              },
 
-							displayOptions: {
-								fitStyle: 'evenFill'
-							}
-						}
-					}
-				},
+              displayOptions: {
+                fitStyle: 'evenFill'
+              }
+            }
+          }
+        },
 
-				/**
-				 * Job Instruction Grid Model
-				 ****************
-				 * @type {Array}
-				 */
-				gridModel: {
-					type: Array,
-					value: function () {
-						return [{
-							fieldName: 'id',
-						}, {
-							fieldName: 'batch_id'
-						}, {
-							fieldName: 'com_cd'
-						}, {
-							fieldName: 'cell_assgn_cd'
-						}, {
-							fieldName: 'cell_assgn_nm'
-						}, {
-							fieldName: 'equip_cd'
-						}, {
-							fieldName: 'equip_nm'
-						}, {
-							fieldName: 'rack_cd'
-						}, {
-							fieldName: 'zone_cd'
-						}, {
-							fieldName: 'class_cd'
-						}, {
-							fieldName: 'sku_qty',
-							dataType: 'number'
-						}, {
-							fieldName: 'total_pcs',
-							dataType: 'number'
-						}, {
-							fieldName: 'job_data_count',
-							dataType: 'number'
-						}]
-					}
-				},
+        /**
+         * Job Instruction Grid Model
+         ****************
+         * @type {Array}
+         */
+        gridModel: {
+          type: Array,
+          value: function() {
+            return [{
+              fieldName: 'id',
+            }, {
+              fieldName: 'batch_id'
+            }, {
+              fieldName: 'com_cd'
+            }, {
+              fieldName: 'cell_assgn_cd'
+            }, {
+              fieldName: 'cell_assgn_nm'
+            }, {
+              fieldName: 'equip_cd'
+            }, {
+              fieldName: 'equip_nm'
+            }, {
+              fieldName: 'rack_cd'
+            }, {
+              fieldName: 'zone_cd'
+            }, {
+              fieldName: 'class_cd'
+            }, {
+              fieldName: 'sku_qty',
+              dataType: 'number'
+            }, {
+              fieldName: 'total_pcs',
+              dataType: 'number'
+            }, {
+              fieldName: 'job_data_count',
+              dataType: 'number'
+            }]
+          }
+        },
 
-				/**
-				 * Job Instruction Grid Columns
-				 ****************
-				 * @type {Array}
-				 */
-				gridColumns: {
-					type: Array,
-					value: function () {
-						return [{
-							name: 'id',
-							fieldName: 'id',
-							width: 0
-						}, {
-							name: 'batch_id',
-							fieldName: 'batch_id',
-							width: 0
-						}, {
-							name: 'com_cd',
-							fieldName: 'com_cd',
-							width: 70,
-							header: {
-								text: Things.DataGlobal.t('label.com_cd')
-							},
-							editable: false
-						}, {
-							name: 'cell_assgn_cd',
-							fieldName: 'cell_assgn_cd',
-							width: 120,
-							header: {
-								text: Things.DataGlobal.t('label.cell_assgn_cd')
-							},
-							editable: false
-						}, {
-							name: 'cell_assgn_nm',
-							fieldName: 'cell_assgn_nm',
-							width: 250,
-							header: {
-								text: Things.DataGlobal.t('label.cell_assgn_nm')
-							},
-							editable: false
-						}, {
-							name: 'sku_qty',
-							fieldName: 'sku_qty',
-							width: 60,
-							header: {
-								text: Things.DataGlobal.t('label.sku_qty')
-							},
-							styles: {
-								textAlignment: 'far',
-								numberFormat: '#,###'
-							},
-							editable: false
-						}, {
-							name: 'total_pcs',
-							fieldName: 'total_pcs',
-							width: 60,
-							header: {
-								text: Things.DataGlobal.t('label.total_pcs')
-							},
-							styles: {
-								textAlignment: 'far',
-								numberFormat: '#,###'
-							},
-							editable: false
-						}, {
-							name: 'equip_nm',
-							fieldName: 'equip_nm',
-							width: 65,
-							header: {
-								text: Things.DataGlobal.t('label.equip_nm')
-							},
-							styles: {
-								textAlignment: 'center'
-							},
-							editable: false
-						}, {
-							name: 'equip_cd',
-							fieldName: 'equip_cd',
-							width: 75,
-							header: {
-								text: Things.DataGlobal.t('label.equip_cd')
-							},
-							styles: {
-								textAlignment: 'center'
-							},
-							editable: false
-						}, {
-							name: 'class_cd',
-							fieldName: 'class_cd',
-							width: 80,
-							header: {
-								text: Things.DataGlobal.t('label.class_cd')
-							},
-							styles: {
-								textAlignment: 'center'
-							},
-							editable: false
-						}, {
-							name: 'job_data_count',
-							fieldName: 'job_data_count',
-							width: 90,
-							header: {
-								text: Things.DataGlobal.t('label.alloc_qty')
-							},
-							styles: {
-								textAlignment: 'far'
-							},
-							editable: false,
-							visible: false
-						}]
-					}
-				},
+        /**
+         * Job Instruction Grid Columns
+         ****************
+         * @type {Array}
+         */
+        gridColumns: {
+          type: Array,
+          value: function() {
+            return [{
+              name: 'id',
+              fieldName: 'id',
+              width: 0
+            }, {
+              name: 'batch_id',
+              fieldName: 'batch_id',
+              width: 0
+            }, {
+              name: 'com_cd',
+              fieldName: 'com_cd',
+              width: 70,
+              header: {
+                text: Things.DataGlobal.t('label.com_cd')
+              },
+              editable: false
+            }, {
+              name: 'cell_assgn_cd',
+              fieldName: 'cell_assgn_cd',
+              width: 120,
+              header: {
+                text: Things.DataGlobal.t('label.cell_assgn_cd')
+              },
+              editable: false
+            }, {
+              name: 'cell_assgn_nm',
+              fieldName: 'cell_assgn_nm',
+              width: 250,
+              header: {
+                text: Things.DataGlobal.t('label.cell_assgn_nm')
+              },
+              editable: false
+            }, {
+              name: 'sku_qty',
+              fieldName: 'sku_qty',
+              width: 60,
+              header: {
+                text: Things.DataGlobal.t('label.sku_qty')
+              },
+              styles: {
+                textAlignment: 'far',
+                numberFormat: '#,###'
+              },
+              editable: false
+            }, {
+              name: 'total_pcs',
+              fieldName: 'total_pcs',
+              width: 60,
+              header: {
+                text: Things.DataGlobal.t('label.total_pcs')
+              },
+              styles: {
+                textAlignment: 'far',
+                numberFormat: '#,###'
+              },
+              editable: false
+            }, {
+              name: 'equip_nm',
+              fieldName: 'equip_nm',
+              width: 65,
+              header: {
+                text: Things.DataGlobal.t('label.equip_nm')
+              },
+              styles: {
+                textAlignment: 'center'
+              },
+              editable: false
+            }, {
+              name: 'equip_cd',
+              fieldName: 'equip_cd',
+              width: 75,
+              header: {
+                text: Things.DataGlobal.t('label.equip_cd')
+              },
+              styles: {
+                textAlignment: 'center'
+              },
+              editable: false
+            }, {
+              name: 'class_cd',
+              fieldName: 'class_cd',
+              width: 80,
+              header: {
+                text: Things.DataGlobal.t('label.class_cd')
+              },
+              styles: {
+                textAlignment: 'center'
+              },
+              editable: false
+            }, {
+              name: 'job_data_count',
+              fieldName: 'job_data_count',
+              width: 90,
+              header: {
+                text: Things.DataGlobal.t('label.alloc_qty')
+              },
+              styles: {
+                textAlignment: 'far'
+              },
+              editable: false,
+              visible: false
+            }]
+          }
+        },
 
-    			/**
-				 * buttons of grid
-				 ****************
-				 * @type {Array}
-				 */
-				buttons: {
-					type: Array,
-					value: function () {
-						return [{
-							id: 'job_instruct',
-							text: 'job_instruct'
-						}];
-					}
-				},
+        /**
+         * buttons of grid
+         ****************
+         * @type {Array}
+         */
+        buttons: {
+          type: Array,
+          value: function() {
+            return [{
+              id: 'job_instruct',
+              text: 'job_instruct'
+            }];
+          }
+        },
 
-				/**
-				 * buttons of form
-				 ****************
-				 * @type {Array}
-				 */
-				emptyButton: {
-					type: Array,
-					value: []
-				},
+        /**
+         * buttons of form
+         ****************
+         * @type {Array}
+         */
+        emptyButton: {
+          type: Array,
+          value: []
+        },
 
-				/**
-				 * 완료 여부
-				 ****************
-				 * @type {Boolean}
-				 */
-				isFinished: {
-					type: Boolean,
-					value: false
-				},
+        /**
+         * 완료 여부
+         ****************
+         * @type {Boolean}
+         */
+        isFinished: {
+          type: Boolean,
+          value: false
+        },
 
-				/**
-				 * 진행율
-				 ****************
-				 * @type {Boolean}
-				 */
-				progressRate: {
-					type: Number,
-					value: 0,
-					observer: '_progressRateChanged'
-				},
+        /**
+         * 진행율
+         ****************
+         * @type {Boolean}
+         */
+        progressRate: {
+          type: Number,
+          value: 0,
+          observer: '_progressRateChanged'
+        },
 
-				/**
-				 * 진행 메시지
-				 ****************
-				 * @type {Boolean}
-				 */
-				progressMessage: {
-					type: String,
-					value: ''
-				}
-			},
+        /**
+         * 진행 메시지
+         ****************
+         * @type {Boolean}
+         */
+        progressMessage: {
+          type: String,
+          value: ''
+        }
+      },
 
-			listeners: {
-				'job-list-ajax.things-ajax-response': '_jobListResponsed',
-				'resource-form.things-form-configure': '_infoFormConfigure',
-				'resource-form.things-form-configured': '_infoFormConfigured',
-				'complete-preprocessing-ajax.things-ajax-response': '_onPreprocessSuccess',
-				'job-instruction-ajax.things-ajax-response': '_onJobInstructionSuccess',
-				'job-instruction-ajax.things-ajax-error': '_onJobInstructionError',
-				'progress-instruction-ajax.things-ajax-response': '_jobInstructionProgressing',
-				'grid.job_instruct-tap': 'instructJob',
-				'grid.things-grid-configured': '_onGridConfigured'
-			},
+      listeners: {
+        'job-list-ajax.things-ajax-response': '_jobListResponsed',
+        'resource-form.things-form-configure': '_infoFormConfigure',
+        'resource-form.things-form-configured': '_infoFormConfigured',
+        'complete-preprocessing-ajax.things-ajax-response': '_onPreprocessSuccess',
+        'job-instruction-ajax.things-ajax-response': '_onJobInstructionSuccess',
+        'job-instruction-ajax.things-ajax-error': '_onJobInstructionError',
+        'progress-instruction-ajax.things-ajax-response': '_jobInstructionProgressing',
+        'grid.job_instruct-tap': 'instructJob',
+        'grid.things-grid-configured': '_onGridConfigured'
+      },
 
-			/**
-			 * batchId 변경시 해당 배치의 job list를 조회
-			 ***************
-			 * @param {String} batchId
-			 */
-			_batchIdChanged: function (batchId) {
-				if (batchId) {
-					var jobListAjax = this.$['job-list-ajax'];
-					jobListAjax.generateRequest();
-				}
-			},
+      /**
+       * batchId 변경시 해당 배치의 job list를 조회
+       ***************
+       * @param {String} batchId
+       */
+      _batchIdChanged: function(batchId) {
+        if (batchId) {
+          var jobListAjax = this.$['job-list-ajax'];
+          jobListAjax.generateRequest();
+        }
+      },
 
-			/**
-			 * job list ajax response event handler
-			 * cnt 값을 통해 전체 거래처 수를 계산하고 폼에 출력
-			 ***************
-			 * @param {Object} event
-			 */
-			_jobListResponsed: function (event) {
-				this.jobList = event.detail.list;
-				var totalCustCnt = event.detail.custCnt;
-				var totalSkuCnt = event.detail.skuCnt;
-				var totalPcsCnt = event.detail.pcsCnt;
-				this.$['resource-form'].setFormData({
-					total_customers: totalCustCnt || '0',
-					total_sku_qty: totalSkuCnt || '0',
-					total_pcs_qty: totalPcsCnt || '0'
-				});
-			},
+      /**
+       * job list ajax response event handler
+       * cnt 값을 통해 전체 거래처 수를 계산하고 폼에 출력
+       ***************
+       * @param {Object} event
+       */
+      _jobListResponsed: function(event) {
+        this.jobList = event.detail.list;
+        var totalCustCnt = event.detail.custCnt;
+        var totalSkuCnt = event.detail.skuCnt;
+        var totalPcsCnt = event.detail.pcsCnt;
+        this.$['resource-form'].setFormData({
+          total_customers: totalCustCnt || '0',
+          total_sku_qty: totalSkuCnt || '0',
+          total_pcs_qty: totalPcsCnt || '0'
+        });
+      },
 
-			/**
-			 * 정보 폼 구성 시작 시 ...
-			 ***************
-			 * @param {Object} event
-			 */
-			_infoFormConfigure: function (event) {
-				var newFormFields = [{
-					label: Things.DataGlobal.t('label.total_customers'),
-					name: 'total_customers',
-					type: 'text'
-				}, {
-					label: Things.DataGlobal.t('label.total_sku_qty'),
-					name: 'total_sku_qty',
-					type: 'text'
-				}, {
-					label: Things.DataGlobal.t('label.total_pcs'),
-					name: 'total_pcs',
-					type: 'text'
-				}];
+      /**
+       * 정보 폼 구성 시작 시 ...
+       ***************
+       * @param {Object} event
+       */
+      _infoFormConfigure: function(event) {
+        var newFormFields = [{
+          label: Things.DataGlobal.t('label.total_customers'),
+          name: 'total_customers',
+          type: 'text'
+        }, {
+          label: Things.DataGlobal.t('label.total_sku_qty'),
+          name: 'total_sku_qty',
+          type: 'text'
+        }, {
+          label: Things.DataGlobal.t('label.total_pcs'),
+          name: 'total_pcs',
+          type: 'text'
+        }];
 
-				this.searchFormFields = this.searchFormFields.concat(newFormFields);
-			},
+        this.searchFormFields = this.searchFormFields.concat(newFormFields);
+      },
 
-			/**
-			 * 정보 폼 구성 완료 시 ...
-			 ***************
-			 * @param {Object} event
-			 */
-			_infoFormConfigured: function (event) {
-				this.batchId = this.formData['id'];
-				this.$['resource-form'].setFormData(this.formData);
-			},
+      /**
+       * 정보 폼 구성 완료 시 ...
+       ***************
+       * @param {Object} event
+       */
+      _infoFormConfigured: function(event) {
+        this.batchId = this.formData['id'];
+        this.$['resource-form'].setFormData(this.formData);
+      },
 
-			/**
-			 * 그리드 구성 완료 후 ...
-			 ***************
-			 * @param {Object} event
-			 */
-			_onGridConfigured: function (event) {
-				// 주문 가공 완료시 로우 색상을 변경하기 위한 grid 설정 추가
-				this.setGridDynamicRowStyle(event.target);
-			},
+      /**
+       * 그리드 구성 완료 후 ...
+       ***************
+       * @param {Object} event
+       */
+      _onGridConfigured: function(event) {
+        // 주문 가공 완료시 로우 색상을 변경하기 위한 grid 설정 추가
+        this.setGridDynamicRowStyle(event.target);
+      },
 
-			/**
-			 * 주문 가공 완료시 로우 색상을 변경하기 위한 grid 설정 추가
-			 ***************
-			 * @param {Object} grid
-			 */
-			setGridDynamicRowStyle: function (grid) {
-				var gridObject = grid.getGridObject();
-				var gridBody = gridObject.body();
-				gridBody.setCellDynamicStyles({
-					expression: "values['job_data_count'] > 0",
-					styles: {
-						background: '#e5ffe2',
-						color: '#494f48'
-					}
-				})
-			},
+      /**
+       * 주문 가공 완료시 로우 색상을 변경하기 위한 grid 설정 추가
+       ***************
+       * @param {Object} grid
+       */
+      setGridDynamicRowStyle: function(grid) {
+        var gridObject = grid.getGridObject();
+        var gridBody = gridObject.body();
+        gridBody.setCellDynamicStyles({
+          expression: "values['job_data_count'] > 0",
+          styles: {
+            background: '#e5ffe2',
+            color: '#494f48'
+          }
+        })
+      },
 
-			/**
-			 * 작업 지시 트랜잭션 처리
-			 ***************
-			 * @param {Object} event
-			 */
-			instructJob: function (event) {
-				var title = Things.DataGlobal.t('button.job_instruct')
-				var ajax = this.$['job-instruction-ajax'];
-				var text = Things.DataGlobal.t('text.Sure to X', { x: title });
-				var self = this;
+      /**
+       * 작업 지시 트랜잭션 처리
+       ***************
+       * @param {Object} event
+       */
+      instructJob: function(event) {
+        var title = Things.DataGlobal.t('button.job_instruct')
+        var ajax = this.$['job-instruction-ajax'];
+        var text = Things.DataGlobal.t('text.Sure to X', {
+          x: title
+        });
+        var self = this;
 
-				this.openConfirmMsg({
-					type: 'info', title: title, text: text, showCancelButton: true
-				}, function () {
-					self.isFinished = false;
-					ajax.resourceId = self.batchId;
-					ajax.generateRequest();
-					self.async(self._showJobInstructionProgress, 500);
-				});
-			},
+        this.openConfirmMsg({
+          type: 'info',
+          title: title,
+          text: text,
+          showCancelButton: true
+        }, function() {
+          self.isFinished = false;
+          ajax.resourceId = self.batchId;
+          ajax.generateRequest();
+          self.async(self._showJobInstructionProgress, 500);
+        });
+      },
 
-			/**
-			 * 작업 지시 진행 상황 업데이트 ...
-			 ***************
-			 * @param {Object} event
-			 */
-			_jobInstructionProgressing: function (event) {
-				this.jobList = event.detail;
-				// 전체 거래처 개수에 처리 완료 카운트로 현재 진행율 계산하여 프로그레스 바 표시
-				var totalOrdCnt = this.jobList.length; // 처리 대상 주문 개수
-				var processedOrders = this.jobList.filter(order => order.job_data_count > 0);
-				// job_data_count가 0 이상인 order의 개수 (주문 가공이 완료 된 오더)
-				var processedCnt = processedOrders.length;
-				// 전체 중 완료된 백분위 계산 후 progressRate에 초기화하여 progress-bar 상태 변경
-				this.progressRate = (processedCnt / totalOrdCnt * 100).toFixed(2);
+      /**
+       * 작업 지시 진행 상황 업데이트 ...
+       ***************
+       * @param {Object} event
+       */
+      _jobInstructionProgressing: function(event) {
+        this.jobList = event.detail;
+        // 전체 거래처 개수에 처리 완료 카운트로 현재 진행율 계산하여 프로그레스 바 표시
+        var totalOrdCnt = this.jobList.length; // 처리 대상 주문 개수
+        var processedOrders = this.jobList.filter(order => order.job_data_count > 0);
+        // job_data_count가 0 이상인 order의 개수 (주문 가공이 완료 된 오더)
+        var processedCnt = processedOrders.length;
+        // 전체 중 완료된 백분위 계산 후 progressRate에 초기화하여 progress-bar 상태 변경
+        this.progressRate = (processedCnt / totalOrdCnt * 100).toFixed(2);
 
-				if (!this.isFinished) {
-					this.async(this._showJobInstructionProgress, 1500);
-				}
-			},
+        if (!this.isFinished) {
+          this.async(this._showJobInstructionProgress, 1500);
+        }
+      },
 
-			/**
-			 * 주문 가공 진행 상황 요청
-			 ***************
-			 */
-			_showJobInstructionProgress: function () {
-				// if(parseInt(this.progressRate) < 100) {
-				// 	this.progressMessage = '(' + Things.DataGlobal.t('text.please_wait') + ')';
-				// 	var progressAjax = this.$['progress-instruction-ajax'];
-				// 	progressAjax.resourceId = this.batchId;
-				// 	progressAjax.generateRequest();
-				// }
-			},
+      /**
+       * 주문 가공 진행 상황 요청
+       ***************
+       */
+      _showJobInstructionProgress: function() {
+        // if(parseInt(this.progressRate) < 100) {
+        // 	this.progressMessage = '(' + Things.DataGlobal.t('text.please_wait') + ')';
+        // 	var progressAjax = this.$['progress-instruction-ajax'];
+        // 	progressAjax.resourceId = this.batchId;
+        // 	progressAjax.generateRequest();
+        // }
+      },
 
-			/**
-			 * 주문 가공 완료 후
-			 ***************
-			 * @param {Object} event
-			 */
-			_onJobInstructionSuccess: function (event) {
-				this.isFinished = true;
-				var title = Things.DataGlobal.t('text.Success to Process');
-				var text = Things.DataGlobal.t('button.job_instruct') + ' ' + Things.DataGlobal.t('text.processed');
-				this.openInfoMsg({ type: 'info', title: title, text: text });
-			},
+      /**
+       * 주문 가공 완료 후
+       ***************
+       * @param {Object} event
+       */
+      _onJobInstructionSuccess: function(event) {
+        this.isFinished = true;
+        var title = Things.DataGlobal.t('text.Success to Process');
+        var text = Things.DataGlobal.t('button.job_instruct') + ' ' + Things.DataGlobal.t('text.processed');
+        this.openInfoMsg({
+          type: 'info',
+          title: title,
+          text: text
+        });
+      },
 
-			/**
-			 * 주문 가공 실패 후
-			 ***************
-			 * @param {Object} event
-			 */
-			_onJobInstructionError: function (event) {
-				this.isFinished = true;
-			},
+      /**
+       * 주문 가공 실패 후
+       ***************
+       * @param {Object} event
+       */
+      _onJobInstructionError: function(event) {
+        this.isFinished = true;
+      },
 
-			/**
-			 * progressRate가 변경될 경우
-			 ***************
-			 * @param {Number} progressRate
-			 */
-			_progressRateChanged: function (progressRate) {
-				if (progressRate > 99.99) {
-					// 작업 지시 처리 완료했습니다
-					var msg = Things.DataGlobal.t('text.x_is_done', { x: Things.DataGlobal.t('text.instruct_job') });
-					this.progressMessage = '(' + msg + ')';
-				}
-			}
-		})
-	</script>
+      /**
+       * progressRate가 변경될 경우
+       ***************
+       * @param {Number} progressRate
+       */
+      _progressRateChanged: function(progressRate) {
+        if (progressRate > 99.99) {
+          // 작업 지시 처리 완료했습니다
+          var msg = Things.DataGlobal.t('text.x_is_done', {
+            x: Things.DataGlobal.t('text.instruct_job')
+          });
+          this.progressMessage = '(' + msg + ')';
+        }
+      }
+    })
+  </script>
 </dom-module>

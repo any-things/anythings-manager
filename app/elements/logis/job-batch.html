@@ -64,7 +64,7 @@ Copyright © HatioLab Inc. All rights reserved.
     </things-ajax>
 
     <!-- 작업 지시 취소 Ajax -->
-    <things-ajax id="cancel-instruct-job-ajax" resource-url="job_batches/:id/cancel_job_instruction"
+    <things-ajax id="cancel-instruct-job-ajax" resource-url="job_batches/:id/instruct/cancel"
       resource-action="delete">
     </things-ajax>
 
@@ -437,10 +437,6 @@ Copyright © HatioLab Inc. All rights reserved.
                 }
                 break;
               case 'SDAS':
-                {
-                  this._instructSMSBatchProcess(checkedRow);
-                }
-                break;
               case 'SRTN':
                 {
                   this._instructSMSBatchProcess(checkedRow);
@@ -885,7 +881,6 @@ Copyright © HatioLab Inc. All rights reserved.
 
       /**
        * @description 작업 지시 전 호기 확인 완료
-       *  - 가상호기 확인
        **************
        * @param {Object} event
        */
@@ -1097,15 +1092,15 @@ Copyright © HatioLab Inc. All rights reserved.
        * @return 주문 가공 완료 팝업 화면
        */
       createBatchInstructPopup: function(jobBatch) {
-        var completePopup = null;
+        var completePopup = document.createElement('job-batch-instruct-popup');
 
         // 1. 작업 지시 팝업 생성
-        if (jobBatch.job_type == 'DAS' || jobBatch.job_type == 'DAS2' || jobBatch.job_type == 'DAS3' || jobBatch.job_type == 'DPS2') {
+        /*if (jobBatch.job_type == 'DAS' || jobBatch.job_type == 'DAS2' || jobBatch.job_type == 'DAS3' || jobBatch.job_type == 'DPS2') {
           completePopup = document.createElement('job-batch-instruct-popup');
 
         } else if (jobBatch.job_type == 'RTN' || jobBatch.job_type == 'RTN3') {
           completePopup = document.createElement('job-batch-rtn-instruct-popup');
-        }
+        }*/
 
         // 2. 정보 폼 구성
         completePopup.jobType = jobBatch.job_type;
