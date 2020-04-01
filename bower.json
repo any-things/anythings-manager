@@ -30,7 +30,10 @@
     "things-scene-progressbar": "ThingsElements/things-scene-progressbar",
     "things-scene-half-roundrect": "ThingsElements/things-scene-half-roundrect",
     "things-scene-gauge": "ThingsElements/things-scene-gauge",
-    "things-scene-form": "ThingsElements/things-scene-form"
+    "things-scene-form": "ThingsElements/things-scene-form",
+    "things-scene-indoor-map": "ThingsElements/things-scene-indoor-map",
+    "things-scene-conveyor": "ThingsElements/things-scene-wheel-sorter",
+    "things-scene-tab": "ThingsElements/things-scene-tab"
   },
   "ignore": [],
   "resolutions": {

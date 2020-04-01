@@ -392,13 +392,13 @@ Copyright © HatioLab Inc. All rights reserved.
             // 주문 가공 페이지로 이동
             if (row && row.job_type) {
               var jobType = row.job_type.toLowerCase();
+              var routing = '/' + jobType + '_preprocess';
               if (jobType === 'rtn3') {
                 jobType = 'rtn';
               } else if (jobType === 'srtn' || jobType === 'sdas') {
                 jobType = 'sms';
+                routing = '/' + jobType + '_control';
               }
-
-              var routing = '/' + jobType + '_preprocess';
 
               for (var i = 0, keys = Object.keys(row), len = keys.length; i < len; i++) {
                 if (!row[keys[i]]) row[keys[i]] = '';

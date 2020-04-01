@@ -1,0 +1,71 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-input-field/things-input-field.html">
+<link rel="import" href="../../bower_components/things-resource-combo/things-code-combo.html">
+<link rel="import" href="../../bower_components/things-tristate-radio/things-tristate-radio.html">
+<link rel="import" href="../../bower_components/things-button/things-button-bar.html">
+<link rel="import" href="../../bower_components/things-upload/things-file-upload.html">
+
+
+
+<dom-module id="rack-cell-popup">
+  <template>
+    <style>
+      :host {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+        display: grid;
+        grid-template-rows: auto auto auto 1fr
+      }
+
+      #progress-bar {
+        padding: 2px;
+        padding-left: 20px;
+        padding-right: 20px;
+        width: unset;
+        --paper-progress-active-color: var(--paper-light-blue-500);
+        --paper-progress-secondary-color: var(--paper-light-blue-100)
+      }
+
+      #progress-rate {
+        padding-left: 25px
+      }
+    </style>
+
+    <script type="text/template" id='sort_group_001'>
+      <div class="popup_title"><@= idx @> 호기</div>
+      <ul id="mps_sort_group">
+        <li id="test1">testasdfa</li>
+      </ul>
+    </script>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'rack-cell-popup',
+
+      behaviors: [
+        Things.MsgBoxBehavior
+      ],
+
+      properties: {
+				/**
+				 * Job Batch ID
+				 *******
+				 *@type {Array}
+				 */
+        batchId: {
+          type: String
+        }
+      },
+
+      listeners: {
+      },
+
+			
+    })
+  </script>
+</dom-module>
