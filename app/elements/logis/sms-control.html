@@ -38,11 +38,6 @@
       content-type="application/json">
     </things-ajax>
 
-      <div id='sort_group_001'class="popup_title">호기
-      <ul id="mps_sort_group">
-      </ul>
-      </div>
-
     <div class="bottom">
       <things-button-bar id="button-group" buttons="[[customButtons]]"></things-button-bar>
     </div>
@@ -60,10 +55,6 @@
         scene: {
           type: Object,
           notify: true
-        },
-
-        popup: {
-          type: Object
         },
 
         model: {
@@ -151,21 +142,15 @@
       },
 
       _onSceneClick(e, hint) {
-
-        if(this.popup)
-          this.popup.remove();
-
-
-
         var origin = hint.origin
         var id = origin.get('id')
         var type = origin.get('type')
 
-        if ((type == 'local-ref' && id.indexOf('chute') != -1) || (type == 'local-ref' && id.indexOf('input') != -1)) {
+        if (id && (type == 'local-ref' && id.indexOf('chute') != -1) || (type == 'local-ref' && id.indexOf('input') != -1)) {
           var state = origin.data
           origin.data = state == 'Y' ? 'N' : 'Y'
-        } else if(type == 'rect' && id.indexOf('op_mps') != -1) {
-          this.createGroupPopup();
+        } else if(id && type == 'rect' && id.indexOf('op_mps') != -1) {
+          this.createGroupPopup(id.split('_').reverse()[0]);
         }
       },
 
@@ -219,16 +204,23 @@
       * @param {String} batchId
       * @return 주문 가공 완료 팝업 화면
       */
-      createGroupPopup: function () {
-        this.popup = this.$['sort_group_001'];
-        var groupUl = this.popup.children.mps_sort_group;
-        groupUl.innerHTML = "<li id=test>asdfasdfasdfasd</li>";
-        
-
-        this.popup.style.marginLeft = '150px';
-        this.popup.style.marginTop = '200px';
-
-
+      createGroupPopup: function (rackCd) {
+        var props = {
+          rackCd: rackCd
+        };
+        var rackCellPopup = this.create('rack-cell-popup', props);
+        // 팝업 띄우기
+        this.fire('things-open-popup-view', {
+          view: rackCellPopup,
+          modal: true,
+          closeCallback: function () {
+            
+          }
+        });
+        var popup = rackCellPopup.$['sort_group_001'];
+        var groupUl = popup.children.mps_sort_group;
+        groupUl.innerHTML += "<li id=li_test>asdfasdfasdf</li>";
+        groupUl.innerHTML += "<li id=li_test2>111111111</li>";
       }
     });
   </script>

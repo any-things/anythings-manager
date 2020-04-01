@@ -13,33 +13,147 @@
 <dom-module id="rack-cell-popup">
   <template>
     <style>
-      :host {
-        @apply(--layout-flex);
-        @apply(--layout-vertical);
-        display: grid;
-        grid-template-rows: auto auto auto 1fr
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        padding-top:20%; /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
       }
-
-      #progress-bar {
-        padding: 2px;
-        padding-left: 20px;
-        padding-right: 20px;
-        width: unset;
-        --paper-progress-active-color: var(--paper-light-blue-500);
-        --paper-progress-secondary-color: var(--paper-light-blue-100)
+      /* Modal Content */
+      .modal-content {
+        background-color: #fff;
+        margin: auto;
+        width: 60%;
+        max-width:400px;
+        box-shadow: 3px 3px 3px 0px rgba(0,0,0,0.15);
+        border-radius:4px;
+        overflow:hidden;
       }
-
-      #progress-rate {
-        padding-left: 25px
+      .modal-content .fields{
+        padding:20px 10px;
+        text-align:center;
+        font-size:14px;
+        color:#585858
+      }
+      .modal-content .buttons{
+        background-color:#efefef;
+        border-top:1px solid #ccc;
+        padding:5px 0px 7px 0;
+        text-align:center
+      }
+      /* The Close Button */
+      .close {
+        color: #efefef;
+        float: right;
+        margin:3px 10px 0 0;
+        font-size: 24px;
+      }
+      .close:hover,
+      .close:focus {
+        color: #fff;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .mytable {
+        border-collapse: collapse;
+        border-top: 1px solid #ccc;
+        border-left: 1px solid #ccc;
+        width:100%;
+        height: 40%;
+      }
+      .mytable td {
+        width:35px;max-width:35px;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        font-size:13px;
+        border-bottom: 1px solid #ccc;
+        border-right: 1px solid #ccc;
+        cursor: pointer;
+      }
+      #mps_sort_group{
+        min-width:300px;
+        list-style:none;
+        margin:10px 0 10px 3%;padding:0;
+      }
+      #mps_sort_group li{
+        width:20%;
+        float:left;
+        margin-right:-1px;margin-bottom:-1px;
+        padding:5px 5px 3px 5px;
+        border:1px solid #ccc;
+        text-align:center
+      }
+      #mps_sort_group li:hover{
+        background-color:#4caf50;
+        color:#fff;
+        cursor:pointer
+      }
+      .group_select_popup,.group_setting_popup{
+        position:absolute;
+        display:inline-block;
+        background-color:white;
+        padding-bottom:10px;
+        box-shadow: 3px 3px 3px 0px rgba(0,0,0,0.15);
+        border-radius:4px;
+        overflow:hidden;
+      }
+      .popup_title::before{
+        content:'';
+        position:relative;
+        top:0px;
+        width:7px;height:7px;
+        margin-right:4px;
+        border:2px solid #20c3ed;
+        border-radius:10px;
+        display:inline-block;
+      }
+      .popup_title{
+        background-color:#555c6b;
+        padding:7px 10px 5px 10px;
+        color:#fff;
+        text-transform:capitalize;
+      }
+      .group_select_popup ul{
+        width:100%;
+      }
+      .group_setting_popup{
+        min-width:500px;
+      }
+      .group_setting_popup select,.group_setting_popup button{
+        margin:7px 0 0 3px;
+      }
+      .group_setting_popup select{
+        margin-left:9px
+      }
+      .group_setting_popup span,.group_setting_popup table{
+        width:96% !important;
+        margin-left:2%
+      }
+      .group_setting_popup span{
+        display:block;
+        margin-bottom:2px;
+        color:#449c45;
+        font-size:12px;
+      }
+      *{
+        user-select:none;-webkit-user-select:none;
+      }
+      table td.highlighted {
+        background-color:#999;
       }
     </style>
 
-    <script type="text/template" id='sort_group_001'>
-      <div class="popup_title"><@= idx @> 호기</div>
-      <ul id="mps_sort_group">
-        <li id="test1">testasdfa</li>
-      </ul>
-    </script>
+    <div id="sort_group_001">
+      <div class="popup_title">[[rackCd]] 호기</div>
+      <ul id="mps_sort_group"></ul>
+    </div>
 
   </template>
 
@@ -52,12 +166,7 @@
       ],
 
       properties: {
-				/**
-				 * Job Batch ID
-				 *******
-				 *@type {Array}
-				 */
-        batchId: {
+        rackCd: {
           type: String
         }
       },
