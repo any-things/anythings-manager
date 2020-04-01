@@ -48,23 +48,10 @@
         padding:5px 0px 7px 0;
         text-align:center
       }
-      /* The Close Button */
-      .close {
-        color: #efefef;
-        float: right;
-        margin:3px 10px 0 0;
-        font-size: 24px;
-      }
-      .close:hover,
-      .close:focus {
-        color: #fff;
-        text-decoration: none;
-        cursor: pointer;
-      }
       .mytable {
         border-collapse: collapse;
-        border-top: 1px solid #ccc;
-        border-left: 1px solid #ccc;
+        border-top: 1px solid #000;
+        border-left: 1px solid #000;
         width:100%;
         height: 40%;
       }
@@ -73,27 +60,9 @@
         overflow:hidden;
         text-overflow:ellipsis;
         font-size:13px;
-        border-bottom: 1px solid #ccc;
-        border-right: 1px solid #ccc;
+        border-bottom: 1px solid #000;
+        border-right: 1px solid #000;
         cursor: pointer;
-      }
-      #mps_sort_group{
-        min-width:300px;
-        list-style:none;
-        margin:10px 0 10px 3%;padding:0;
-      }
-      #mps_sort_group li{
-        width:20%;
-        float:left;
-        margin-right:-1px;margin-bottom:-1px;
-        padding:5px 5px 3px 5px;
-        border:1px solid #ccc;
-        text-align:center
-      }
-      #mps_sort_group li:hover{
-        background-color:#4caf50;
-        color:#fff;
-        cursor:pointer
       }
       .group_select_popup,.group_setting_popup{
         position:absolute;
@@ -103,22 +72,6 @@
         box-shadow: 3px 3px 3px 0px rgba(0,0,0,0.15);
         border-radius:4px;
         overflow:hidden;
-      }
-      .popup_title::before{
-        content:'';
-        position:relative;
-        top:0px;
-        width:7px;height:7px;
-        margin-right:4px;
-        border:2px solid #20c3ed;
-        border-radius:10px;
-        display:inline-block;
-      }
-      .popup_title{
-        background-color:#555c6b;
-        padding:7px 10px 5px 10px;
-        color:#fff;
-        text-transform:capitalize;
       }
       .group_select_popup ul{
         width:100%;
@@ -150,9 +103,24 @@
       }
     </style>
 
-    <div id="sort_group_001">
-      <div class="popup_title">[[rackCd]] 호기</div>
-      <ul id="mps_sort_group"></ul>
+    <div id="t001">
+      <select id="category" name="category">
+        <option>테스트</option>
+      </select>
+      <button onClick="settingAll()" id="btn_all">일괄 설정</button>
+      <button onClick="saveTemplate()" id="btn_save">저장</button>
+      <button onClick="loadTemplate()" id="btn_load">불러오기</button>
+      
+      <span id="front_name"></span>
+      <table id="mps_front_table" class="mytable">
+        <tbody>
+        </tbody>
+      </table>
+      <span id="back_name"></span>
+      <table id="mps_back_table" class="mytable">
+        <tbody>
+        </tbody>
+      </table>
     </div>
 
   </template>

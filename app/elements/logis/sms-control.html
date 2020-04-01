@@ -13,6 +13,7 @@
 <script src="./asset/sorter-status-control-model.js"></script>
 <script src="./asset/sorter-status-test-model.js"></script>
 <link rel="import" href="./rack-cell-popup.html">
+<link rel="import" href="./work-group-popup.html">
 
 <dom-module id="sms-control">
   <template>
@@ -151,6 +152,8 @@
           origin.data = state == 'Y' ? 'N' : 'Y'
         } else if(id && type == 'rect' && id.indexOf('op_mps') != -1) {
           this.createGroupPopup(id.split('_').reverse()[0]);
+        } else if(id && type == 'rect' && id.indexOf('btn_mps') != -1) {
+          this.createRackCellPopup(id.split('_').reverse()[0]);
         }
       },
 
@@ -204,8 +207,30 @@
       * @param {String} batchId
       * @return 주문 가공 완료 팝업 화면
       */
-      createGroupPopup: function (rackCd) {
+      createGroupPopup: function(rackCd) {
         var props = {
+          title: rackCd + Things.DataGlobal.t('label.region'),
+          rackCd: rackCd
+        };
+        var rackCellPopup = this.create('work-group-popup', props);
+        // 팝업 띄우기
+        this.fire('things-open-popup-view', {
+          view: workGroupPopup,
+          modal: true,
+          closeCallback: function () {
+            
+          }
+        });
+        var popup = workGroupPopup.$['sort_group_001'];
+        popup.className = 'group_select_popup';
+        var groupUl = popup.children.mps_sort_group;
+        groupUl.innerHTML += '<li id=li_test>asdfasdfasdf</li>';
+        groupUl.innerHTML += '<li id=li_test2>111111111</li>';
+      },
+
+      createRackCellPopup: function(rackCd) {
+        var props = {
+          title: rackCd + Things.DataGlobal.t('label.region'),
           rackCd: rackCd
         };
         var rackCellPopup = this.create('rack-cell-popup', props);
@@ -214,13 +239,49 @@
           view: rackCellPopup,
           modal: true,
           closeCallback: function () {
-            
+
           }
         });
-        var popup = rackCellPopup.$['sort_group_001'];
-        var groupUl = popup.children.mps_sort_group;
-        groupUl.innerHTML += "<li id=li_test>asdfasdfasdf</li>";
-        groupUl.innerHTML += "<li id=li_test2>111111111</li>";
+        var popup = rackCellPopup.$['t001'];
+        popup.className = 'group_setting_popup';
+        var frontTbody = popup.children.mps_front_table.tBodies;
+        var backTbody = popup.children.mps_back_table.tBodies;
+        var frontTr = '';
+        var backTr = '';
+
+        var fRowIdx = 3;
+        var fColumnIdx = 21;
+        var bRowIdx = 3;
+        var bColumnIdx = 25;
+
+        if (fRowIdx && fColumnIdx) {
+          popup.children.front_name.innerHTML = '<br> 앞면 <br>'
+          frontTr += this.oddEvenCheck(rackCd, fRowIdx, fColumnIdx);
+          frontTbody[0].innerHTML += frontTr;
+        }
+        if (bRowIdx && bColumnIdx) {
+          popup.children.back_name.innerHTML = '<br> 뒷면 <br>'
+          backTr += this.oddEvenCheck(rackCd, bRowIdx, bColumnIdx);
+          backTbody[0].innerHTML += backTr;
+        }
+      },
+
+      oddEvenCheck: function(rackCd, rowIdx, colIdx) {
+        var tr = '';
+        for(var i = rowIdx ; i > 0 ; i --) {
+          tr += '<tr>';
+          for(var j = colIdx ; j > 0 ; j--) {
+            var td = '<td id=';
+            var td_id = rackCd + '_' + i + '_' + j;
+            var color = '';
+            var cellContent = 'Any';
+            td = td + td_id + ' bgColor=' + color + '>' + cellContent + '</td>';
+            tr += td;
+          }
+          tr += '</tr>';
+        }
+        
+        return tr;
       }
     });
   </script>

@@ -1,0 +1,114 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-input-field/things-input-field.html">
+<link rel="import" href="../../bower_components/things-resource-combo/things-code-combo.html">
+<link rel="import" href="../../bower_components/things-tristate-radio/things-tristate-radio.html">
+<link rel="import" href="../../bower_components/things-button/things-button-bar.html">
+<link rel="import" href="../../bower_components/things-upload/things-file-upload.html">
+
+
+
+<dom-module id="work-group-popup">
+  <template>
+    <style>
+      .modal {
+        display: none;
+        /* Hidden by default */
+        position: fixed;
+        /* Stay in place */
+        z-index: 1;
+        /* Sit on top */
+        padding-top: 20%;
+        /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%;
+        /* Full width */
+        height: 100%;
+        /* Full height */
+        overflow: auto;
+        /* Enable scroll if needed */
+        background-color: rgb(0, 0, 0);
+        /* Fallback color */
+        background-color: rgba(0, 0, 0, 0.4);
+        /* Black w/ opacity */
+      }
+
+      /* Modal Content */
+      .modal-content {
+        background-color: #fff;
+        margin: auto;
+        width: 60%;
+        max-width: 400px;
+        box-shadow: 3px 3px 3px 0px rgba(0, 0, 0, 0.15);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .modal-content .fields {
+        padding: 20px 10px;
+        text-align: center;
+        font-size: 14px;
+        color: #585858
+      }
+
+      .modal-content .buttons {
+        background-color: #efefef;
+        border-top: 1px solid #ccc;
+        padding: 5px 0px 7px 0;
+        text-align: center
+      }
+
+      #mps_sort_group {
+        min-width: 300px;
+        list-style: none;
+        margin: 10px 0 10px 3%;
+        padding: 0;
+      }
+
+      #mps_sort_group li {
+        width: 20%;
+        float: left;
+        margin-right: -1px;
+        margin-bottom: -1px;
+        padding: 5px 5px 3px 5px;
+        border: 1px solid #ccc;
+        text-align: center
+      }
+
+      #mps_sort_group li:hover {
+        background-color: #4caf50;
+        color: #fff;
+        cursor: pointer
+      }
+    </style>
+
+    <div id="sort_group_001">
+      <ul id="mps_sort_group"></ul>
+    </div>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'work-group-popup',
+
+      behaviors: [
+        Things.MsgBoxBehavior
+      ],
+
+      properties: {
+        rackCd: {
+          type: String
+        }
+      },
+
+      listeners: {
+      },
+
+
+    })
+  </script>
+</dom-module>
