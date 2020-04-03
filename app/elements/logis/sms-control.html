@@ -4,11 +4,11 @@
 <script src="../../bower_components/things-scene-core/things-scene-min.js"></script>
 <script src="../../bower_components/things-scene-form/things-scene-form-min.js"></script>
 
-<script src="../../bower_components/things-scene-conveyor/things-scene-wheel-sorter-min.js"></script>
+<!--script src="../../bower_components/things-scene-conveyor/things-scene-wheel-sorter-min.js"></script>
 <script src="../../bower_components/things-scene-indoor-map/things-scene-indoor-map-min.js"></script>
 <script src="../../bower_components/things-scene-tab/things-scene-tab-min.js"></script>
 <script src="../../bower_components/things-scene-table/things-scene-table-min.js"></script>
-<script src="../../bower_components/things-scene-progressbar/things-scene-progressbar-min.js"></script>
+<script src="../../bower_components/things-scene-progressbar/things-scene-progressbar-min.js"></script-->
 
 <script src="./asset/sorter-status-control-model.js"></script>
 <script src="./asset/sorter-status-test-model.js"></script>
@@ -150,9 +150,9 @@
         if (id && (type == 'local-ref' && id.indexOf('chute') != -1) || (type == 'local-ref' && id.indexOf('input') != -1)) {
           var state = origin.data
           origin.data = state == 'Y' ? 'N' : 'Y'
-        } else if(id && type == 'rect' && id.indexOf('op_mps') != -1) {
+        } else if (id && type == 'rect' && id.indexOf('op_mps') != -1) {
           this.createGroupPopup(id.split('_').reverse()[0]);
-        } else if(id && type == 'rect' && id.indexOf('btn_mps') != -1) {
+        } else if (id && type == 'rect' && id.indexOf('btn_mps') != -1) {
           this.createRackCellPopup(id.split('_').reverse()[0]);
         }
       },
@@ -202,11 +202,11 @@
       },
 
       /**
-      * 작업그룹을 다이얼로그를 생성하여 리턴
-      * ***********************
-      * @param {String} batchId
-      * @return 주문 가공 완료 팝업 화면
-      */
+       * 작업그룹을 다이얼로그를 생성하여 리턴
+       * ***********************
+       * @param {String} batchId
+       * @return 주문 가공 완료 팝업 화면
+       */
       createGroupPopup: function(rackCd) {
         var props = {
           title: rackCd + Things.DataGlobal.t('label.region'),
@@ -217,8 +217,8 @@
         this.fire('things-open-popup-view', {
           view: workGroupPopup,
           modal: true,
-          closeCallback: function () {
-            
+          closeCallback: function() {
+
           }
         });
         var popup = workGroupPopup.$['sort_group_001'];
@@ -238,7 +238,7 @@
         this.fire('things-open-popup-view', {
           view: rackCellPopup,
           modal: true,
-          closeCallback: function () {
+          closeCallback: function() {
 
           }
         });
@@ -268,9 +268,9 @@
 
       oddEvenCheck: function(rackCd, rowIdx, colIdx) {
         var tr = '';
-        for(var i = rowIdx ; i > 0 ; i --) {
+        for (var i = rowIdx; i > 0; i--) {
           tr += '<tr>';
-          for(var j = colIdx ; j > 0 ; j--) {
+          for (var j = colIdx; j > 0; j--) {
             var td = '<td id=';
             var td_id = rackCd + '_' + i + '_' + j;
             var color = '';
@@ -280,7 +280,7 @@
           }
           tr += '</tr>';
         }
-        
+
         return tr;
       }
     });
