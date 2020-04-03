@@ -1,0 +1,118 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<!--
+	WCS 실적 리포트 > 시간대 별 생산성
+-->
+<dom-module id="wcs-hourly-result">
+  <template>
+    <style>
+      :host {
+        @apply --layout-vertical;
+      }
+
+      .container {
+        @apply --layout-flex;
+      }
+    </style>
+
+    <!-- 메뉴 메타 조회 Ajax -->
+    <things-ajax 
+      auto 
+      id="resource-meta" 
+      method="GET" 
+      resource-url="[[menuMetaUrl]]" 
+      last-response="{{metaData}}">
+    </things-ajax>
+
+    <!-- 검색 폼 -->
+    <things-search-form 
+      id="search-form" 
+      title="[[menuInfo.title]]" 
+      form-fields="[[searchFormFields]]"
+      select-fields="[[selectFields]]" 
+      sort-fields="[[sortFields]]" 
+      action-url="[[menuInfo.resource_url]]"
+      page="{{page}}" 
+      limit="[[limit]]" 
+      last-response="{{lastResponse}}">
+    </things-search-form>
+
+		<div class="container" id="hourly-chart">
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'wcs-hourly-result',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
+
+      properties: {
+        /**
+         * @description Hourly Chart
+         ********************
+         * @type {Object}
+         */
+        hourlyChart: {
+          type: Object
+        }
+      },
+
+      /**
+       * @description Life Cycle
+       *******************
+       */
+      attached: function() {
+        setTimeout(function() {
+          this._renderHourlyChart();
+        }.bind(this), 250)
+      },
+
+      /**
+       * @description 시간대별 차트 렌더링
+       *******************
+       */
+      _renderHourlyChart: function() {
+        var legend = Things.DataGlobal.t('label.progress_rate');
+        this.hourlyChart = c3.generate({
+          bindto: this.$['hourly-chart'],
+          data: {
+            x: 'x',
+            columns: [
+              ['x', '0800', '0810', '0820', '0830', '0840', '0850', '0900', '0910', '0920', '0930', '0940', '0950', '1000', '1010', '1020', '1030', '1040', '1050', '1100', '1110', '1120', '1130', '1140', '1150', '1200', '1210', '1220', '1230', '1240', '1250', '1300', '1310', '1320', '1330', '1340', '1350', '1400', '1410', '1420', '1430', '1440', '1450', '1500', '1510', '1520', '1530', '1540', '1550', '1600', '1610', '1620', '1630', '1640', '1650', '1700', '1710', '1720', '1730', '1740', '1750', '1800', '1810', '1820', '1830'],
+              ['data1', 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 0, 0, 0, 0]
+            ],
+            type: 'bar',
+            colors: {
+              data1: '#F1C018'
+            }
+          },
+          axis: {
+            x: {
+              label: '시간'
+            },
+            y: {
+              label: '실적'
+            }
+          },
+          bar: {
+            width: {
+              ratio: 0.4
+            }
+          }
+        })
+      }
+    })
+  </script>
+</dom-module>
