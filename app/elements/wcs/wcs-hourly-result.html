@@ -46,7 +46,8 @@ Copyright © HatioLab Inc. All rights reserved.
       last-response="{{lastResponse}}">
     </things-search-form>
 
-		<div class="container" id="hourly-chart">
+		<div class="container" id="hourly-chart" style="margin:10px 16px 10px 16px;background-color: #FFFFFF;">
+      <canvas id="canvas"></canvas>
     </div>
   </template>
 
@@ -66,6 +67,16 @@ Copyright © HatioLab Inc. All rights reserved.
          */
         hourlyChart: {
           type: Object
+        },
+
+        /**
+         * @description 검색 데이터 
+         ********************
+         * @type {Object}
+         */
+        lastResponse: {
+          type: Object,
+          observer: '_onDataChanged'
         }
       },
 
@@ -75,43 +86,97 @@ Copyright © HatioLab Inc. All rights reserved.
        */
       attached: function() {
         setTimeout(function() {
-          this._renderHourlyChart();
-        }.bind(this), 250)
+          this.lastResponse = [];
+        }.bind(this), 1000);
+      },
+
+      /**
+       * @description 데이터 변경시 
+       *******************
+       * @param {Object} lastResponse
+       */
+      _onDataChanged: function(lastResponse) {
+        var dataset = this.randomActuals();
+        this.renderBarChart(dataset);
+      },
+
+      /**
+       * @description 그리드 데이터를 초기화
+       ******************************
+       */
+      resetData: function() {
+        this.items = [];
+      },
+
+      /**
+       * @description 그리드 데이터를 리프레쉬
+       ******************************
+       */
+      refreshData: function(items) {
+        this.items = items;
+      },
+
+      randomInt: function() {
+        var min = Math.ceil(500);
+        var max = Math.floor(600);
+        return Math.floor(Math.random() * (max - min)) + min;
+      },
+
+      randomData: function(labels) {
+        return labels.map(function(i) {
+          return this.randomInt();
+        }.bind(this));
+      },
+
+      /**
+       * @description 랜덤 실적 생성
+       *******************
+       */
+      randomActuals: function() {
+        var labels = ['08:00', '08:10', '08:20', '08:30', '08:40', '08:50', '09:00', '09:10', '09:20', '09:30', '09:40', '09:50', '10:00', '10:10', '10:20', '10:30', '10:40', '10:50', '11:00', '11:10', '11:20', '11:30', '11:40', '11:50', '12:00', '12:10', '12:20', '12:30', '12:40', '12:50', '13:00', '13:10', '13:20', '13:30', '13:40', '13:50', '14:00', '14:10', '14:20', '14:30', '14:40', '14:50', '15:00', '15:10', '15:20', '15:30', '15:40', '15:50', '16:00', '16:10', '16:20', '16:30', '16:40', '16:50', '17:00', '17:10', '17:20', '17:30', '17:40', '17:50', '18:00'];
+        var actual = this.randomData(labels);
+
+        return {
+          labels: labels,
+          datasets: [{
+            label: '실적',
+            borderWidth: 1,
+            backgroundColor: 'rgba(75,192,192,0.2)',
+            borderColor: 'rgba(75,192,192,1)',
+            data: actual
+          }]
+        };
       },
 
       /**
        * @description 시간대별 차트 렌더링
        *******************
+       * @param {Object} dataset
        */
-      _renderHourlyChart: function() {
-        var legend = Things.DataGlobal.t('label.progress_rate');
-        this.hourlyChart = c3.generate({
-          bindto: this.$['hourly-chart'],
-          data: {
-            x: 'x',
-            columns: [
-              ['x', '0800', '0810', '0820', '0830', '0840', '0850', '0900', '0910', '0920', '0930', '0940', '0950', '1000', '1010', '1020', '1030', '1040', '1050', '1100', '1110', '1120', '1130', '1140', '1150', '1200', '1210', '1220', '1230', '1240', '1250', '1300', '1310', '1320', '1330', '1340', '1350', '1400', '1410', '1420', '1430', '1440', '1450', '1500', '1510', '1520', '1530', '1540', '1550', '1600', '1610', '1620', '1630', '1640', '1650', '1700', '1710', '1720', '1730', '1740', '1750', '1800', '1810', '1820', '1830'],
-              ['data1', 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 644, 572, 633, 515, 655, 587, 0, 0, 0, 0]
-            ],
+      renderBarChart: function(dataset) {
+        // 1. 최초 차트가 그려지기 전 
+        if (!this.hourlyChart) {
+          var ctx = this.$['canvas'].getContext('2d');
+          this.hourlyChart = new Chart(ctx, {
             type: 'bar',
-            colors: {
-              data1: '#F1C018'
+            data: dataset,
+            options: {
+              responsive: true,
+              legend: {
+                position: 'top'
+              },
+              title: {
+                display: true,
+                text: '시간대별 실적'
+              }
             }
-          },
-          axis: {
-            x: {
-              label: '시간'
-            },
-            y: {
-              label: '실적'
-            }
-          },
-          bar: {
-            width: {
-              ratio: 0.4
-            }
-          }
-        })
+          });
+
+          // 2. 차트가 한 번 그려진 이후 
+        } else {
+          this.hourlyChart.config.data = dataset;
+          this.hourlyChart.update();
+        }
       }
     })
   </script>
