@@ -14,7 +14,7 @@ Copyright © HatioLab Inc. All rights reserved.
  -->
 
 <dom-module id="base-home">
-	<template>
+  <template>
 		<style>
 			:host {
 				@apply --layout-flex;
@@ -29,6 +29,8 @@ Copyright © HatioLab Inc. All rights reserved.
 				border-radius: 4px;
 				grid-column-gap: 1em;
 				grid-row-gap: 1em;
+        margin: 10px;
+        background-color: #FFFFFF;
 			}
 
 			.top-section {
@@ -68,6 +70,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				font-size: 15px;
 				padding-top: 1.2em;
 				text-align: center;
+        color: #222;
 			}
 
 			#sum-subtitle {
@@ -80,9 +83,10 @@ Copyright © HatioLab Inc. All rights reserved.
 				font-size: 15px;
 				padding-top: 1.2em;
 				text-align: center;
+        color: #222;
 			}
 
-			#july-text {
+			#first-month-text {
 				display: grid;
 				grid-row-start: 2;
 				grid-row-end: 2;
@@ -90,7 +94,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				grid-column-end: 1;
 			}
 
-			#august-text {
+			#second-month-text {
 				display: grid;
 				grid-row-start: 3;
 				grid-row-end: 3;
@@ -98,7 +102,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				grid-column-end: 1;
 			}
 
-			#september-text {
+			#third-month-text {
 				display: grid;
 				grid-row-start: 4;
 				grid-row-end: 4;
@@ -106,7 +110,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				grid-column-end: 1;
 			}
 
-			#july-chart-container {
+			#first-chart-container {
 				display: grid;
 				grid-row-start: 2;
 				grid-row-end: 2;
@@ -116,7 +120,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				fill: silver;
 			}
 
-			#august-chart-container {
+			#second-chart-container {
 				display: grid;
 				grid-row-start: 3;
 				grid-row-end: 3;
@@ -126,7 +130,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				fill: silver;
 			}
 
-			#september-chart-container {
+			#third-chart-container {
 				display: grid;
 				grid-row-start: 4;
 				grid-row-end: 4;
@@ -136,7 +140,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				fill: silver;
 			}
 
-			#july-sum {
+			#first-month-sum {
 				display: grid;
 				grid-row-start: 2;
 				grid-row-end: 2;
@@ -145,7 +149,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				background-color: rgba(255, 255, 255, .04);
 			}
 
-			#august-sum {
+			#second-month-sum {
 				display: grid;
 				grid-row-start: 3;
 				grid-row-end: 3;
@@ -154,7 +158,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				background-color: rgba(255, 255, 255, .04);
 			}
 
-			#september-sum {
+			#third-month-sum {
 				display: grid;
 				grid-row-start: 4;
 				grid-row-end: 4;
@@ -194,7 +198,6 @@ Copyright © HatioLab Inc. All rights reserved.
 
 			span.percent {
 				font-size: 23px;
-				color: #fff;
 				text-align: center;
 				font-weight: bold;
 			}
@@ -224,181 +227,221 @@ Copyright © HatioLab Inc. All rights reserved.
 		<div class="container">
 			<div class="top-section"></div>
 
-			<div id="july-text">
+			<div id="first-month-text">
 				<span class="month">1월</span>
 			</div>
 
 			<div id="chart-subtitle">물동량 추이
-				<!-- <span class="chart-info">전월 최대<br></span>
+				<!--span class="chart-info">전월 최대<br></span>
 				<span class="chart-info">전월 최소<br></span>
-				<span class="chart-info">단위: PCS</span> -->
+				<span class="chart-info">단위: PCS</span-->
 			</div>
 
-			<div id="july-chart-container">
-				<div id="july-chart"></div>
+			<div id="first-chart-container">
+        <canvas id="first-chart" style="height:80px"></canvas>
 			</div>
 
-			<div id="sum-subtitle">누적합계</div>
+			<div id="sum-subtitle">누적 합계</div>
 
-			<div id="july-sum">
+			<div id="first-month-sum">
 				<span class="sum-text">1,123,456</span>
 				<span class="percent">5%<div class="arrow-down"></div></span>
 			</div>
 
-			<div id="august-text">
+			<div id="second-month-text">
 				<span class="month">2월</span>
 			</div>
 
-			<div id="august-chart-container">
-				<div id="august-chart"></div>
+			<div id="second-chart-container">
+				<canvas id="second-chart" style="height:80px"></canvas>
 			</div>
 
-			<div id="august-sum">
+			<div id="second-month-sum">
 				<span class="sum-text">1,324,456</span>
 				<span class="percent">13%<div class="arrow-up"></div></span>
 			</div>
 
-			<div id="september-text">
+			<div id="third-month-text">
 				<span class="month">3월</span>
 			</div>
 
-			<div id="september-chart-container">
-				<div id="september-chart"></div>
+			<div id="third-chart-container">
+				<canvas id="third-chart" style="height:80px"></canvas>
 			</div>
 
-			<div id="september-sum">
+			<div id="third-month-sum">
 				<span class="sum-text">823,456</span>
 				<span class="percent">8%<div class="arrow-up"></div></span>
 			</div>
 
-			<div class="bottom-section">
+			<!--div class="bottom-section">
 				<span class="bottom-text">이번 달은 <br>같은 기간 상승/하락</span>
-			</div>
+			</div-->
 		</div>
 	</template>
 
-	<script>
-		Polymer({
-			is: 'base-home',
+  <script>
+    Polymer({
+      is: 'base-home',
 
-			behaviors: [],
+      properties: {
+        /**
+         * @description First Chart
+         ********************
+         * @type {Object}
+         */
+        firstChart: {
+          type: Object
+        },
 
-			properties: {},
+        /**
+         * @description Second Chart
+         ********************
+         * @type {Object}
+         */
+        secondChart: {
+          type: Object
+        },
 
-			listeners: {},
+        /**
+         * @description Third Chart
+         ********************
+         * @type {Object}
+         */
+        thirdChart: {
+          type: Object
+        }
+      },
 
-			attached: function () {
-				setTimeout(function () {
-					this._renderJulyChart(50);
-					this._renderAugustChart(50);
-					this._renderSeptemberChart(50);
-				}.bind(this), 2000)
+      /**
+       * @description Life Cycle
+       *******************
+       */
+      attached: function() {
+        setTimeout(function() {
+          this._renderFirstChart(this.randomActuals(31, '1'));
+          this._renderSecondChart(this.randomActuals(28, '2'));
+          this._renderThirdChart(this.randomActuals(31, '3'));
+        }.bind(this), 1000)
 
-			},
+      },
 
-			/**
-			 * 7월 차트 렌더링
-			 *******************
-			 * @param {Number} rate
-			 */
-			_renderJulyChart: function (rate) {
-				var legend = Things.DataGlobal.t('label.progress_rate');
+      /**
+       * @description 하루 랜덤 실적 생성
+       *******************
+       */
+      randomInt: function() {
+        var min = Math.ceil(17000);
+        var max = Math.floor(25000);
+        return Math.floor(Math.random() * (max - min)) + min;
+      },
 
-				if (this.julyChart) {
-					this.julyChart.load({
-						columns: [
-							[legend, rate]
-						]
-					});
+      /**
+       * @description 30일 랜덤 실적 생성
+       *******************
+       * @param {Array} labels
+       */
+      randomData: function(labels) {
+        return labels.map(function(i) {
+          return this.randomInt();
+        }.bind(this));
+      },
 
-				} else {
-					this.julyChart = c3.generate({
-						bindto: this.$['july-chart'],
-						data: {
-							x: 'x',
-							columns: [
-								['x', 10, 20, 30, 40, 50, 60, 70, 80],
-								['data1', 1100, 1200, 1150, 1200, 1250, 1100]
-							]
-						},
-						color: {
-							pattern: ['#60B044', '#60B044'],
-							threshold: {
-								values: [30, 60, 90, 100]
-							}
-						}
-					})
-				}
-			},
+      /**
+       * @description 랜덤 실적 생성
+       *******************
+       * @param {Number} days
+       * @param {String} colorType
+       */
+      randomActuals: function(days, colorType) {
+        var labels = [];
+        for (var i = 1; i < days; i++) {
+          labels.push('' + i);
+        }
+        var actual = this.randomData(labels);
+        var color = 'rgba(';
 
-			/**
-			 * 8월 차트 렌더링
-			 *******************
-			 * @param {Number} rate
-			 */
-			_renderAugustChart: function (rate) {
-				var legend = Things.DataGlobal.t('label.progress_rate');
+        if (colorType == '1') {
+          color += '255,99,132';
+        } else if (colorType == '2') {
+          color += '153,102,255';
+        } else {
+          color += '255,206,86';
+        }
 
-				if (this.augustChart) {
-					this.augustChart.load({
-						columns: [
-							[legend, rate]
-						]
-					});
+        return {
+          labels: labels,
+          datasets: [{
+            label: '실적',
+            borderWidth: 1,
+            backgroundColor: color + ',0.2)',
+            borderColor: color + ',1)',
+            data: actual
+          }]
+        };
+      },
 
-				} else {
-					this.augustChart = c3.generate({
-						bindto: this.$['august-chart'],
-						data: {
-							x: 'x',
-							columns: [
-								['x', 10, 20, 30, 40, 50, 60, 70, 80],
-								['data2', 1300, 1200, 1150, 1100, 1250, 1150]
-							]
-						},
-						color: {
-							pattern: ['#60B044', '#60B044'],
-							threshold: {
-								values: [30, 60, 90, 100]
-							}
-						}
-					})
-				}
-			},
+      /**
+       * @description 첫 번째 차트 렌더링
+       *******************
+       * @param {Object} dataset
+       */
+      _renderFirstChart: function(dataset) {
+        this.firstChart = this._renderLineChart('first-chart', this.firstChart, dataset);
+      },
 
-			/**
-			 * 9월 차트 렌더링
-			 *******************
-			 * @param {Number} rate
-			 */
-			_renderSeptemberChart: function (rate) {
-				var legend = Things.DataGlobal.t('label.progress_rate');
+      /**
+       * @description 두 번째 차트 렌더링
+       *******************
+       * @param {Object} dataset
+       */
+      _renderSecondChart: function(dataset) {
+        this.secondChart = this._renderLineChart('second-chart', this.secondChart, dataset);
+      },
 
-				if (this.septemberChart) {
-					this.septemberChart.load({
-						columns: [
-							[legend, rate]
-						]
-					});
+      /**
+       * @description 세 번째 차트 렌더링
+       *******************
+       * @param {Object} dataset
+       */
+      _renderThirdChart: function(dataset) {
+        this.thirdChart = this._renderLineChart('third-chart', this.thirdChart, dataset);
+      },
 
-				} else {
-					this.septemberChart = c3.generate({
-						bindto: this.$['september-chart'],
-						data: {
-							x: 'x',
-							columns: [
-								['x', 10, 20, 30, 40, 50, 60, 70, 80],
-								['data1', 1100, 1150, 1100, 1200, 1250, 1150],
-								['red', 1200, 1200, 1200, 1200, 1200, 1200],
-								['blue', 350, 350, 350, 350, 350, 350]
-							]
-						},
-						color: {
-							pattern: ['#60B044', '#FF0000', '#0000FF']
-						}
-					})
-				}
-			}
-		})
-	</script>
+      /**
+       * @description 라인 차트 렌더링
+       *******************
+       * @param {Object} canvasId
+       * @param {Object} lineChart
+       * @param {Object} dataset
+       * @return
+       */
+      _renderLineChart: function(canvasId, lineChart, dataset) {
+        // 1. 최초 차트가 그려지기 전 
+        if (!lineChart) {
+          var ctx = this.$[canvasId].getContext('2d');
+          lineChart = new Chart(ctx, {
+            type: 'line',
+            data: dataset,
+            options: {
+              responsive: true,
+              legend: {
+                display: false,
+              },
+              title: {
+                display: false
+              }
+            }
+          });
+
+          // 2. 차트가 한 번 그려진 이후 
+        } else {
+          lineChart.config.data = dataset;
+          lineChart.update();
+        }
+
+        return lineChart;
+      }
+    })
+  </script>
 </dom-module>
