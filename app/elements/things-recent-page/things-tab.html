@@ -21,7 +21,7 @@ Custom property | Description | Default
     <style>
       :host {
         position: relative;
-        flex:1;
+        flex: 1;
         max-width: 290px;
         height: 50px;
         font-size: 15px;
@@ -29,20 +29,23 @@ Custom property | Description | Default
         overflow: hidden;
         outline: none;
 
-        --default-tab-background-color: #252222;
-        --default-tab-selected-color: #3c3c3c;
-        --default-tab-hover-color: #2d2d2d;
-        --tab-selected-text:#fff;
+        --default-tab-background-color: var(--things-tab-background-color);
+        --default-tab-selected-color: var(--things-tab-selected-color);
+        --default-tab-hover-color: var(--things-tab-hover-color);
+        --tab-selected-text: var(--things-tab-selected-text);
       }
+
       .tab-left {
 
-        width:9px;
-        background-color: #252222;
-        z-index:1;
+        width: 9px;
+        background-color: var(--things-tab-background-color);
+        z-index: 1;
       }
+
       .tab-right {
-        z-index:1;
+        z-index: 1;
       }
+
       .tab-content {
         flex: 1;
         background: var(--default-tab-background-color);
@@ -51,41 +54,52 @@ Custom property | Description | Default
         white-space: nowrap;
         overflow: hidden;
         align-items: center;
-        color:rgba(255,255,255,.5);
-        border-right:1px solid rgba(0,0,0,.5);
+        color: rgba(255, 255, 255, .5);
+        border-right: 1px solid rgba(0, 0, 0, .5);
       }
+
       .tab-title {
         text-overflow: ellipsis;
         overflow: hidden;
-        margin-top:8px;
+        margin-top: 8px;
         flex: 1;
       }
-      :host:hover *{
-        background-color:#2d2d2d !important;
-        cursor:pointer;
+
+      :host:hover * {
+        background-color: #2d2d2d !important;
+        cursor: pointer;
       }
+
       :host(.selected) {
         z-index: 2;
       }
+
       :host(.selected) .tab-content {
         background: var(--default-tab-selected-color) !important;
-        border-bottom:2px solid #f7af01;
+        border-bottom: 2px solid #f7af01;
         color: #fff;
       }
+
       :host(.selected) .tab-left {
         background: var(--default-tab-selected-color) !important;
-        border-bottom:2px solid #f7af01
+        border-bottom: 2px solid #f7af01
       }
-      :host(.selected) .tab-right,:host(.selected) .tab-title,:host(.selected) .tab-close {
+
+      :host(.selected) .tab-right,
+      :host(.selected) .tab-title,
+      :host(.selected) .tab-close {
         background: var(--default-tab-selected-color) !important;
       }
-      :host(.selected) .tab-close,:host(.selected):hover .tab-close {
-        color:rgba(255,255,255,.9) !important;
+
+      :host(.selected) .tab-close,
+      :host(.selected):hover .tab-close {
+        color: rgba(255, 255, 255, .9) !important;
       }
+
       .tab-close {
-        position:relative;
-        top:3px;
-        left:-5px;
+        position: relative;
+        top: 3px;
+        left: -5px;
         width: 18px;
         box-sizing: border-box;
         border-radius: 18px;
@@ -93,15 +107,16 @@ Custom property | Description | Default
         display: flex;
         align-content: stretch;
         flex-direction: column-reverse;
-        opacity:0.5;
+        opacity: 0.5;
       }
+
       .tab-close:before {
         content: url(../../images/tab-close.png);
       }
-      .tab-close:hover {
-        opacity:1;
-      }
 
+      .tab-close:hover {
+        opacity: 1;
+      }
     </style>
 
     <div class="tab-left"></div>
@@ -140,7 +155,7 @@ Custom property | Description | Default
       hostAttributes: {
         role: 'tab',
       },
-      _tabTaped: function(event){
+      _tabTaped: function (event) {
         event.stopPropagation();
         this.fire('tab-taped', { item: this });
       },
@@ -151,7 +166,7 @@ Custom property | Description | Default
        * @event tap-close
        * @param {things-tab} item the curent tab
        */
-      _close: function(event) {
+      _close: function (event) {
         event.stopPropagation();
         this.fire('tab-close', { item: this });
       },
