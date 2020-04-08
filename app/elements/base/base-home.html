@@ -286,6 +286,15 @@ Copyright © HatioLab Inc. All rights reserved.
 
       properties: {
         /**
+         * @description Canvas 2D Context
+         ********************
+         * @type {Object}
+         */
+        canvasCtx: {
+          type: Object
+        },
+
+        /**
          * @description First Chart
          ********************
          * @type {Object}
@@ -318,6 +327,12 @@ Copyright © HatioLab Inc. All rights reserved.
        *******************
        */
       attached: function() {
+        this.canvasCtx = {
+          'first-chart': null,
+          'second-chart': null,
+          'third-chart': null
+        };
+
         setTimeout(function() {
           this._renderFirstChart(this.randomActuals(31, '1'));
           this._renderSecondChart(this.randomActuals(28, '2'));
@@ -419,7 +434,11 @@ Copyright © HatioLab Inc. All rights reserved.
       _renderLineChart: function(canvasId, lineChart, dataset) {
         // 1. 최초 차트가 그려지기 전 
         if (!lineChart) {
-          var ctx = this.$[canvasId].getContext('2d');
+          var ctx = this.canvasCtx[canvasId];
+          if (ctx == null) {
+            ctx = this.$[canvasId].getContext('2d');
+          }
+
           lineChart = new Chart(ctx, {
             type: 'line',
             data: dataset,
