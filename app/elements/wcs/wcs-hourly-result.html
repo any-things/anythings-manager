@@ -21,6 +21,8 @@ Copyright © HatioLab Inc. All rights reserved.
 
       .container {
         @apply --layout-flex;
+        margin:10px 16px 10px 16px;
+        background-color: #FFFFFF;
       }
     </style>
 
@@ -46,7 +48,7 @@ Copyright © HatioLab Inc. All rights reserved.
       last-response="{{lastResponse}}">
     </things-search-form>
 
-		<div class="container" id="hourly-chart" style="margin:10px 16px 10px 16px;background-color: #FFFFFF;">
+		<div class="container" id="hourly-chart">
       <canvas id="canvas"></canvas>
     </div>
   </template>
@@ -84,11 +86,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @description Life Cycle
        *******************
        */
-      attached: function() {
-        setTimeout(function() {
-          this.lastResponse = [];
-        }.bind(this), 1000);
-      },
+      attached: function() {},
 
       /**
        * @description 데이터 변경시 

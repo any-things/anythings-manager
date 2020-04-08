@@ -1,0 +1,311 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<link rel="import" href="./things-chart-behavior.html">
+
+<!--
+	검색 폼 - 메뉴 기반의 그리드 && 차트 화면으로 구성된 화면을 등록한다.
+	메뉴에 그리드 설정이 되어있어야 하고 메뉴 메타에 메뉴 configuration이 존재해야 한다. 
+-->
+
+<dom-module id="things-chart-content">
+  <template>
+		<style>
+      :host {
+        @apply --layout-vertical;
+      }
+
+      .container {
+        @apply --layout-flex;
+        margin:10px 16px 10px 16px;
+        background-color: #FFFFFF;
+      }
+		</style>
+
+    <!-- 메뉴 메타 정보 조회 -->
+		<things-ajax 
+			auto
+			id="resource-meta"
+			method="GET"
+			resource-url="[[menuMetaUrl]]"
+			last-response="{{metaData}}">
+		</things-ajax>
+
+    <!-- 검색 폼 -->
+		<things-search-form 
+			id="search-form"
+			form-fields="[[searchFormFields]]" 
+			select-fields="[[selectFields]]"
+			sort-fields="[[sortFields]]"
+			action-url="[[menuInfo.resource_url]]" 
+			page="{{page}}"
+			limit="[[limit]]"
+			last-response="{{lastResponse}}">
+    </things-search-form>
+    
+    <!-- 차트 컨테이너 -->
+    <div id="container" class="container">
+      <canvas id="chart"></canvas>
+    </div>
+	</template>
+
+  <script>
+    Polymer({
+      is: 'things-chart-content',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
+
+      properties: {
+        /**
+         * @description 차트 유형
+         ********************
+         * @type {String}
+         */
+        chartType: {
+          type: String,
+          value: 'bar'
+        },
+
+        /**
+         * @description 차트 타이틀
+         ********************
+         * @type {String}
+         */
+        chartTitle: {
+          type: String,
+          value: ''
+        },
+
+        /**
+         * @description 차트 라벨 
+         ********************
+         * @type {String}
+         */
+        chartLabel: {
+          type: String,
+          value: ''
+        },
+
+        /**
+         * @description 차트 백그라운드 컬러 
+         ********************
+         * @type {String}
+         */
+        chartBackgroundColor: {
+          type: String,
+          value: 'rgba(54,162,235,0.2)'
+        },
+
+        /**
+         * @description 차트 컬러 
+         ********************
+         * @type {String}
+         */
+        chartColor: {
+          type: String,
+          value: 'rgba(54,162,235,1)'
+        },
+
+        /**
+         * @description 범례 포지션 
+         ********************
+         * @type {String}
+         */
+        legendPosition: {
+          type: String,
+          value: 'top'
+        },
+
+        /**
+         * @description Y축 값 필드
+         ********************
+         * @type {String}
+         */
+        xValueField: {
+          type: String,
+          value: 'x'
+        },
+
+        /**
+         * @description Y축 값 필드
+         ********************
+         * @type {String}
+         */
+        yValueField: {
+          type: String,
+          value: 'y'
+        },
+
+        /**
+         * @description 차트 오브젝트
+         ********************
+         * @type {Object}
+         */
+        chart: {
+          type: Object
+        },
+
+        /**
+         * @description 검색 데이터 
+         ********************
+         * @type {Object}
+         */
+        lastResponse: {
+          type: Object,
+          observer: '_onDataChanged'
+        },
+
+        /**
+         * @description 버튼
+         **************
+         * @type {Array}
+         */
+        buttons: {
+          type: Array,
+          value: []
+        }
+      },
+
+      listeners: {
+        'things-menu-meta-configured': '_menuMetaConfigured'
+      },
+
+      /**
+       * @description Life Cycle - Ready
+       *******************
+       */
+      ready: function() {
+        this.initialSearchFlag = false;
+      },
+
+      /**
+       * @description 데이터 변경시 
+       *******************
+       * @param {Object} lastResponse
+       */
+      _onDataChanged: function(lastResponse) {
+        var dataset = this.chartDataset(lastResponse);
+        this.renderChart(dataset);
+      },
+
+      /**
+       * @description 메뉴 정보 설정 이후 ...
+       ******************************
+       * @param {Object} event
+       */
+      _menuMetaConfigured: function(event) {
+        // 메뉴 파라미터 값을 추출
+        var menuParams = this.metaData.menu_params;
+        // 메뉴 파라미터에서 차트 파라미터 추출 후 설정
+        if (menuParams && menuParams.length > 0) {
+          // 차트 유형 
+          this.chartType = this.menuParamValue(menuParams, 'chart-type', this.chartType);
+          // 차트 타이틀
+          this.chartTitle = this.menuParamValue(menuParams, 'chart-title', this.chartTitle);
+          // 차트 라벨
+          this.chartLabel = this.menuParamValue(menuParams, 'chart-label', this.chartLabel);
+          // 차트 백그라운드 컬러
+          this.chartBackgroundColor = this.menuParamValue(menuParams, 'chart-background-color', this.chartBackgroundColor);
+          // 차트 컬러
+          this.chartColor = this.menuParamValue(menuParams, 'chart-color', this.chartColor);
+          // 차트 범례 위치
+          this.legendPosition = this.menuParamValue(menuParams, 'chart-legend-position', this.legendPosition);
+          // X축 라벨 필드 
+          this.xValueField = this.menuParamValue(menuParams, 'x-value-field', this.xValueField);
+          // Y축 라벨 필드 
+          this.yValueField = this.menuParamValue(menuParams, 'y-value-field', this.yValueField);
+        }
+      },
+
+      /**
+       * @description 메뉴 파라미터 값 추출 
+       *******************
+       * @param {String} menuParams
+       * @param {String} menuParamName
+       * @param {String} defaultValue
+       * @return
+       */
+      menuParamValue: function(menuParams, menuParamName, defaultValue) {
+        var paramItem = menuParams.find(function(item) {
+          return item.name == menuParamName;
+        });
+
+        return (paramItem && paramItem.value) ? (paramItem.value.trim().length > 1 ? paramItem.value : defaultValue) : defaultValue;
+      },
+
+      /**
+       * @description 차트 실적 데이터 
+       *******************
+       * @param {Array} items
+       */
+      chartDataset: function(items) {
+        var xValueField = this.xValueField;
+        var yValueField = this.yValueField;
+
+        var labels = items.map(function(item) {
+          return item[xValueField];
+        });
+        var dataList = items.map(function(item) {
+          return item[yValueField];
+        });
+
+        return {
+          labels: labels,
+          datasets: [{
+            label: this.chartLabel ? this.chartLabel : '',
+            steppedLine: false,
+            borderWidth: 1,
+            backgroundColor: this.chartBackgroundColor,
+            borderColor: this.chartColor,
+            data: dataList
+          }]
+        };
+      },
+
+      /**
+       * @description 차트 렌더링
+       *******************
+       * @param {Object} dataset
+       */
+      renderChart: function(dataset) {
+        // 1. 최초 차트가 그려지기 전 
+        if (!this.chart) {
+          var chartType = this.chartType;
+          var chartTitle = this.chartTitle;
+          var legendPosition = this.legendPosition;
+          var ctx = this.$['chart'].getContext('2d');
+
+          this.chart = new Chart(ctx, {
+            type: chartType,
+            data: dataset,
+            options: {
+              responsive: true,
+              legend: {
+                display: legendPosition ? true : false,
+                position: legendPosition
+              },
+              title: {
+                display: chartTitle ? true : false,
+                text: chartTitle
+              }
+            }
+          });
+
+          // 2. 차트가 한 번 그려진 이후 
+        } else {
+          this.chart.config.data = dataset;
+          this.chart.update();
+        }
+      }
+    });
+  </script>
+</dom-module>
