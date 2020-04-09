@@ -206,13 +206,14 @@ Copyright © HatioLab Inc. All rights reserved.
         var doneOrders = this.items && this.items.length > 0 ? 7460 : 0;
         var totalPcs = this.items && this.items.length > 0 ? 59734 : 0;
         var donePcs = this.items && this.items.length > 0 ? 26790 : 0;
-        var progressRate = Math.round((doneOrders / totalOrders) * 100);
+        var progressRate = doneOrders == 0 ? 0 : Math.round((doneOrders / totalOrders) * 100);
+        var pcsRate = donePcs == 0 ? 0 : Math.round((donePcs / totalPcs) * 100);
 
         // 2. 주문 진행율 바차트 렌더링
-        this.renderOrderBarChart(totalOrders, doneOrders);
+        this.renderOrderBarChart(totalOrders, doneOrders, progressRate);
 
         // 3. 주문 진행율 바차트 렌더링
-        this.renderPcsBarChart(totalPcs, donePcs);
+        this.renderPcsBarChart(totalPcs, donePcs, pcsRate);
 
         // 4. 게이지 차트 렌더링
         var datasets = this.calcProgressRate(progressRate);
@@ -266,8 +267,8 @@ Copyright © HatioLab Inc. All rights reserved.
 
         return [{
           data: [progressRate, leftRate],
-          backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(159, 157, 150, 0.2)'],
-          borderColor: ['rgba(255, 99, 132, 1)', 'rgba(159, 157, 150, 0.2)'],
+          backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(159, 157, 150, 0.6)'],
+          borderColor: ['rgba(255, 99, 132, 1)', 'rgba(159, 157, 150, 0.6)'],
           label: 'Data'
         }]
       },
@@ -320,22 +321,23 @@ Copyright © HatioLab Inc. All rights reserved.
       /**
        * @description 주문 진행율 바 차트 렌더링
        *******************
-       * @param {Object} totalOrders
-       * @param {Object} doneOrders
+       * @param {Number} totalOrders
+       * @param {Number} doneOrders
+       * @param {Number} orderRate
        */
-      renderOrderBarChart: function(totalOrders, doneOrders) {
+      renderOrderBarChart: function(totalOrders, doneOrders, orderRate) {
         dataset = {
           labels: ['주문'],
           datasets: [{
             label: '주문 계획',
             borderWidth: 1,
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            backgroundColor: 'rgba(75, 192, 192, 0.6)',
             borderColor: 'rgba(75, 192, 192, 1)',
             data: [totalOrders]
           }, {
             label: '주문 실적',
             borderWidth: 1,
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            backgroundColor: 'rgba(255, 99, 132, 0.6)',
             borderColor: 'rgba(255, 99, 132, 1)',
             data: [doneOrders]
           }]
@@ -357,7 +359,7 @@ Copyright © HatioLab Inc. All rights reserved.
               title: {
                 display: true,
                 fontSize: 14,
-                text: '주문 진행율 (56%)'
+                text: '주문 진행율 (' + orderRate + '%)'
               },
               layout: {
                 margin: {
@@ -377,7 +379,7 @@ Copyright © HatioLab Inc. All rights reserved.
           // 2. 차트가 한 번 그려진 이후 
         } else {
           this.orderBarChart.config.data = dataset;
-          this.orderBarChart.config.options.title.text = '주문 진행율 (56%)';
+          this.orderBarChart.config.options.title.text = '주문 진행율 (' + orderRate + '%)';
           this.orderBarChart.update();
         }
       },
@@ -387,20 +389,21 @@ Copyright © HatioLab Inc. All rights reserved.
        *******************
        * @param {Number} totalPcs
        * @param {Number} donePcs
+       * @param {Number} pcsRate
        */
-      renderPcsBarChart: function(totalPcs, donePcs) {
+      renderPcsBarChart: function(totalPcs, donePcs, pcsRate) {
         dataset = {
           labels: ['PCS'],
           datasets: [{
             label: 'PCS 계획',
             borderWidth: 1,
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            backgroundColor: 'rgba(75, 192, 192, 0.6)',
             borderColor: 'rgba(75, 192, 192, 1)',
             data: [totalPcs]
           }, {
             label: 'PCS 실적',
             borderWidth: 1,
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            backgroundColor: 'rgba(255, 99, 132, 0.6)',
             borderColor: 'rgba(255, 99, 132, 1)',
             data: [donePcs]
           }]
@@ -422,7 +425,7 @@ Copyright © HatioLab Inc. All rights reserved.
               title: {
                 display: true,
                 fontSize: 14,
-                text: 'PCS 진행율 (62%)'
+                text: 'PCS 진행율 (' + pcsRate + '%)'
               },
               layout: {
                 margin: {
@@ -442,7 +445,7 @@ Copyright © HatioLab Inc. All rights reserved.
           // 2. 차트가 한 번 그려진 이후 
         } else {
           this.pcsBarChart.config.data = dataset;
-          this.pcsBarChart.config.options.title.text = 'PCS 진행율 (62%)';
+          this.pcsBarChart.config.options.title.text = 'PCS 진행율 (' + pcsRate + '%)';
           this.pcsBarChart.update();
         }
       }
