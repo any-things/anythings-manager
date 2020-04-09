@@ -104,13 +104,17 @@
         border: none;
         background: url(/images/icon-collapse.png) 70% 50% no-repeat;
       }
+
       .recent-pages-wrap {
-        display: grid; grid-template-columns:0px 1fr;
+        display: grid;
+        grid-template-columns: 0px 1fr;
       }
 
-      .recent-pages-wrap[active]{
-        display: grid; grid-template-columns:160px 1fr;
+      .recent-pages-wrap[active] {
+        display: grid;
+        grid-template-columns: 160px 1fr;
       }
+
       things-alarm-badge {
         color: #6a83b8
       }
@@ -181,7 +185,7 @@
       }
 
       .header {
-        background-color: #312e2e;
+        background-color: var(--things-sidebar-background-color);
         padding: 6px 0;
         /* border-bottom: 1px solid rgba(255, 255, 255, .2); */
         color: rgba(255, 255, 255, .4);
@@ -190,12 +194,14 @@
 
       .header ::shadow iron-icon {
         /* fill: #312e2e; */
-        margin-top: 2px ;
-        width:18px;
-        height:18px;
-        padding-left:5px;
+        margin-top: 2px;
+        width: 18px;
+        height: 18px;
+        padding-left: 5px;
       }
-      .header ::shadow iron-icon:hover, things-profile:hover{
+
+      .header ::shadow iron-icon:hover,
+      things-profile:hover {
         color: var(--things-primary-color);
       }
 
@@ -220,7 +226,6 @@
           font-weight: bold !important;
         }
       }
-
     </style>
 
     <iron-localstorage id="localStorage" name="{$ appName $}" value="{{storage}}"
@@ -240,7 +245,7 @@
         brand-name="[[domainAppObj.brand_name]]" menu-group="{{menuGroup}}"
         query-fields='[{"name":"category","operator":"noteq","value":"TERMINAL"}]'>
         <!--  class="user-menu header" -->
-         <div class="header">
+        <div class="header">
           <!-- sidebar header toolbar menu start-->
           <things-profile system="Things Suite" role-list-url="roles"
             role-request-url="request_auths/account/auth/request" default-locale="ko-KR">
@@ -264,9 +269,11 @@
         <!-- Main Content -->
         <div class="container flex-horizontal-with-ratios">
           <div class="container flex vertical flex5child" id="mainSection">
-            <div id="div-recent-page-wrap" active$="[[isNarrow]]" class="recent-pages-wrap" hidden="[[recentPageHidden]]">
+            <div id="div-recent-page-wrap" active$="[[isNarrow]]" class="recent-pages-wrap"
+              hidden="[[recentPageHidden]]">
               <!-- Layout Toolbar를 위한 DIV 추가 -->
-              <things-sidebar-toggle drawer-id='paperDrawerPanel' brand-name=[[domainAppObj.brand_name]]></things-sidebar-toggle>
+              <things-sidebar-toggle drawer-id='paperDrawerPanel' brand-name=[[domainAppObj.brand_name]]>
+              </things-sidebar-toggle>
               <things-recent-page id="recent-page"></things-recent-page>
             </div>
 
