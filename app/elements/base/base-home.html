@@ -238,7 +238,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			</div>
 
 			<div id="first-chart-container">
-        <canvas id="first-chart" style="height:80px;margin:0px 10px 75px 10px"></canvas>
+        <canvas id="first-chart"></canvas>
 			</div>
 
 			<div id="sum-subtitle">누적 합계</div>
@@ -253,7 +253,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			</div>
 
 			<div id="second-chart-container">
-				<canvas id="second-chart" style="height:80px;margin:0px 10px 75px 10px"></canvas>
+				<canvas id="second-chart"></canvas>
 			</div>
 
 			<div id="second-month-sum">
@@ -266,7 +266,7 @@ Copyright © HatioLab Inc. All rights reserved.
 			</div>
 
 			<div id="third-chart-container">
-				<canvas id="third-chart" style="height:80px;margin:0px 10px 75px 10px"></canvas>
+				<canvas id="third-chart"></canvas>
 			</div>
 
 			<div id="third-month-sum">
@@ -444,6 +444,7 @@ Copyright © HatioLab Inc. All rights reserved.
             data: dataset,
             options: {
               responsive: true,
+              maintainAspectRatio: false,
               legend: {
                 display: false,
               },
