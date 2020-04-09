@@ -24,7 +24,7 @@ Copyright © HatioLab Inc. All rights reserved.
       .container {
         height: 100%;
         display: grid;
-        grid-template-rows: 35% 65%;
+        grid-template-rows: 45% 55%;
         grid-template-columns: 25% 75%;
         border-radius: 4px;
       }
@@ -74,13 +74,6 @@ Copyright © HatioLab Inc. All rights reserved.
       method="GET" 
       resource-url="[[menuMetaUrl]]" 
       last-response="{{metaData}}">
-    </things-ajax>
-
-    <!-- 차트 렌더링을 위한 데이터 -->
-    <things-ajax 
-      id="chart-data-ajax" 
-      resource-action="find" 
-      resource-url="job_batches/progress_rate">
     </things-ajax>
 
     <!-- 검색 폼 -->
@@ -180,10 +173,6 @@ Copyright © HatioLab Inc. All rights reserved.
         }
       },
 
-      listeners: {
-        'chart-data-ajax.things-ajax-response': '_onChartDataChanged'
-      },
-
       /**
        * @description 배치 데이터 변경시 
        *******************
@@ -196,64 +185,49 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
-       * @description 차트 데이터 변경시 
-       *******************
-       * @param {Object} chartData
-       */
-      _onChartDataChanged: function(chartData) {
-        // 1. 총 수량 및 진행율 계산
-        var totalOrders = this.items && this.items.length > 0 ? 15670 : 0;
-        var doneOrders = this.items && this.items.length > 0 ? 7460 : 0;
-        var totalPcs = this.items && this.items.length > 0 ? 59734 : 0;
-        var donePcs = this.items && this.items.length > 0 ? 26790 : 0;
-        var progressRate = doneOrders == 0 ? 0 : Math.round((doneOrders / totalOrders) * 100);
-        var pcsRate = donePcs == 0 ? 0 : Math.round((donePcs / totalPcs) * 100);
-
-        // 2. 주문 진행율 바차트 렌더링
-        this.renderOrderBarChart(totalOrders, doneOrders, progressRate);
-
-        // 3. 주문 진행율 바차트 렌더링
-        this.renderPcsBarChart(totalPcs, donePcs, pcsRate);
-
-        // 4. 게이지 차트 렌더링
-        var datasets = this.calcProgressRate(progressRate);
-        this.renderGuateChart(datasets);
-      },
-
-      /**
        * @description 배치 데이터 변경시 ...
        *******************
        * @param {Array} items
        */
       _itemsChanged: function(items) {
-        // 1. 차트 데이터 조회 
-        this.searchChartData();
+        // 1. 총 수량 및 진행율 계산
+        var totalOrders = 0;
+        var doneOrders = 0;
+        var totalPcs = 0;
+        var donePcs = 0;
 
-        // 2. 배치 데이터 작업 진행율 계산
-        return items.map(function(item) {
-          if (!item.batch_order_qty || !item.result_order_qty || item.batch_order_qty == 0 || item.result_order_qty == 0) {
-            item.progress_rate = 0;
-          } else {
-            item.progress_rate = (item.result_order_qty / item.batch_order_qty) * 100;
-          }
+        if (items && items.length > 0) {
+          items.forEach(function(item) {
+            // 1-1. 배치별 총 주문 수량, 총 처리 주문 수량, 총 PCS, 총 처리 PCS 계산
+            totalOrders += item.batch_order_qty;
+            doneOrders += item.result_order_qty;
+            totalPcs += item.batch_pcs;
+            donePcs += item.result_pcs;
 
-          return item;
-        });
-      },
+            // 1-2. 배치 데이터 작업 진행율 계산
+            if (item.batch_pcs == 0 || item.result_pcs == 0) {
+              item.progress_rate = 0;
+            } else {
+              item.progress_rate = (item.result_pcs / item.result_pcs) * 100;
+            }
+          });
+        }
 
-      /**
-       * @description 차트 데이터 조회 
-       *******************
-       */
-      searchChartData: function() {
-        var formData = this.getResourceSearchForm().serializeMyForm();
-        var today = formData.job_date;
+        var progressRate = (totalOrders == 0 || doneOrders == 0) ? 0 : Math.round((doneOrders / totalOrders) * 100);
+        var pcsRate = (totalPcs == 0 || donePcs == 0) ? 0 : Math.round((donePcs / totalPcs) * 100);
 
-        var chartAjax = this.$['chart-data-ajax'];
-        chartAjax.params = {
-          job_date: today
-        };
-        chartAjax.generateRequest();
+        // 2. 주문 진행율 바차트 렌더링
+        this.orderBarChart = this.renderBarChart(this.orderBarChart, 'order-chart', '주문', totalOrders, doneOrders, progressRate);
+
+        // 3. 주문 진행율 바차트 렌더링
+        this.pcsBarChart = this.renderBarChart(this.pcsBarChart, 'pcs-chart', 'PCS', totalPcs, donePcs, pcsRate);
+
+        // 4. 게이지 차트 렌더링
+        var datasets = this.calcProgressRate(pcsRate);
+        this.renderGuateChart(datasets);
+
+        // 5. 리턴
+        return items;
       },
 
       /**
@@ -267,8 +241,8 @@ Copyright © HatioLab Inc. All rights reserved.
 
         return [{
           data: [progressRate, leftRate],
-          backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(159, 157, 150, 0.6)'],
-          borderColor: ['rgba(255, 99, 132, 1)', 'rgba(159, 157, 150, 0.6)'],
+          backgroundColor: ['rgba(255,99,132,0.6)', 'rgba(159,157,150,0.6)'],
+          borderColor: ['rgba(255,99,132,1)', 'rgba(159,157,150,0.6)'],
           label: 'Data'
         }]
       },
@@ -279,6 +253,8 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Object} dataset
        */
       renderGuateChart: function(dataset) {
+        var chartTitle = '작업 진행율 (' + dataset[0].data[0] + '%)';
+
         // 1. 최초 차트가 그려지기 전 
         if (!this.chart) {
           var ctx = this.$['gauge-chart'].getContext('2d');
@@ -295,16 +271,16 @@ Copyright © HatioLab Inc. All rights reserved.
               responsive: true,
               maintainAspectRatio: false,
               legend: {
-                position: 'top'
+                position: 'bottom'
               },
               title: {
                 display: true,
                 fontSize: 20,
-                text: '작업 진행율 (' + dataset[0].data[0] + '%)'
+                text: chartTitle
               },
               layout: {
                 padding: {
-                  bottom: 20
+                  bottom: 10
                 }
               }
             }
@@ -313,106 +289,58 @@ Copyright © HatioLab Inc. All rights reserved.
           // 2. 차트가 한 번 그려진 이후 
         } else {
           this.chart.config.data.datasets = dataset;
-          this.chart.config.options.title.text = '작업 진행율 (' + dataset[0].data[0] + '%)';
+          this.chart.config.options.title.text = chartTitle;
           this.chart.update();
         }
       },
 
       /**
-       * @description 주문 진행율 바 차트 렌더링
+       * @description 바차트 데이터 셋 생성 
        *******************
-       * @param {Number} totalOrders
-       * @param {Number} doneOrders
-       * @param {Number} orderRate
+       * @param {String} category
+       * @param {Number} total
+       * @param {Number} done
+       * @return 바차트 데이터 셋 리턴
        */
-      renderOrderBarChart: function(totalOrders, doneOrders, orderRate) {
-        dataset = {
-          labels: ['주문'],
+      _createBarChartDataset: function(category, total, done) {
+        return {
+          labels: [category],
           datasets: [{
-            label: '주문 계획',
+            label: category + ' 계획',
             borderWidth: 1,
-            backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            data: [totalOrders]
+            backgroundColor: 'rgba(75,192,192,0.6)',
+            borderColor: 'rgba(75,192,192,1)',
+            data: [total]
           }, {
-            label: '주문 실적',
+            label: category + ' 실적',
             borderWidth: 1,
-            backgroundColor: 'rgba(255, 99, 132, 0.6)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            data: [doneOrders]
+            backgroundColor: 'rgba(255,99,132,0.6)',
+            borderColor: 'rgba(255,99,132,1)',
+            data: [done]
           }]
         };
-
-        // 1. 최초 차트가 그려지기 전 
-        if (!this.orderBarChart) {
-          var ctx = this.$['order-chart'].getContext('2d');
-          this.orderBarChart = new Chart(ctx, {
-            type: 'horizontalBar',
-            data: dataset,
-            options: {
-              maintainAspectRatio: false, // div 사이즈에 최적화되도록 표시
-              responsive: true,
-              legend: {
-                display: true,
-                position: 'top'
-              },
-              title: {
-                display: true,
-                fontSize: 14,
-                text: '주문 진행율 (' + orderRate + '%)'
-              },
-              layout: {
-                margin: {
-                  bottom: 10
-                }
-              },
-              scales: {
-                xAxes: [{
-                  ticks: {
-                    beginAtZero: true
-                  }
-                }]
-              }
-            }
-          });
-
-          // 2. 차트가 한 번 그려진 이후 
-        } else {
-          this.orderBarChart.config.data = dataset;
-          this.orderBarChart.config.options.title.text = '주문 진행율 (' + orderRate + '%)';
-          this.orderBarChart.update();
-        }
       },
 
       /**
-       * @description PCS 진행율 바 차트 렌더링
+       * @description 진행율 바 차트 렌더링
        *******************
-       * @param {Number} totalPcs
-       * @param {Number} donePcs
-       * @param {Number} pcsRate
+       * @param {Object} chartObj
+       * @param {String} chartCanvasId
+       * @param {String} category
+       * @param {Number} total
+       * @param {Number} done
+       * @param {Number} rate
+       * @return 바 차트 리턴 
        */
-      renderPcsBarChart: function(totalPcs, donePcs, pcsRate) {
-        dataset = {
-          labels: ['PCS'],
-          datasets: [{
-            label: 'PCS 계획',
-            borderWidth: 1,
-            backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            data: [totalPcs]
-          }, {
-            label: 'PCS 실적',
-            borderWidth: 1,
-            backgroundColor: 'rgba(255, 99, 132, 0.6)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            data: [donePcs]
-          }]
-        };
+      renderBarChart: function(chartObj, chartCanvasId, category, total, done, rate) {
+        // 1. 바차트 데이터 셋 생성 
+        var dataset = this._createBarChartDataset(category, total, done);
+        var chartTitle = category + ' 진행율 (' + rate + '%)';
 
-        // 1. 최초 차트가 그려지기 전 
-        if (!this.pcsBarChart) {
-          var ctx = this.$['pcs-chart'].getContext('2d');
-          this.pcsBarChart = new Chart(ctx, {
+        // 2. 최초 차트가 그려지기 전 
+        if (!chartObj) {
+          var ctx = this.$[chartCanvasId].getContext('2d');
+          chartObj = new Chart(ctx, {
             type: 'horizontalBar',
             data: dataset,
             options: {
@@ -420,12 +348,12 @@ Copyright © HatioLab Inc. All rights reserved.
               responsive: true,
               legend: {
                 display: true,
-                position: 'top'
+                position: 'right'
               },
               title: {
                 display: true,
-                fontSize: 14,
-                text: 'PCS 진행율 (' + pcsRate + '%)'
+                fontSize: 13,
+                text: chartTitle
               },
               layout: {
                 margin: {
@@ -442,12 +370,15 @@ Copyright © HatioLab Inc. All rights reserved.
             }
           });
 
-          // 2. 차트가 한 번 그려진 이후 
+          // 3. 차트가 한 번 그려진 이후 
         } else {
-          this.pcsBarChart.config.data = dataset;
-          this.pcsBarChart.config.options.title.text = 'PCS 진행율 (' + pcsRate + '%)';
-          this.pcsBarChart.update();
+          chartObj.config.data = dataset;
+          chartObj.config.options.title.text = chartTitle;
+          chartObj.update();
         }
+
+        // 4. 차트 리턴
+        return chartObj;
       }
     })
   </script>
