@@ -86,6 +86,16 @@ Copyright © HatioLab Inc. All rights reserved.
         },
 
         /**
+         * @description 차트에 표시할 데이터 셋 개수
+         ********************
+         * @type {Number}
+         */
+        datasetCount: {
+          type: Number,
+          value: 1
+        },
+
+        /**
          * @description 차트 라벨 
          ********************
          * @type {String}
@@ -211,17 +221,23 @@ Copyright © HatioLab Inc. All rights reserved.
           this.chartType = this.menuParamValue(menuParams, 'chart-type', this.chartType);
           // 차트 타이틀
           this.chartTitle = this.menuParamValue(menuParams, 'chart-title', this.chartTitle);
+          // 차트 범례 위치
+          this.legendPosition = this.menuParamValue(menuParams, 'chart-legend-position', this.legendPosition);
+          // X축 라벨 필드 
+          this.xValueField = this.menuParamValue(menuParams, 'x-value-field', this.xValueField);
+
+          // 데이터 셋 카운트
+          var dsCount = this.menuParamValue(menuParams, 'dataset-count', this.datasetCount);
+          if (!Number.isInteger(dsCount)) {
+            this.datasetCount = parseInt(dsCount);
+          }
           // 차트 라벨
           this.chartLabel = this.menuParamValue(menuParams, 'chart-label', this.chartLabel);
           // 차트 백그라운드 컬러
           this.chartBackgroundColor = this.menuParamValue(menuParams, 'chart-background-color', this.chartBackgroundColor);
           // 차트 컬러
           this.chartColor = this.menuParamValue(menuParams, 'chart-color', this.chartColor);
-          // 차트 범례 위치
-          this.legendPosition = this.menuParamValue(menuParams, 'chart-legend-position', this.legendPosition);
-          // X축 라벨 필드 
-          this.xValueField = this.menuParamValue(menuParams, 'x-value-field', this.xValueField);
-          // Y축 라벨 필드 
+          // Y축 라벨 필드
           this.yValueField = this.menuParamValue(menuParams, 'y-value-field', this.yValueField);
         }
       },
@@ -239,7 +255,7 @@ Copyright © HatioLab Inc. All rights reserved.
           return item.name == menuParamName;
         });
 
-        return (paramItem && paramItem.value) ? (paramItem.value.trim().length > 1 ? paramItem.value : defaultValue) : defaultValue;
+        return (paramItem && paramItem.value) ? (paramItem.value.trim().length >= 1 ? paramItem.value : defaultValue) : defaultValue;
       },
 
       /**
@@ -249,25 +265,36 @@ Copyright © HatioLab Inc. All rights reserved.
        */
       chartDataset: function(items) {
         var xValueField = this.xValueField;
-        var yValueField = this.yValueField;
 
         var labels = items.map(function(item) {
           return item[xValueField];
         });
-        var dataList = items.map(function(item) {
-          return item[yValueField];
-        });
+
+        var datasets = [];
+        var chartLabels = this.chartLabel.split(';');
+        var yValueFields = this.yValueField.split(';');
+        var backgroundColors = this.chartBackgroundColor.split(';');
+        var chartColors = this.chartColor.split(';');
+
+        for (var i = 0; i < this.datasetCount; i++) {
+          var data = items.map(function(item) {
+            return item[yValueFields[i]];
+          });
+
+          var dataset = {
+            label: chartLabels[i],
+            borderWidth: 1,
+            backgroundColor: backgroundColors[i],
+            borderColor: chartColors[i],
+            data: data
+          }
+
+          datasets.push(dataset);
+        }
 
         return {
           labels: labels,
-          datasets: [{
-            label: this.chartLabel ? this.chartLabel : '',
-            steppedLine: false,
-            borderWidth: 1,
-            backgroundColor: this.chartBackgroundColor,
-            borderColor: this.chartColor,
-            data: dataList
-          }]
+          datasets: datasets
         };
       },
 
