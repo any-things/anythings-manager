@@ -47,18 +47,19 @@ Copyright © HatioLab Inc. All rights reserved.
       paper-scroll-header-panel {
         height: 100%;
         @apply --things-sidebar-panel;
-        border-right: 1px solid #252222;
+        border-right: 1px solid var(--things-primary-color)
       }
 
       .brand {
         height: 39px;
         padding: 14px 0 0 10px;
         background-color: var(--things-primary-background-color);
+        border-bottom: 1px solid rgba(0, 0, 0, .15);
       }
 
       paper-button {
         display: block;
-        border-bottom: 1px solid rgba(0, 0, 0, .15);
+        border-top: 1px solid rgba(0, 0, 0, .15);    
         margin: 0;
         padding: 10px 5px 10px 10px;
         font-size: 15px;
@@ -73,7 +74,6 @@ Copyright © HatioLab Inc. All rights reserved.
         color: #fff;
       }
 
-
       iron-collapse:focus,
       a:focus {
         outline: none;
@@ -86,14 +86,7 @@ Copyright © HatioLab Inc. All rights reserved.
       }
 
       paper-listbox {
-        background: -moz-linear-gradient(top, #312e2e 20%, #252222 100%);
-        /* FF3.6-15 */
-        background: -webkit-linear-gradient(top, #312e2e 20%, #252222 100%);
-        /* Chrome10-25,Safari5.1-6 */
-        background: linear-gradient(to bottom, #312e2e 20%, #252222 100%);
-        /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-        border-top: 1px solid #312e2e;
-        padding: 0;
+        @apply --things-listbox;
       }
 
       paper-item:before {
@@ -120,9 +113,8 @@ Copyright © HatioLab Inc. All rights reserved.
         color: rgba(255, 255, 255, 1);
       }
 
-
       paper-item[active] {
-        color: #e6b84b;
+        color: var(--things-primary-color);
         font-weight: bold;
         background-color: rgba(0, 0, 0, .1);
       }
@@ -148,8 +140,13 @@ Copyright © HatioLab Inc. All rights reserved.
       }
     </style>
 
-    <things-ajax auto id="refresh" resource-url="[[resourceUrl]]" resource-action="[[resourceAction]]"
-      query-fields="[[queryFields]]" last-response="{{menus}}">
+    <things-ajax 
+      auto 
+      id="refresh" 
+      resource-url="[[resourceUrl]]" 
+      resource-action="[[resourceAction]]"
+      query-fields="[[queryFields]]" 
+      last-response="{{menus}}">
     </things-ajax>
 
     <div class="brand">
@@ -176,22 +173,11 @@ Copyright © HatioLab Inc. All rights reserved.
                     parent-menu-group="[[group.menuGroupId]]">[[item.title]]</paper-item>
                 </a>
               </template>
-            </paper-listbox>
-          </iron-collapse>
-        </template>
-
-        <!-- Terminal Menu -->
-        <template is="dom-if" if={{isTerminal}}>
-          <template is="dom-repeat" items="{{group.child}}" as=item>
-            <a href="[[item.routing]]" class="things-image-button">
-              <things-image-button item="[[item]]" title="[[item.title]]"
-                image-src="[[_computeIconpath(item.icon_path)]]">
-              </things-image-button>
-            </a>
-          </template>
-        </template>
-      </template>
-    </paper-scroll-header-panel>
+  </paper-listbox>
+  </iron-collapse>
+  </template>
+  </template>
+  </paper-scroll-header-panel>
   </template>
 
   <script>
@@ -347,7 +333,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * Life Cycle
        * *******
        */
-      attached: function () {
+      attached: function() {
         // ******** Routing 초기화 ***********
         this.addLoginRouting(this.loginRouting);
         // *********************************
@@ -360,7 +346,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Object} group
        * @param {Object} currentMenu
        */
-      _computeActiveGroup: function (group, currentMenu) {
+      _computeActiveGroup: function(group, currentMenu) {
         return group.id === currentMenu.parent_id;
       },
 
@@ -371,22 +357,24 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Object} group
        * @param {Object} currentMenu
        */
-      _computeGroupOpend: function (group, currentMenu) {
+      _computeGroupOpend: function(group, currentMenu) {
         if (this.isMobile) {
           return true;
         } else {
           return group.id == currentMenu.parent_id;
         }
       },
+
       /**
        * menu, currentMenu가 변화 될때 해당 메소드가 호출되며 그룹메뉴의 비교값을 리턴한다.
        ********
        * @param {Object} menu
        * @param {Object} currentMenu
        */
-      _computeMenuActive: function (menu, currentMenu) {
+      _computeMenuActive: function(menu, currentMenu) {
         return menu.id == currentMenu.id
       },
+
       /**
        * When last response data recieved this function will be called
        * then convert these data to menu tree and set to menuGroup
@@ -396,11 +384,13 @@ Copyright © HatioLab Inc. All rights reserved.
        ********
        * @param {Object} menus 메뉴 정보 menu.total : 총 메뉴 개수, menu.items : 메뉴 리스트
        */
-      _onChangeMenus: function (menus) {
+      _onChangeMenus: function(menus) {
         if (menus && menus.length > 0) {
-          var groups = [], screens = [], me = this;
+          var groups = [],
+            screens = [],
+            me = this;
 
-          menus.forEach(function (item) {
+          menus.forEach(function(item) {
             if (item.menu_type === 'MENU') {
               item.child = me._getChildMenu(item, menus);
               item.menuGroupId = 'group' + item.id;
@@ -428,8 +418,8 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param  {Array} items all menu list
        * @return {Array} child screen array
        */
-      _getChildMenu: function (menuGroup, items) {
-        return items.filter(function (item) {
+      _getChildMenu: function(menuGroup, items) {
+        return items.filter(function(item) {
           var screenMenuFlag = (item && item.menu_type === 'SCREEN' && item.parent_id === menuGroup.id);
           if (screenMenuFlag) {
             item.parent_name = menuGroup.title;
@@ -443,7 +433,7 @@ Copyright © HatioLab Inc. All rights reserved.
        *******
        * @param {String} menuCategory
        */
-      _computedMenuUrl: function (menuCategory) {
+      _computedMenuUrl: function(menuCategory) {
         return 'menus/user_menus/' + menuCategory;
       },
 
@@ -452,7 +442,7 @@ Copyright © HatioLab Inc. All rights reserved.
        *******
        * @param {String} menuCategory
        */
-      _computedQuery: function (menuCategory) {
+      _computedQuery: function(menuCategory) {
         if (menuCategory === 'MOBILE') {
           this.isStandard = true;
           this.isTerminal = false;
@@ -473,7 +463,7 @@ Copyright © HatioLab Inc. All rights reserved.
        *******
        * @param {String} icon 메뉴 아이콘 조회 URL 구성을 위한 첨부파일(이미지) ID
        */
-      _computeIconpath: function (icon) {
+      _computeIconpath: function(icon) {
         return this.globals.baseUrl + '/download/' + icon;
       },
 
@@ -482,14 +472,14 @@ Copyright © HatioLab Inc. All rights reserved.
        * ******
        * @param {Object} e 버튼 클릭 이벤트
        */
-      toggle: function (e) {
+      toggle: function(e) {
         var target = this.$$('#' + e.target.ariaControls);
         if (target && target.toggle) {
           target.toggle();
         }
       },
 
-      handleItemTap: function (e) {
+      handleItemTap: function(e) {
         if (location.pathname.length > 1) {
           e.preventDefault();
           var routing = e.currentTarget.getAttribute('href');
