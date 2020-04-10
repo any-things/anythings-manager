@@ -91,6 +91,9 @@ Copyright © HatioLab Inc. All rights reserved.
               } else if (routingType == 'CHART') {
                 me._registerChartScreen(menuData);
 
+              } else if (routingType == 'GRID-CHART') {
+                me._registerGridChartScreen(menuData);
+
               } else if (routingType == 'REPORT') {
                 me._registerReportScreen(menuData);
 
@@ -218,13 +221,26 @@ Copyright © HatioLab Inc. All rights reserved.
     },
 
     /**
-     * 차트 그리드 (검색 폼 - 메뉴 기반의 그리드 && 차트 화면)으로 구성된 화면을 등록한다.
-     * 화면은 DiyGrid 기반으로 그려내고 서비스 호출 URL도 화면의 메뉴 메타 정보로 사용한다.
+     * 차트 그리드 (검색 폼 & 차트 화면)으로 구성된 화면을 등록한다.
+     * 화면은 메뉴 메타 정보로 그려내고 서비스 호출 URL도 화면의 메뉴 메타 정보로 사용하며 
+     * 차트는 메뉴 파라미터 정보로 그려낸다.
      * ********
      * @param {Object} menuData 현재 선택된 메뉴 정보
      */
     _registerChartScreen: function(menuData) {
       var screen = document.createElement('things-chart-content');
+      this._setCommonScreenInfo(screen, menuData);
+    },
+
+    /**
+     * 차트 그리드 (검색 폼 - 메뉴 기반의 그리드 && 차트 화면)으로 구성된 화면을 등록한다.
+     * 화면은 메뉴 메타 정보로 그려내고 서비스 호출 URL도 화면의 메뉴 메타 정보로 사용하며
+     * 차트는 메뉴 파라미터 정보로 그려낸다.
+     * ********
+     * @param {Object} menuData 현재 선택된 메뉴 정보
+     */
+    _registerGridChartScreen: function(menuData) {
+      var screen = document.createElement('things-grid-chart-content');
       this._setCommonScreenInfo(screen, menuData);
     },
 

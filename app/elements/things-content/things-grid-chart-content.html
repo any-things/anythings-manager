@@ -1,0 +1,211 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<!--
+	검색 폼 - 메뉴 기반의 그리드 && 차트 화면으로 구성된 화면을 등록한다.
+	메뉴에 그리드 설정이 되어있어야 하고 메뉴 메타에 메뉴 configuration이 존재해야 한다. 
+-->
+
+<dom-module id="things-grid-chart-content">
+  <template>
+    <style>
+      :host {
+        @apply --layout-flex;
+        @apply --layout-vertical;
+      }
+
+      .container {
+        height: 100%;
+        display: grid;
+        grid-template-rows: 50% 50%;
+        border-radius: 4px;
+      }
+
+      #chart-container {
+        display: grid;
+        background-color: #FFFFFF;
+        margin: 10px 16px 0px 16px;
+      }
+
+      things-resource-grid {
+        @apply --layout-vertical;
+        @apply --layout-flex;
+      }
+    </style>
+
+    <!-- 메뉴 메타 조회 Ajax -->
+    <things-ajax 
+      auto 
+      id="resource-meta" 
+      method="GET" 
+      resource-url="[[menuMetaUrl]]" 
+      last-response="{{metaData}}">
+    </things-ajax>
+
+    <!-- 검색 폼 -->
+    <things-search-form 
+      id="search-form" 
+      title="[[menuInfo.title]]" 
+      form-fields="[[searchFormFields]]"
+      select-fields="[[selectFields]]" 
+      sort-fields="[[sortFields]]" 
+      action-url="[[menuInfo.resource_url]]"
+      page="{{page}}" 
+      limit="[[limit]]" 
+      last-response="{{lastResponse}}">
+    </things-search-form>
+
+    <!-- 컨테이너 -->
+    <div class="container">
+      <!-- 차트 -->
+      <div id="chart-container">
+        <canvas id="chart"></canvas>
+      </div>
+
+      <!-- 그리드 -->
+      <things-resource-grid 
+        id="grid" 
+        config="[[gridConfig]]" 
+        model="[[gridModel]]" 
+        columns="[[gridColumns]]"
+        buttons="[[buttons]]" 
+        current-page="{{page}}" 
+        limit="{{limit}}" 
+        data="[[items]]" 
+        total-count="[[itemCount]]"
+        fixed-column-count="[[menuInfo.fixed_columns]]">
+      </things-resource-grid>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'things-grid-chart-content',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
+
+      properties: {
+        /**
+         * @description Chart Object
+         ********************
+         * @type {Object}
+         */
+        chart: {
+          type: Object
+        },
+
+        /**
+         * @description Chart Options
+         ********************
+         * @type {Object}
+         */
+        chartOptions: {
+          type: Object
+        }
+      },
+
+      listeners: {
+        'things-menu-meta-configured': '_menuMetaConfigured'
+      },
+
+      observers: [
+        '_itemsChanged(items)'
+      ],
+
+      /**
+       * @description 메뉴 정보 설정 이후 ...
+       ******************************
+       * @param {Object} event
+       */
+      _menuMetaConfigured: function(event) {
+        // 메뉴 파라미터 값을 추출
+        var menuParams = this.metaData.menu_params;
+        var chartOptStr = null;
+
+        // 메뉴 파라미터에서 차트 파라미터 추출 후 설정
+        if (menuParams && menuParams.length > 0) {
+          // 차트 옵션  
+          chartOptStr = this.menuParamValue(menuParams, 'chart-options', null);
+        }
+
+        // 차트 옵션이 없다면 에러
+        if (!chartOptStr || chartOptStr.length <= 1) {
+          this.openInfoMsg({
+            title: Things.DataGlobal.t('title.error'),
+            text: '메뉴 파라미터에 차트 옵션(chart-options)이 설정되어 있지 않습니다.'
+          });
+        }
+
+        // 차트 옵션 설정
+        this.chartOptions = JSONfn.parse(chartOptStr);
+      },
+
+      /**
+       * @description 메뉴 파라미터 값 추출 
+       *******************
+       * @param {String} menuParams
+       * @param {String} menuParamName
+       * @param {String} defaultValue
+       * @return
+       */
+      menuParamValue: function(menuParams, menuParamName, defaultValue) {
+        var paramItem = menuParams.find(function(item) {
+          return item.name == menuParamName;
+        });
+
+        return (paramItem && paramItem.value) ? (paramItem.value.trim().length >= 1 ? paramItem.value : defaultValue) : defaultValue;
+      },
+
+      /**
+       * @description 그리드 데이터 변경시 ...
+       *******************
+       * @param {Array} items
+       */
+      _itemsChanged: function(items) {
+        if (this.chartOptions) {
+          this.chart = this.renderChart(this.chart, items);
+        }
+
+        return items;
+      },
+
+      /**
+       * @description 차트 렌더링
+       *******************
+       * @param {Object} chartObj
+       * @param {Array} items
+       * @return 바 차트 리턴 
+       */
+      renderChart: function(chartObj, items) {
+        // 1. 바차트 데이터 셋 생성 
+        var dataset = this.lastResponse.chart;
+
+        // 2. 최초 차트가 그려지기 전 
+        if (!chartObj) {
+          var ctx = this.$['chart'].getContext('2d');
+          this.chartOptions.data = dataset;
+          var chartOpts = this.chartOptions;
+          chartObj = new Chart(ctx, chartOpts);
+
+          // 3. 차트가 한 번 그려진 이후 
+        } else {
+          chartObj.config.data = dataset;
+          chartObj.update();
+        }
+
+        // 4. 차트 리턴
+        return chartObj;
+      }
+    })
+  </script>
+</dom-module>
