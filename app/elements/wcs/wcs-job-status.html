@@ -91,24 +91,24 @@ Copyright © HatioLab Inc. All rights reserved.
 
     <!-- 컨테이너 -->
     <div class="container">
-      <!-- 차트 1 -->
       <div id="gauge-chart-container">
+        <!-- 전체 진행율 차트 -->
         <canvas id="gauge-chart"></canvas>
       </div>
 
-      <!-- 차트 2 -->
       <div id="bar-chart-container">
         <div id="order-chart-container">
+          <!-- 주문 진행율 차트 -->
           <canvas id="order-chart"></canvas>
         </div>
   
-        <!-- 차트 3 -->
         <div id="pcs-chart-container">
+          <!-- PCS 진행율 차트 -->
           <canvas id="pcs-chart"></canvas>
         </div>
       </div>
 
-      <!-- 그리드  -->
+      <!-- 그리드 -->
       <div class="bottom-section">
         <things-resource-grid 
           id="grid" 
@@ -236,7 +236,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Number} progressRate
        */
       calcProgressRate: function(progressRate) {
-        var labels = ['Done', 'Left'];
+        var labels = ['완료', '미완료'];
         var leftRate = 100 - progressRate;
 
         return [{
@@ -261,7 +261,7 @@ Copyright © HatioLab Inc. All rights reserved.
           this.chart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-              labels: ['Done', 'Left'],
+              labels: ['완료', '미완료'],
               datasets: dataset
             },
             options: {
