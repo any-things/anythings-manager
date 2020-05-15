@@ -9,173 +9,250 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
 <link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
 
+<!--
+  주문 및 작업 > 작업 배치 > DPS 랙 지정 팝업
+ -->
 <dom-module id="dps-rack-assignment">
-   <template>
+  <template>
       <style>
-         :host {
-            @apply --layout-flex;
-            @apply --layout-vertical;
-         }
+        :host {
+          @apply --layout-flex;
+          @apply --layout-vertical;
+        }
 
-         things-resource-grid {
-            @apply --layout-vertical;
-            @apply --layout-flex;
-         }
+        things-resource-grid {
+          @apply --layout-vertical;
+          @apply --layout-flex;
+        }
       </style>
 
       <!-- Get Menu Meta Ajax -->
-      <things-ajax id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index"
-         last-response="{{metaData}}">
+      <things-ajax 
+        id="resource-meta" 
+        resource-url="[[menuMetaUrl]]" 
+        resource-action="index"
+        last-response="{{metaData}}">
       </things-ajax>
 
-      <things-ajax auto query-support id="assignable-dps-rack-ajax" method="GET"
-         resource-url="[[menuInfo.resource_url]]" last-response="{{lastResponse}}">
+      <!-- 할당 가능한 랙 조회 Ajax -->
+      <things-ajax 
+        query-support 
+        id="assignable-dps-rack-ajax" 
+        method="GET"
+        resource-url="/racks" 
+        last-response="{{lastResponse}}">
       </things-ajax>
 
-      <things-ajax id="instruct-job-ajax" method="POST" content-type="application/json"
-         resource-url="job_batches/:id/instruct/batch">
+      <!-- 작업 지시 Ajax -->
+      <things-ajax 
+        id="instruct-job-ajax" 
+        method="POST" 
+        content-type="application/json"
+        resource-url="job_batches/:id/instruct/batch">
       </things-ajax>
 
-      <things-resource-grid id="grid" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]"
-         buttons="[[buttons]]" data="[[lastResponse.items]]" total-count="[[lastResponse.total]]"
-         fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]">
+      <!-- 그리드 -->
+      <things-resource-grid 
+        id="grid" 
+        config="[[gridConfig]]" 
+        model="[[gridModel]]" 
+        columns="[[gridColumns]]"
+        buttons="[[buttons]]"
+        data="[[lastResponse.items]]" 
+        total-count="[[lastResponse.total]]"
+        fixed-column-count="[[menuInfo.fixed_columns]]" 
+        grid-save-action="[[menuInfo.grid_save_url]]">
       </things-resource-grid>
    </template>
 
-   <script>
-      Polymer({
-         is: 'dps-rack-assignment',
+  <script>
+    Polymer({
+      is: 'dps-rack-assignment',
 
-         behaviors: [
-            Things.MsgBoxBehavior,
-            Things.NamedMetaBehavior
-         ],
+      behaviors: [
+        Things.MsgBoxBehavior,
+        Things.NamedMetaBehavior
+      ],
 
-         properties: {
-            gridConfig: {
-               type: Object,
-               value: function () {
-                  return {
-                     options: {
-                        displayOptions: {
-                           fitStyle: 'fill'
-                        }
-                     }
-                  }
-               }
-            },
-
-            /**
-             * 작업 배치 화면에서 선택된 배치 
-             */
-            batch: {
-               type: Object,
-               observer: '_batchChanged'
-            },
-
-
-            selectFields: {
-               type: String,
-               value: function () {
-                  return "id,rack_cd,rack_nm,batch_id";
-               }
-            },
-
-            sortFields: {
-               type: Array,
-               value: function () {
-                  return [{
-                     field: "rack_cd",
-                     ascending: true
-                  }];
-               }
-            },
-
-            queryFields: {
-               type: Array,
-               value: function () {
-                  return [{
-                     name: "job_type",
-                     operator: "eq",
-                     value: "DPS"
-                  }, {
-                     name: "active_flag",
-                     operator: "eq",
-                     value: true
-                  }, {
-                     name: "batch_id",
-                     operator: "is_null"
-                  }];
-               }
-            }
-         },
-
-         listeners: {
-            "grid.job_instruct-btn-tap": "_onJobInstructBtnTap",
-            "instruct-job-ajax.things-ajax-response": "_onInstructResponse",
-            "instruct-job-ajax.things-ajax-error": "_onInstructResponse"
-         },
-
-         _paramMaker: function (select, sort, query) {
-
-            query.push({ name: "area_cd", operator: "eq", value: this.batch.area_cd });
-            query.push({ name: "stage_cd", operator: "eq", value: this.batch.stage_cd });
-
+      properties: {
+        /**
+         * @description 그리드 Configuration
+         *************************
+         * @type {Object}
+         */
+        gridConfig: {
+          type: Object,
+          value: function() {
             return {
-               select: select,
-               sort: JSON.stringify(sort),
-               query: JSON.stringify(query)
-            };
-         },
-
-         /**
-          * 작업 지시 버튼 처리 
-          */
-         _onJobInstructBtnTap: function (event) {
-            var ajax = this.$['instruct-job-ajax'];
-            var grid = this.$['grid'].grid;
-            ajax.body = grid.getCheckedRows().map(function (row) {
-               return row.getRowObject().id;
-            });
-
-            if (!ajax.body || ajax.body.length == 0) {
-               this.openConfirmMsg({
-                  type: 'error',
-                  title: Things.DataGlobal.t('text.rack_is_not_selected'),
-                  text: Things.DataGlobal.t('text.rack_is_not_selected')
-               });
-               return;
+              options: {
+                displayOptions: {
+                  fitStyle: 'fill'
+                }
+              }
             }
+          }
+        },
 
-            ajax.resourceId = this.batch.id;
+        /**
+         * @description 작업 배치 화면에서 선택된 배치
+         *************************
+         * @type {Object}
+         */
+        batch: {
+          type: Object,
+          observer: '_batchChanged'
+        },
 
-            event.target.disabled = true;
-            grid.setOptions({
-               checkBar: {
-                  checkableCallback: function () { return false; },
-                  draggable: false
-               }
-            });
+        /**
+         * @description 조회 필드
+         *************************
+         * @type {String}
+         */
+        selectFields: {
+          type: String,
+          value: function() {
+            return "id,rack_cd,rack_nm,batch_id";
+          }
+        },
 
-            ajax.generateRequest();
-         },
+        /**
+         * @description 소팅을 위한 필드
+         *************************
+         * @type {Array}
+         */
+        sortFields: {
+          type: Array,
+          value: function() {
+            return [{
+              field: 'rack_cd',
+              ascending: true
+            }];
+          }
+        },
 
-         _onInstructResponse: function () {
-            this.fire('things-dialog-close');
-         },
+        /**
+         * @description 검색 조건 필드
+         *************************
+         * @type {Array}
+         */
+        queryFields: {
+          type: Array,
+          value: function() {
+            return [{
+              name: 'job_type',
+              operator: 'eq',
+              value: 'DPS'
+            }, {
+              name: 'active_flag',
+              operator: 'eq',
+              value: true
+            }, {
+              name: 'batch_id',
+              operator: 'is_blank'
+            }];
+          }
+        }
+      },
 
-         /**
-          * 배치가 변경 되면 배치에 해당하는 Rack 리스트 조회 
-          */
-         _batchChanged: function (batch) {
-            if (batch) {
-               var rackListAjax = this.$['assignable-dps-rack-ajax'];
-               rackListAjax.params = this._paramMaker(this.selectFields, this.sortFields, this.queryFields);
+      listeners: {
+        "grid.job_instruct-btn-tap": "_onJobInstructBtnTap",
+        "instruct-job-ajax.things-ajax-response": "_onInstructResponse",
+        "instruct-job-ajax.things-ajax-error": "_onInstructResponse"
+      },
 
-               var resourceMetaAjax = this.$['resource-meta'];
-               resourceMetaAjax.generateRequest();
-            }
-         },
-      });
-   </script>
+      /**
+       * @description 조회를 위한 각종 조건들 설정 
+       ****************************
+       * @param {String} batch
+       * @param {String} select
+       * @param {String} sort
+       * @param {String} query
+       * @return 
+       */
+      _paramMaker: function(batch, select, sort, query) {
+        if (batch.area_cd) {
+          query.push({
+            name: 'area_cd',
+            operator: 'eq',
+            value: batch.area_cd
+          });
+        }
+
+        if (batch.stage_cd) {
+          query.push({
+            name: 'stage_cd',
+            operator: 'eq',
+            value: batch.stage_cd
+          });
+        }
+
+        return {
+          select: select,
+          sort: JSON.stringify(sort),
+          query: JSON.stringify(query)
+        };
+      },
+
+      /**
+       * @description 작업 지시 버튼 처리 
+       ****************************
+       * @param {Object} event
+       */
+      _onJobInstructBtnTap: function(event) {
+        var ajax = this.$['instruct-job-ajax'];
+        var grid = this.$['grid'].grid;
+
+        ajax.body = grid.getCheckedRows().map(function(row) {
+          return row.getRowObject().id;
+        });
+
+        if (!ajax.body || ajax.body.length == 0) {
+          this.openConfirmMsg({
+            type: 'error',
+            title: Things.DataGlobal.t('text.rack_is_not_selected'),
+            text: Things.DataGlobal.t('text.rack_is_not_selected')
+          });
+          return;
+        }
+
+        ajax.resourceId = this.batch.id;
+        event.target.disabled = true;
+
+        grid.setOptions({
+          checkBar: {
+            checkableCallback: function() {
+              return false;
+            },
+            draggable: false
+          }
+        });
+
+        ajax.generateRequest();
+      },
+
+      /**
+       * @description 작업 지시 응답 후 ... 
+       ****************************
+       */
+      _onInstructResponse: function() {
+        this.fire('things-dialog-close');
+      },
+
+      /**
+       * @description 배치가 변경 되면 배치에 해당하는 Rack 리스트 조회 
+       ****************************
+       * @param {Object} batch
+       */
+      _batchChanged: function(batch) {
+        if (batch) {
+          var rackListAjax = this.$['assignable-dps-rack-ajax'];
+          rackListAjax.params = this._paramMaker(batch, this.selectFields, this.sortFields, this.queryFields);
+          rackListAjax.generateRequest();
+
+          var resourceMetaAjax = this.$['resource-meta'];
+          resourceMetaAjax.generateRequest();
+        }
+      },
+    });
+  </script>
 </dom-module>

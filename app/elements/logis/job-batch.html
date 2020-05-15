@@ -472,32 +472,28 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Object} rowData
        */
       _instructB2CBatchProcess: function(rowData) {
-        // TODO 상위 시스템 랙 지정 여부 판별 해서 랙 지정 팝업 사용할지 안 할지 체크 
         if (rowData.equip_cd) {
           // 설비 코드가 지정된 배치는 작업 지시 ... 
-          var props = {
+          var runningJobAjax = this.create('things-ajax', {
             id: "check-running-job-ajax",
             method: "GET",
             contentType: "application/json",
             resourceUrl: "job_batches/running_batch/:id",
             resourceId: rowData.stage_cd + '/' + rowData.equip_type + '/' + (rowData.equip_cd ? rowData.equip_cd : 'null')
-          };
-
-          var runningJobAjax = this.create('things-ajax', props);
-          runningJobAjax.checkedRow = checkedRow;
+          });
+          runningJobAjax.checkedRow = rowData;
           this.listen(runningJobAjax, 'things-ajax-response', '_checkAndRequestInstructJob');
           runningJobAjax.generateRequest();
 
         } else {
           // 설비 코드가 지정 안된 배치는 호기 선택 popup
-          var props = {
+          let view = this.create('dps-rack-assignment', {
             resourceName: 'DpsRackAssignment',
             title: Things.DataGlobal.t("menu.DpsRackAssignment"),
             batch: rowData,
             parent: this
-          };
+          });
 
-          let view = this.create('dps-rack-assignment', props);
           // DPS 호기 할당 팝업 표시
           this.fire('things-open-custom-size-dialog', {
             view: view,
