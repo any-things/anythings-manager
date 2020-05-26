@@ -38,9 +38,9 @@
         <things-tab model="[[item]]" route-info$="[[item.routeInfo]]" class$="[[item.selected]]"
           title="[[item.pageName]]" on-tab-taped="routing"></things-tab>
       </template>
-  </things-tabs>
-  <iron-localstorage id="local-storage" name="recentPages" value="{{recentPages}}">
-  </iron-localstorage>
+    </things-tabs>
+    <iron-localstorage id="local-storage" name="recentPages" value="{{recentPages}}">
+    </iron-localstorage>
   </template>
 
   <script>
@@ -56,7 +56,7 @@
          */
         recentPages: {
           type: Array,
-          value: function() {
+          value: function () {
             return [];
           }
         },
@@ -77,8 +77,8 @@
        * *******
        *
        */
-      attached: function() {
-        document.addEventListener('things-recent-page-added', function(event) {
+      attached: function () {
+        document.addEventListener('things-recent-page-added', function (event) {
           var routingInfo = event.detail;
           if (routingInfo.category === 'STANDARD') {
             this.addPage(routingInfo.id, routingInfo.domain_id, routingInfo.pageName, routingInfo.routeInfo);
@@ -92,7 +92,7 @@
           }
         }.bind(this));
 
-        document.addEventListener('things-routing-configured', function(event) {
+        document.addEventListener('things-routing-configured', function (event) {
           this.set('routingConfigured', true);
           if (this.pageInfo) {
             if (this.$$('.selected')) {
@@ -103,7 +103,7 @@
           }
         }.bind(this));
 
-        document.addEventListener('things-screens-changed', function(event) {
+        document.addEventListener('things-screens-changed', function (event) {
           this.filterAvailMenus(event.detail);
         }.bind(this));
       },
@@ -115,10 +115,10 @@
        *******
        * @param  {Array} menus (menu list)
        */
-      filterAvailMenus: function(screens) {
+      filterAvailMenus: function (screens) {
         var screenIds = [];
 
-        screens.forEach(function(screen) {
+        screens.forEach(function (screen) {
           screenIds.push(screen.id);
         });
 
@@ -126,7 +126,7 @@
 
         if (!this.recentPages || this.recentPages.length === 0) return;
 
-        this.recentPages.forEach(function(recentPage) {
+        this.recentPages.forEach(function (recentPage) {
           if (screenIds.includes(recentPage.id)) {
             tempArray.push(recentPage);
           }
@@ -139,7 +139,7 @@
        * 새로 추가된 pageName, routeInfo를 첫번째 index에 추가하고 index값이 maxCount를 넘어서는 것은 삭제
        * ******
        */
-      addPage: function(id, domainId, pageName, routeInfo) {
+      addPage: function (id, domainId, pageName, routeInfo) {
         var newItem = {
           id: id,
           domainId: domainId,
@@ -150,20 +150,20 @@
 
         // 1. 페이지가 이미 등록된 것인지 체크
         if (!this.recentPages || !this.recentPages.length) this.recentPages = [];
-        var alreadyAddedIdx = this.recentPages.map(function(page) {
+        var alreadyAddedIdx = this.recentPages.map(function (page) {
           return page.id;
         }).indexOf(id);
         if (this.$$('.selected')) {
           this.$$('.selected').classList.remove('selected');
         }
-        this.recentPages.forEach(function(page) {
-            if (routeInfo != page.routeInfo && page.selected == 'selected') {
-              page.selected = '';
-            } else if (routeInfo == page.routeInfo) {
-              page.selected = 'selected'
-            }
-          })
-          // 2. 페이지가 등록되어 있으면 return
+        this.recentPages.forEach(function (page) {
+          if (routeInfo != page.routeInfo && page.selected == 'selected') {
+            page.selected = '';
+          } else if (routeInfo == page.routeInfo) {
+            page.selected = 'selected'
+          }
+        })
+        // 2. 페이지가 등록되어 있으면 return
         if (alreadyAddedIdx >= 0) {
           return
         }
@@ -172,7 +172,7 @@
         this.unshift('recentPages', newItem);
 
         var sortedRecentPagesByDomain = {};
-        this.recentPages.forEach(function(recentPage) {
+        this.recentPages.forEach(function (recentPage) {
           if (!sortedRecentPagesByDomain[recentPage.domainId]) sortedRecentPagesByDomain[recentPage.domainId] = [];
           sortedRecentPagesByDomain[recentPage.domainId].push(recentPage);
         });
@@ -195,17 +195,17 @@
           this.splice('recentPageItems', -1, 1);
         }
 
-        // // 4. 총 페이지가 Max Count보다 크다면 맨 마지막 1개 삭제
-        // while(this.recentPages.length > this.maxCount) {
-        //   this.splice('recentPages', -1, 1);
-        // }
+        // 4. 총 페이지가 Max Count보다 크다면 맨 마지막 1개 삭제
+        while (this.recentPages.length > this.maxCount) {
+          this.splice('recentPages', -1, 1);
+        }
       },
 
       /**
        * 삭제 버튼 클릭시 실행되며 해당 item의 index를 통해 local storage에서 삭제
        * ******
        */
-      deletePage: function(event) {
+      deletePage: function (event) {
         var idx = event.detail.index;
         this.splice('recentPages', idx, 1);
         this.splice('recentPageItems', idx, 1);
@@ -215,7 +215,7 @@
        * 화면에 출력된 pageName 클릭시 해당 페이지로 이동
        * ******
        */
-      routing: function(event) {
+      routing: function (event) {
         this.pageInfo = event.detail.item.model;
         if (this.routingConfigured) {
           page('/' + this.pageInfo.routeInfo);
@@ -226,7 +226,7 @@
        * Recent Page 중 active Page이면 true
        * *******
        */
-      itemActive: function(index) {
+      itemActive: function (index) {
         return index === 0;
       }
     });
