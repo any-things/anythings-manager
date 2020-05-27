@@ -51,7 +51,7 @@ Copyright © HatioLab Inc. All rights reserved.
     </things-ajax>
 
     <!-- 주문 수신 시작 ajax -->
-    <things-ajax id="start-receiving-ajax" resource-url="job_batch/receive_orders/start"
+    <things-ajax id="start-receiving-ajax" resource-url="job_batches/receive_orders/start"
       resource-action="update_multiple">
     </things-ajax>
 
@@ -73,7 +73,7 @@ Copyright © HatioLab Inc. All rights reserved.
     </things-ajax>
 
     <!-- 배치 그룹 전체 작업 완료 Ajax -->
-    <things-ajax id="group-complete-batch-ajax" resource-url="job_batches/:id/complete_batch_group"
+    <things-ajax id="group-complete-batch-ajax" resource-url="job_batches/:id/close_batches/by_group"
       resource-action="update">
     </things-ajax>
 
@@ -481,6 +481,7 @@ Copyright © HatioLab Inc. All rights reserved.
             resourceUrl: "job_batches/running_batch/:id",
             resourceId: rowData.stage_cd + '/' + rowData.equip_type + '/' + (rowData.equip_cd ? rowData.equip_cd : 'null')
           });
+
           runningJobAjax.checkedRow = rowData;
           this.listen(runningJobAjax, 'things-ajax-response', '_checkAndRequestInstructJob');
           runningJobAjax.generateRequest();
@@ -559,7 +560,7 @@ Copyright © HatioLab Inc. All rights reserved.
           id: "qps-total-picking-instruct-job-ajax",
           method: "POST",
           contentType: "application/json",
-          resourceUrl: "job_batch/:id/instruct_total_picking",
+          resourceUrl: "job_batches/:id/instruct/total_picking",
           resourceId: checkedRow.id
         };
 
@@ -811,7 +812,7 @@ Copyright © HatioLab Inc. All rights reserved.
             ajax.resourceId = checkedRow.id;
             ajax.method = 'PUT';
             ajax.resourceAction = 'update';
-            ajax.resourceUrl = 'job_batch/:id/force_complete_batch';
+            ajax.resourceUrl = 'job_batches/:id/close_batch_forcibly';
 
             ajax.addEventListener('things-ajax-response', function(event) {
               if (event.detail.result === 'ok') {
@@ -856,7 +857,7 @@ Copyright © HatioLab Inc. All rights reserved.
             var checkedRow = this._checkedGridRow();
             var ajax = this.$['group-complete-batch-ajax'];
             ajax.resourceId = checkedRow.id;
-            ajax.resourceUrl = 'job_batch/:id/complete_batch_group?force_flag=true';
+            ajax.resourceUrl = 'job_batched/:id/close_batches/by_group?force_flag=true';
             ajax.generateRequest();
 
           }.bind(this));

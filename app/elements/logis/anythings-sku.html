@@ -20,25 +20,51 @@ Copyright © HatioLab Inc. All rights reserved.
       }
     </style>
 
-    <things-ajax auto id="resource-meta" method="GET" resource-url="[[menuMetaUrl]]" last-response="{{metaData}}">
+    <things-ajax 
+      auto 
+      id="resource-meta" 
+      method="GET" 
+      resource-url="[[menuMetaUrl]]" 
+      last-response="{{metaData}}">
     </things-ajax>
 
-    <things-ajax id="ready-to-receive-sku-ajax" resource-url="sku/receive/ready/:id" method="POST"
+    <things-ajax 
+      id="ready-to-receive-sku-ajax" 
+      resource-url="sku/receive/ready/sku/:id" 
+      method="POST"
       content-type="application/json">
     </things-ajax>
 
-    <things-ajax id="receive-sku-ajax" resource-url="sku/receive/start/:id" method="POST"
+    <things-ajax 
+      id="receive-sku-ajax" 
+      resource-url="sku/receive/start/sku/:id" 
+      method="POST"
       content-type="application/json">
     </things-ajax>
 
-    <things-search-form id="search-form" title="[[menuInfo.title]]" form-fields="[[searchFormFields]]"
-      select-fields="[[selectFields]]" sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]"
-      page="{{page}}" limit="{{limit}}" last-response="{{lastResponse}}">
+    <things-search-form 
+      id="search-form" 
+      title="[[menuInfo.title]]" 
+      form-fields="[[searchFormFields]]"
+      select-fields="[[selectFields]]" 
+      sort-fields="[[sortFields]]" 
+      action-url="[[menuInfo.resource_url]]"
+      page="{{page}}" 
+      limit="{{limit}}" 
+      last-response="{{lastResponse}}">
     </things-search-form>
 
-    <things-resource-grid id="grid" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]"
-      data="[[lastResponse.items]]" total-count="[[itemCount]]" current-page="{{page}}" limit="{{limit}}"
-      fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]"
+    <things-resource-grid 
+      id="grid" 
+      config="[[gridConfig]]" 
+      model="[[gridModel]]" 
+      columns="[[gridColumns]]"
+      data="[[lastResponse.items]]" 
+      total-count="[[itemCount]]" 
+      current-page="{{page}}" 
+      limit="{{limit}}"
+      fixed-column-count="[[menuInfo.fixed_columns]]" 
+      grid-save-action="[[menuInfo.grid_save_url]]"
       buttons="[[buttons]]">
     </things-resource-grid>
   </template>
@@ -52,20 +78,20 @@ Copyright © HatioLab Inc. All rights reserved.
       ],
 
       listeners: {
-        'grid.receive-btn-tap': '_receiveBtnTapped',
-        'ready-to-receive-sku-ajax.things-ajax-response': '_receiveSku',
-        'receive-sku-ajax.things-ajax-response': '_endReceivingSku',
+        'grid.receive-btn-tap': '_onReadyToReceive',
+        'ready-to-receive-sku-ajax.things-ajax-response': '_readyToReceiveSku',
+        'receive-sku-ajax.things-ajax-response': '_onReceivedSku',
         'grid.show-sku-cd-btn-tap': '_showBarcode',
         'grid.show-sku-barcd-btn-tap': '_showBarcode',
         'grid.show-box-barcd-btn-tap': '_showBarcode'
       },
 
       /**
-       * 수신 버튼 click event handler
+       * @description 수신 버튼 click event handler
        *******************
        * @param {Object} event
        */
-      _receiveBtnTapped: function (event) {
+      _onReadyToReceive: function(event) {
         var comCd = this._checkForReceive();
         if (comCd) {
           this._readyToReceive(event, comCd);
@@ -73,12 +99,12 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
-       * 상품 마스터 수신 준비 - 수신할 상품 건수 조회
+       * @description 상품 마스터 수신 준비 - 수신할 상품 건수 조회
        *******************
        * @param {Object} event
        * @param {String} comCd
        */
-      _readyToReceive: function (event, comCd) {
+      _readyToReceive: function(event, comCd) {
         var title = Things.DataGlobal.t(event.detail.text);
         var ajax = this.$['ready-to-receive-sku-ajax'];
         ajax.resourceId = comCd;
@@ -86,10 +112,10 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
-       * 수신을 위한 체크
+       * @description 수신을 위한 체크
        *******************
        */
-      _checkForReceive: function () {
+      _checkForReceive: function() {
         var searchFormData = this.$['search-form'].serializeMyForm();
         var comCd = searchFormData.com_cd;
 
@@ -98,6 +124,7 @@ Copyright © HatioLab Inc. All rights reserved.
           var text = Things.DataGlobal.t('text.please_select_x', {
             x: Things.DataGlobal.t('menu.Company')
           });
+
           this.openInfoMsg({
             type: 'info',
             title: text,
@@ -109,26 +136,19 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
-       * 상품 마스터 수신
+       * @description 상품 마스터 수신
        *******************
        * @param {Object} event
        */
-      _receiveSku: function (event) {
-        this._realReceiveSku(event);
-      },
+      _readyToReceiveSku: function(event) {
+        if (!event || !event.detail || !event.detail.com_cd) {
+          return;
+        }
 
-      /**
-       * 상품 마스터 수신
-       *******************
-       * @param {Object} event
-       */
-      _realReceiveSku: function (event) {
         var comCd = event.detail.com_cd;
-        var skuCount = event.detail.sku_count;
-        var bcrCount = event.detail.barcd_count;
-        var weightCount = event.detail.weight_count ? event.detail.weight_count : 0;
+        var skuPlanCount = event.detail.sku_plan_count;
 
-        if (skuCount == 0 && bcrCount == 0 && weightCount == 0) {
+        if (skuPlanCount == 0) {
           // 수신할 상품 정보가 없습니다
           var text = Things.DataGlobal.t('text.VALUE_IS_NOT_EXIST', {
             value: Things.DataGlobal.t('menu.SKU')
@@ -142,17 +162,23 @@ Copyright © HatioLab Inc. All rights reserved.
         } else {
           var ajax = this.$['receive-sku-ajax'];
           var title = Things.DataGlobal.t('button.receive');
-          // 상품 수량: [1],바코드 수량: [2] 수신하시겠습니까?
+
+          // 상품 수량: [1] 수신하시겠습니까?
           var text = Things.DataGlobal.t('label.x_qty', {
             x: Things.DataGlobal.t('menu.SKU')
-          }); // 상품 건수
-          text = text + ': [' + skuCount + '],';
-          text = text + Things.DataGlobal.t('label.x_qty', {
-            x: Things.DataGlobal.t('label.barcode')
-          }); // 바코드 건수
-          text = text + ': [' + bcrCount + '] \n' + Things.DataGlobal.t('text.Sure to X', {
+          });
+          // 상품 건수
+          text = text + ': [' + skuPlanCount + '] \n' + Things.DataGlobal.t('text.Sure to X', {
             x: title
           });
+
+          /*text = text + Things.DataGlobal.t('label.x_qty', {
+            x: Things.DataGlobal.t('label.barcode')
+          });
+          // 바코드 건수
+          text = text + ': [' + bcrCount + '] \n' + Things.DataGlobal.t('text.Sure to X', {
+            x: title
+          });*/
 
           this.openConfirmMsg({
             type: 'info',
@@ -160,7 +186,8 @@ Copyright © HatioLab Inc. All rights reserved.
             text: text,
             showCancelButton: true,
             closeOnConfirm: false
-          }, function () {
+
+          }, function() {
             this.openConfirmMsg({
               type: 'info',
               title: title,
@@ -169,16 +196,20 @@ Copyright © HatioLab Inc. All rights reserved.
             });
             ajax.resourceId = comCd;
             ajax.generateRequest();
+
           }.bind(this));
         }
       },
 
       /**
-       * 상품 마스터 수신 완료 후 ...
+       * @description 상품 마스터 수신 완료 후 ...
        *******************
        * @param {Object} event
        */
-      _endReceivingSku: function (event) {
+      _onReceivedSku: function(event) {
+        console.log(event.detail);
+
+        // TODO 몇 건 수신했습니다.
         var text = Things.DataGlobal.t('text.Success to Process');
         this.openInfoMsg({
           type: 'info',
@@ -192,7 +223,7 @@ Copyright © HatioLab Inc. All rights reserved.
        ******************
        * @param {Object} event
        */
-      _showBarcode: function (event) {
+      _showBarcode: function(event) {
         var checkedSkuRow = this._getCheckedRow();
         if (!checkedSkuRow) return;
 
@@ -202,6 +233,7 @@ Copyright © HatioLab Inc. All rights reserved.
         var eventType = event.type;
         if (eventType.indexOf('show-sku-cd-btn') >= 0) {
           target = 'sku_cd';
+
         } else if (eventType.indexOf('show-sku-barcd') >= 0) {
           target = 'sku_barcd';
 
@@ -227,8 +259,9 @@ Copyright © HatioLab Inc. All rights reserved.
       /**
        * @description 체크한 그리드의 로우 오브젝트를 리턴함
        * 하나의 로우만 체크해야하며 복수 혹은 체크하지 않을 경우 팝업 출력
+       ********************
        */
-      _getCheckedRow: function () {
+      _getCheckedRow: function() {
         var gridObj = this.$['grid'].getGridObject();
         var checkedRows = gridObj.getCheckedRows();
 
@@ -241,7 +274,7 @@ Copyright © HatioLab Inc. All rights reserved.
         } else {
           return checkedRows[0];
         }
-      },
+      }
     })
   </script>
 </dom-module>
