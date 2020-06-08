@@ -304,15 +304,17 @@ Copyright © HatioLab Inc. All rights reserved.
         var needField = '';
 
         //Stage 코드 선택 체크
-        if (stageCd == '' || stageCd == '_na_') {
+        /*if (stageCd == '' || stageCd == '_na_') {
           this.openInfoMsg({
             type: 'info',
             title: 'Stage 설정하세요.',
             closeOnConfirm: true
           });
-
           return;
-        }
+        }*/
+
+        var searchFormData = this.$['search-form'].serializeMyForm();
+        var jobType = searchFormData.job_type;
 
         switch (true) {
           case !jobDate:
@@ -336,15 +338,16 @@ Copyright © HatioLab Inc. All rights reserved.
           var text = Things.DataGlobal.t('text.Sure to X', {
             x: title
           });
-          var self = this;
 
           this.openConfirmMsg({
             type: 'info',
             title: title,
             text: text,
             showCancelButton: true
+
           }, function() {
-            ajax.resourceId = areaCd + '/' + stageCd + '/' + comCd + '/' + jobDate;
+            var ajaxUrl = `${areaCd}/${stageCd}/${comCd}/${jobDate}?job_type=${jobType}`;
+            ajax.resourceId = ajaxUrl;
             ajax.generateRequest();
           });
         }
