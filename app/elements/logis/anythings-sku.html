@@ -146,7 +146,7 @@ Copyright © HatioLab Inc. All rights reserved.
         }
 
         var comCd = event.detail.com_cd;
-        var skuPlanCount = event.detail.sku_plan_count;
+        var skuPlanCount = event.detail.plan_count;
 
         if (skuPlanCount == 0) {
           // 수신할 상품 정보가 없습니다
@@ -207,8 +207,6 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Object} event
        */
       _onReceivedSku: function(event) {
-        console.log(event.detail);
-
         // TODO 몇 건 수신했습니다.
         var text = Things.DataGlobal.t('text.Success to Process');
         this.openInfoMsg({

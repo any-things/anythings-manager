@@ -198,18 +198,11 @@ Copyright © HatioLab Inc. All rights reserved.
 
         if (items && items.length > 0) {
           items.forEach(function(item) {
-            // 1-1. 배치별 총 주문 수량, 총 처리 주문 수량, 총 PCS, 총 처리 PCS 계산
+            // 배치별 총 주문 수량, 총 처리 주문 수량, 총 PCS, 총 처리 PCS 계산
             totalOrders += item.batch_order_qty;
             doneOrders += item.result_order_qty;
             totalPcs += item.batch_pcs;
             donePcs += item.result_pcs;
-
-            // 1-2. 배치 데이터 작업 진행율 계산
-            if (item.batch_pcs == 0 || item.result_pcs == 0) {
-              item.progress_rate = 0;
-            } else {
-              item.progress_rate = (item.result_pcs / item.result_pcs) * 100;
-            }
           });
         }
 
@@ -223,7 +216,7 @@ Copyright © HatioLab Inc. All rights reserved.
         this.pcsBarChart = this.renderBarChart(this.pcsBarChart, 'pcs-chart', 'PCS', totalPcs, donePcs, pcsRate);
 
         // 4. 게이지 차트 렌더링
-        var datasets = this.calcProgressRate(pcsRate);
+        var datasets = this.calcProgressRate(progressRate);
         this.renderGuateChart(datasets);
 
         // 5. 리턴
