@@ -284,13 +284,13 @@ window.Things.THINGS_XMES_THEME_STYLES = {
 window.Things.THINGS_XMES_THEME_OPTIONS = {
   vscrollBar: {
     visible: true,
-    barWidth: 8,
+    barWidth: 18,
     barIndent: "header",
     thumbSize: 10
   },
   hscrollBar: {
     visible: true,
-    barWidth: 8,
+    barWidth: 18,
     barIndent: "fixed",
     thumbWidth: 10,
   },
