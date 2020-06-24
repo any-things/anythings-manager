@@ -401,6 +401,7 @@ Copyright © HatioLab Inc. All rights reserved.
               } else if (jobType === 'srtn' || jobType === 'sdas') {
                 jobType = 'sms';
                 routing = '/' + jobType + '_control';
+                //routing = '/' + jobType + '_preprocess';
               }
 
               for (var i = 0, keys = Object.keys(row), len = keys.length; i < len; i++) {

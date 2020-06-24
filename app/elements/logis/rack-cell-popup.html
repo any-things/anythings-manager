@@ -13,41 +13,6 @@
 <dom-module id="rack-cell-popup">
   <template>
     <style>
-      .modal {
-        display: none; /* Hidden by default */
-        position: fixed; /* Stay in place */
-        z-index: 1; /* Sit on top */
-        padding-top:20%; /* Location of the box */
-        left: 0;
-        top: 0;
-        width: 100%; /* Full width */
-        height: 100%; /* Full height */
-        overflow: auto; /* Enable scroll if needed */
-        background-color: rgb(0,0,0); /* Fallback color */
-        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-      }
-      /* Modal Content */
-      .modal-content {
-        background-color: #fff;
-        margin: auto;
-        width: 60%;
-        max-width:400px;
-        box-shadow: 3px 3px 3px 0px rgba(0,0,0,0.15);
-        border-radius:4px;
-        overflow:hidden;
-      }
-      .modal-content .fields{
-        padding:20px 10px;
-        text-align:center;
-        font-size:14px;
-        color:#585858
-      }
-      .modal-content .buttons{
-        background-color:#efefef;
-        border-top:1px solid #ccc;
-        padding:5px 0px 7px 0;
-        text-align:center
-      }
       .mytable {
         border-collapse: collapse;
         border-top: 1px solid #000;
@@ -136,13 +101,216 @@
       properties: {
         rackCd: {
           type: String
+        },
+
+        dragUpFlag: {
+          type: Boolean,
+          value: false
+        },
+
+        dragDownFlag: {
+          type: Boolean,
+          value: false
+        },
+
+        dragStart: {
+          type: Object
+        },
+
+        dragEnd: {
+          type: Object
+        },
+
+        mpsCellList: {
+          type: Object
+        },
+
+        mpsCellListTemp: {
+          type: Object
         }
       },
 
       listeners: {
+        'click': '_onClick',
+        'mouseup': '_onMouseUp',
+        'mousedown': '_onMouseDown',
+        'mouseover': '_onMouseOver'
       },
 
-			
-    })
+      _onClick(e, hint) {
+        if (this.dragStart && this.dragEnd) {
+          if (this.dragDownFlag && this.dragUpFlag && this.dragEnd.id == e.target.id) {
+            this.selectCategory(e);
+          } else {
+            this.dragSelectCategory(e);
+          }
+          this.dragStart = null;
+          this.dragEnd = null;
+          this.dragDownFlag = false;
+          this.dragUpFlag = false;
+
+          var frontMpsTable = e.currentTarget.children.t001.children.mps_front_table;
+          var backMpsTable = e.currentTarget.children.t001.children.mps_back_table;
+          this.tableBgColorReset(frontMpsTable.rows);
+          this.tableBgColorReset(backMpsTable.rows);
+        } else if (!e.target.id || e.target.nodeName != 'TD') return;
+      },
+
+      _onMouseUp(e, hint) {
+        if (!e.target.id || e.target.nodeName != 'TD') return;
+
+        this.dragUpFlag = true;
+        this.dragEnd = e.target;
+      },
+
+      _onMouseDown(e, hint) {
+        if (!e.target.id || e.target.nodeName != 'TD') return;
+
+        this.dragDownFlag = true;
+        this.dragStart = e.target;
+      },
+
+      _onMouseOver(e, hint) {
+        if (!e.target.id || e.target.nodeName != 'TD') return;
+
+        if (this.dragDownFlag) {
+          var rowsStart = this.dragStart.parentElement.rowIndex > e.target.parentElement.rowIndex ? e.target.parentElement.rowIndex : this.dragStart.parentElement.rowIndex;
+          var rowsEnd = this.dragStart.parentElement.rowIndex > e.target.parentElement.rowIndex ? this.dragStart.parentElement.rowIndex : e.target.parentElement.rowIndex;
+
+          var frontMpsTable = e.currentTarget.children.t001.children.mps_front_table;
+          var backMpsTable = e.currentTarget.children.t001.children.mps_back_table;
+
+          var row, rows = frontMpsTable.rows;
+          if (e.target.parentElement.parentElement.parentElement.id == 'mps_front_table') {
+            row, rows = frontMpsTable.rows;
+          } else if (e.target.parentElement.parentElement.parentElement.id == 'mps_back_table') {
+            row, rows = backMpsTable.rows;
+          }
+
+          var colsStart = this.dragStart.cellIndex > e.target.cellIndex ? e.target.cellIndex : this.dragStart.cellIndex;
+          var colsEnd = this.dragStart.cellIndex > e.target.cellIndex ? this.dragStart.cellIndex : e.target.cellIndex;
+
+          this.tableBgColorReset(rows);
+          for (var i = 0; i < rows.length; i++) {
+            if (rowsStart <= i && i <= rowsEnd) {
+              row = rows[i];
+              for (var j = 0; j < row.cells.length; j++) {
+                if (colsStart <= j && j <= colsEnd) {
+                  row.cells[j].classList.add("highlighted");
+                }
+              }
+            }
+          }
+        }
+      },
+
+      tableBgColorReset: function(mpsTable) {
+        var row, rows = mpsTable;
+        for(var i = 0 ; i<rows.length ; i++) {
+          row = rows[i];
+          for (var j = 0; j < row.cells.length; j++) {
+            row.cells[j].classList.remove("highlighted");
+          }
+        }
+      },
+
+      selectCategory: function(e) {
+      if(!e.target.id || e.target.nodeName != 'TD') return;
+        if (e.target.textContent == 'disable') return;
+
+        var tableType = e.target.parentNode.parentNode.parentNode.id;
+        var category = e.currentTarget.children.t001.children.category;
+        var categoryName = category.options[category.selectedIndex].text;
+        var mpsTable;
+
+        e.target.bgColor = this.setBgColor(categoryName);
+        if (categoryName)
+          e.target.textContent = categoryName;
+        else
+          e.target.textContent = e.target.id;
+
+        var frontMpsTable = e.currentTarget.children.t001.children.mps_front_table;
+        var backMpsTable = e.currentTarget.children.t001.children.mps_back_table;
+        this.tableToJSON(frontMpsTable, backMpsTable);
+      },
+
+      dragSelectCategory: function(e) {
+      var category = e.currentTarget.children.t001.children.category;
+      var categoryName = category.options[category.selectedIndex].text;
+
+      var frontMpsTable = e.currentTarget.children.t001.children.mps_front_table;
+      var backMpsTable = e.currentTarget.children.t001.children.mps_back_table;
+
+      var rowsStart = this.dragStart.parentElement.rowIndex > this.dragEnd.parentElement.rowIndex ? this.dragEnd.parentElement.rowIndex : this.dragStart.parentElement.rowIndex;
+      var rowsEnd = this.dragStart.parentElement.rowIndex > this.dragEnd.parentElement.rowIndex ? this.dragStart.parentElement.rowIndex : this.dragEnd.parentElement.rowIndex;
+
+      var row, rows = frontMpsTable.rows;
+      if(e.target.offsetParent.id == 'mps_front_table') {
+          row, rows = frontMpsTable.rows;
+        } else if (e.target.offsetParent.id == 'mps_back_table') {
+          row, rows = backMpsTable.rows;
+        }
+
+        var colsStart = this.dragStart.cellIndex > this.dragEnd.cellIndex ? this.dragEnd.cellIndex : this.dragStart.cellIndex;
+        var colsEnd = this.dragStart.cellIndex > this.dragEnd.cellIndex ? this.dragStart.cellIndex : this.dragEnd.cellIndex;
+
+        for (var i = 0; i < rows.length; i++) {
+          if (rowsStart <= i && i <= rowsEnd) {
+            row = rows[i];
+            for (var j = 0; j < row.cells.length; j++) {
+              if (colsStart <= j && j <= colsEnd) {
+                if (row.cells[j].textContent != 'disable')
+                  row.cells[j].textContent = categoryName;
+              }
+            }
+          }
+        }
+
+        this.tableToJSON(frontMpsTable, backMpsTable);
+      },
+
+      tableToJSON: function(fTable, bTable) {
+        var mpsId = this.rackCd.split('_').pop();
+        mpsId = this.leftPad(mpsId, 3);
+
+        // var obj = this.mpsCellList[mpsId] ? this.mpsCellList[mpsId] : {};
+
+        if(!this.mpsCellList) {
+          this.mpsCellList = {};
+        }
+        var obj = {};
+        var row, rows = fTable.rows;
+        for(var i = 0, iLen=rows.length; i<iLen; i++) {
+          row = rows[i];
+          for (var j = 0; j < row.cells.length; j++) {
+            obj[row.cells[j].id] = row.cells[j].textContent;
+          }
+        }
+        row, rows = bTable.rows;
+        for (var i = 0, iLen = rows.length; i < iLen; i++) {
+          row = rows[i];
+          for (var j = 0; j < row.cells.length; j++) {
+            obj[row.cells[j].id] = row.cells[j].textContent;
+          }
+        }
+        this.mpsCellList[mpsId] = obj;
+
+        console.log(this.mpsCellList);
+      },
+
+      leftPad: function(number, targetLength) {
+        var output = number + '';
+        while(output.length < targetLength) {
+          output = '0' + output;
+        }
+        return output;
+      },
+
+      setBgColor: function(categoryName) {
+        var color = '';
+        return color;
+      }
+
+    });
   </script>
 </dom-module>

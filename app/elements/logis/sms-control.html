@@ -8,9 +8,9 @@
 <script src="../../bower_components/things-scene-indoor-map/things-scene-indoor-map-min.js"></script>
 <script src="../../bower_components/things-scene-tab/things-scene-tab-min.js"></script>
 <script src="../../bower_components/things-scene-table/things-scene-table-min.js"></script>
-<script src="../../bower_components/things-scene-progressbar/things-scene-progressbar-min.js"></script-->
+<script src="../../bower_components/things-scene-progressbar/things-scene-progressbar-min.js"></script>
 
-<script src="./asset/sorter-status-control-model.js"></script>
+<script src="./asset/sorter-status-control-model.js"></script-->
 <script src="./asset/sorter-status-test-model.js"></script>
 <link rel="import" href="./rack-cell-popup.html">
 <link rel="import" href="./work-group-popup.html">
@@ -35,7 +35,11 @@
       last-response="{{chuteStatusResponse}}">
     </things-ajax>
 
-    <things-ajax id="chute-status-set" resource-url="chute/sorter_status_monitor_set" method="POST"
+    <!-- 주문 가공 데이터 조회 Ajax -->
+    <things-ajax id="chute-select-ajax" resource-url="chutes" resource-action="index">
+    </things-ajax>
+
+    <things-ajax id="generate-order-ajax" resource-url="order_preprocesses/generate_order" method="POST"
       content-type="application/json">
     </things-ajax>
 
@@ -58,7 +62,15 @@
           notify: true
         },
 
+        jobBatch: {
+          type: Object,
+        },
+
         model: {
+          type: Object
+        },
+
+        chuteCellCnt: {
           type: Object
         },
 
@@ -78,7 +90,9 @@
 
       listeners: {
         'iron-resize': '_onIronResize',
-        'complete-btn-tap': '_completeBtnTap'
+        'complete-btn-tap': '_completeBtnTap',
+        'chute-select-ajax.things-ajax-response': '_chuteSelectResponse',
+        'generate-order-ajax.things-ajax-response': '_generateCompleted'
       },
 
       observers: [
@@ -87,7 +101,6 @@
 
       attached() {
         this.model = SORTER_STATUS_MONITOR_MODEL;
-        // this.model = SORTER_STATUS_TEST_MODEL;
         document.addEventListener('things-routing-changed-sms_control', this._onRouteChanged.bind(this));
 
         // Event Binding
@@ -100,38 +113,42 @@
       },
 
       _onRouteChanged(route) {
-        let chuteStatus = this.$['chute-status'];
-        // chuteStatus.generateRequest();
+        this.jobBatch = route.detail.initialParams;
+        let chuteStatus = this.$['chute-select-ajax'];
+        chuteStatus.generateRequest();
+      },
+
+      /**
+       * 주문 가공 정보가 변경된 경우
+       **************
+       * @param {Object} event
+       */
+      _chuteSelectResponse: function (event) {
+        this.chuteStatusResponse = event.detail.items;
       },
 
       // 데이터 리스폰 시, 화면 데이터 세팅
       _onChuteStatusResponse(response) {
-
-        // Data Setting
         let data = {};
-        let distributionMethod;
-        let delayTime;
+        this.chuteCellCnt = {};
 
         response.forEach(v => {
-          if (v.o_key.indexOf('chute') != -1) {
-            data[v.o_key] = v.o_value;
-          } else if (v.o_key.indexOf('eta') != -1) {
-            data[v.o_key] = v.o_value == 'Y' ? 1 : 0;
-          } else if (v.o_key == 'sorter_type') {
-            // 서버에서 오는 분배 종류 = IN_ORDER, EQUALLY
-            data['selectChute'] = distributionMethod = v.o_value;
-          } else if (v.o_key == 'delay_time') {
-            data['selectDelay'] = delayTime = v.o_value;
+          if (v.chute_no) {
+            if(v.active_flag && v.status == 'W') {
+              data['chute-' + v.chute_no] = 'Y';
+            } else {
+              data['chute-' + v.chute_no] = 'N';
+            }
+
+            if(v.ext_flag) {
+              this.chuteCellCnt[v.chute_no + '-ext_cell_cnt'] = v.ext_cell_cnt;
+            } else {
+              this.chuteCellCnt[v.chute_no + '-ext_cell_cnt'] = 0;
+            }
           }
         });
-
-        let selectChute = this.scene.findById('selectChute')
-        selectChute.set('value', distributionMethod);
-
-        let selectDelay = this.scene.findById('selectDelay')
-        selectDelay.set('value', delayTime);
-
         this.scene.data = data;
+        console.log(this.scene.data);
       },
 
       _disposeScene() {
@@ -150,10 +167,6 @@
         if (id && (type == 'local-ref' && id.indexOf('chute') != -1) || (type == 'local-ref' && id.indexOf('input') != -1)) {
           var state = origin.data
           origin.data = state == 'Y' ? 'N' : 'Y'
-        } else if (id && type == 'rect' && id.indexOf('op_mps') != -1) {
-          this.createGroupPopup(id.split('_').reverse()[0]);
-        } else if (id && type == 'rect' && id.indexOf('btn_mps') != -1) {
-          this.createRackCellPopup(id.split('_').reverse()[0]);
         }
       },
 
@@ -193,95 +206,32 @@
       },
 
       _completeBtnTap() {
-        let chuteStatusSet = this.$['chute-status-set'];
+        let chuteStatusSet = this.$['generate-order-ajax'];
         chuteStatusSet.body = {
-          data: this.scene.data
+          chuteStatus: this.scene.data,
+          batchId: this.jobBatch.id
         };
 
         chuteStatusSet.generateRequest();
       },
 
       /**
-       * 작업그룹을 다이얼로그를 생성하여 리턴
-       * ***********************
-       * @param {String} batchId
-       * @return 주문 가공 완료 팝업 화면
+       * 주문 generate 완료 처리 후
+       **************
+       * @param {Object} event
        */
-      createGroupPopup: function(rackCd) {
-        var props = {
-          title: rackCd + Things.DataGlobal.t('label.region'),
-          rackCd: rackCd
-        };
-        var rackCellPopup = this.create('work-group-popup', props);
-        // 팝업 띄우기
-        this.fire('things-open-popup-view', {
-          view: workGroupPopup,
-          modal: true,
-          closeCallback: function() {
-
-          }
-        });
-        var popup = workGroupPopup.$['sort_group_001'];
-        popup.className = 'group_select_popup';
-        var groupUl = popup.children.mps_sort_group;
-        groupUl.innerHTML += '<li id=li_test>asdfasdfasdf</li>';
-        groupUl.innerHTML += '<li id=li_test2>111111111</li>';
-      },
-
-      createRackCellPopup: function(rackCd) {
-        var props = {
-          title: rackCd + Things.DataGlobal.t('label.region'),
-          rackCd: rackCd
-        };
-        var rackCellPopup = this.create('rack-cell-popup', props);
-        // 팝업 띄우기
-        this.fire('things-open-popup-view', {
-          view: rackCellPopup,
-          modal: true,
-          closeCallback: function() {
-
-          }
-        });
-        var popup = rackCellPopup.$['t001'];
-        popup.className = 'group_setting_popup';
-        var frontTbody = popup.children.mps_front_table.tBodies;
-        var backTbody = popup.children.mps_back_table.tBodies;
-        var frontTr = '';
-        var backTr = '';
-
-        var fRowIdx = 3;
-        var fColumnIdx = 21;
-        var bRowIdx = 3;
-        var bColumnIdx = 25;
-
-        if (fRowIdx && fColumnIdx) {
-          popup.children.front_name.innerHTML = '<br> 앞면 <br>'
-          frontTr += this.oddEvenCheck(rackCd, fRowIdx, fColumnIdx);
-          frontTbody[0].innerHTML += frontTr;
+      _generateCompleted: function (event) {
+        if(event.detail > 0 ) {
+          var routing = '/sms_preprocess';
+          page(routing, this.jobBatch)
+        } else {
+          this.openInfoMsg({
+            title: Things.DataGlobal.t('label.failure'),
+            type: 'info',
+            text: Things.DataGlobal.t('text.Fail to Process'),
+            closeOnConfirm: true
+          });
         }
-        if (bRowIdx && bColumnIdx) {
-          popup.children.back_name.innerHTML = '<br> 뒷면 <br>'
-          backTr += this.oddEvenCheck(rackCd, bRowIdx, bColumnIdx);
-          backTbody[0].innerHTML += backTr;
-        }
-      },
-
-      oddEvenCheck: function(rackCd, rowIdx, colIdx) {
-        var tr = '';
-        for (var i = rowIdx; i > 0; i--) {
-          tr += '<tr>';
-          for (var j = colIdx; j > 0; j--) {
-            var td = '<td id=';
-            var td_id = rackCd + '_' + i + '_' + j;
-            var color = '';
-            var cellContent = 'Any';
-            td = td + td_id + ' bgColor=' + color + '>' + cellContent + '</td>';
-            tr += td;
-          }
-          tr += '</tr>';
-        }
-
-        return tr;
       }
     });
   </script>
