@@ -88,6 +88,10 @@ sms 주문 가공 화면
       resource-action="update">
     </things-ajax>
 
+    <!-- 주문 가공 데이터 Cell 바꾸기 Ajax -->
+    <things-ajax id="swap-cell-ajax" resource-url="order_preprocesses/:id/swap_cell" resource-action="update">
+    </things-ajax>
+
     <!-- 반품 가공 화면 컨테이너 -->
     <div class="container">
       <!-- 검색 폼 -->
@@ -102,8 +106,8 @@ sms 주문 가공 화면
       </things-resource-grid>
 
       <!-- 우측 호기 서머리 그리드 -->
-      <things-resource-grid id="region-grid" class="padding-zero" config="[[regionGridConfig]]"
-        model="[[regionGridModel]]" columns="[[regionGridColumns]]" data="[[regionItems]]"
+      <things-resource-grid id="region-grid" class="padding-zero" config="[[gridConfig]]"
+        model="[[gridModel]]" columns="[[gridColumns]]" data="[[regionItems]]" fixed-column-count="[[menuInfo.fixed_columns]]"
         buttons="[[emptyButtons]]">
       </things-resource-grid>
 
@@ -243,31 +247,6 @@ sms 주문 가공 화면
         },
 
         /**
-         * 호기 그리드 설정
-         ***************
-         * @type {Object}
-         */
-        regionGridConfig: {
-          type: Object,
-          value: function () {
-            return {
-              options: {
-                edit: {
-                  editable: false,
-                  pasteEnabled: false
-                },
-                checkBar: {
-                  exclusive: true
-                },
-                display: {
-                  fitStyle: 'fill'
-                }
-              }
-            }
-          }
-        },
-
-        /**
          * 서머리 그리드 설정
          ***************
          * @type {Array}
@@ -368,99 +347,6 @@ sms 주문 가공 화면
             }];
           }
         },
-
-        /**
-         * 호기 그리드 설정
-         ***************
-         * @type {Array}
-         */
-        regionGridModel: {
-          type: Array,
-          value: function () {
-            return [{
-              fieldName: 'chute_no'
-            }, {
-              fieldName: 'shop_cd'
-            }, {
-              fieldName: 'shop_nm'
-            }, {
-              fieldName: 'assigned_pcs',
-              dataType: 'number'
-            }];
-          }
-        },
-
-        /**
-         * 호기 그리드 설정
-         ***************
-         * @type {Array}
-         */
-        regionGridColumns: {
-          type: Array,
-          value: function () {
-            return [{
-              name: 'assign_icon',
-              editable: false,
-              width: 30,
-              imageList: 'images',
-              header: { text: '' },
-              renderer: { type: 'icon' },
-              styles: {
-                iconIndex: 'statusGreen.png',
-                iconLocation: 'center'
-              }
-            }, {
-              name: 'non_assign_icon',
-              editable: false,
-              width: 30,
-              imageList: 'images',
-              header: { text: '' },
-              renderer: { type: 'icon' },
-              styles: {
-                iconIndex: 'statusGray.png',
-                iconLocation: 'center'
-              }
-            }, {
-              name: 'chute_no',
-              fieldName: 'chute_no',
-              width: 60,
-              header: {
-                text: Things.DataGlobal.t('label.chute_no')
-              },
-              styles: {
-                textAlignment: 'center'
-              },
-              editable: false
-            }, {
-              name: 'shop_cd',
-              fieldName: 'shop_cd',
-              width: 60,
-              header: {
-                text: Things.DataGlobal.t('label.shop_cd')
-              },
-              editable: false
-            }, {
-              name: 'shop_nm',
-              fieldName: 'shop_nm',
-              width: 70,
-              header: {
-                text: Things.DataGlobal.t('label.shop_nm')
-              },
-              editable: false
-            } , {
-              name: 'assigned_pcs',
-              fieldName: 'assigned_pcs',
-              width: 80,
-              header: {
-                text: Things.DataGlobal.t('label.assigned_pcs')
-              },
-              styles: {
-                textAlignment: 'far', numberFormat: '0,000'
-              },
-              editable: false
-            }];
-          }
-        }
       },
 
       observers: [
@@ -479,6 +365,7 @@ sms 주문 가공 화면
 
         'search-preprocessing-ajax.things-ajax-response': '_preprocessListChanged',
         'auto-region-assign-ajax.things-ajax-response': 'refreshData',
+        'swap-cell-ajax.things-ajax-response': 'refreshData',
         'complete-preprocessing-ajax.things-ajax-response': '_preprocessingCompleted',
         'instruct-jobs-ajax.things-ajax-response': 'goBack'
       },
@@ -502,10 +389,6 @@ sms 주문 가공 화면
         switch (e.target.id) {
           // 호기 그리드의 [ALL]행과 빈 행은 체크할 필요 없음
           case 'region-grid': {
-            e.target.grid.checkBar().setCheckableCallback(function (grid, row) {
-              var shopCd = row.getValue("shop_cd")
-              return !(shopCd === '[ALL]' || shopCd === '');
-            });
             e.target.grid.checkBar().setHideUncheckable(true);
           }
         }
@@ -605,11 +488,15 @@ sms 주문 가공 화면
 
           var params = {
             batch_id: this.batchId,
+            prev_id: leftSelectedRow.id,
+            current_id: rightSelectedRow.id,
             prev_chute_no: leftSelectedRow.sub_equip_cd,
-            current_chute_no: rightSelectedRow.chute_no,
-            prev_shop_cd: leftSelectedRow.cell_assgn_cd,
-            current_shop_cd: rightSelectedRow.shop_cd
+            current_chute_no: rightSelectedRow.sub_equip_cd,
+            prev_cell_cd: leftSelectedRow.class_cd,
+            current_cell_cd: rightSelectedRow.class_cd
           };
+          var title = Things.DataGlobal.t(event.detail.text);
+          this._confirmTransaction('swap-cell-ajax', title, '', params);
           /**
           * swap 서비스 생성 또는 기존 서비스 수정
           * sql1 = update order_preprocesses set sub_equip_cd = :current_chute_no where batch_id = :batch_id and sub_equip_cd = :prev_chute_no and cell_assgn_cd = :prev_shop_cd;
