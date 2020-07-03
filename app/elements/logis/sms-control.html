@@ -1,17 +1,14 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
 
 <script src="../../bower_components/things-scene-core/things-scene-min.js"></script>
 <script src="../../bower_components/things-scene-form/things-scene-form-min.js"></script>
-
-<!--script src="../../bower_components/things-scene-conveyor/things-scene-wheel-sorter-min.js"></script>
-<script src="../../bower_components/things-scene-indoor-map/things-scene-indoor-map-min.js"></script>
-<script src="../../bower_components/things-scene-tab/things-scene-tab-min.js"></script>
-<script src="../../bower_components/things-scene-table/things-scene-table-min.js"></script>
-<script src="../../bower_components/things-scene-progressbar/things-scene-progressbar-min.js"></script>
-
-<script src="./asset/sorter-status-control-model.js"></script-->
-<script src="./asset/sorter-status-test-model.js"></script>
+<script src="./asset/things-scene-table-ie.js"></script>
+<script src="./asset/sorter-status-model.js"></script>
 <link rel="import" href="./rack-cell-popup.html">
 <link rel="import" href="./work-group-popup.html">
 
@@ -36,9 +33,24 @@
     </things-ajax>
 
     <!-- 주문 가공 데이터 조회 Ajax -->
-    <things-ajax id="chute-select-ajax" resource-url="chutes" resource-action="index">
+    <things-ajax id="search-preprocessing-ajax" resource-url="order_preprocesses/index_all" resource-action="index">
     </things-ajax>
 
+    <!-- Cell 데이터 조회 Ajax -->
+    <things-ajax id="search-cell-ajax" resource-url="order_preprocesses/:id/cell_info"
+      resource-action="index">
+    </things-ajax>
+
+    <!-- 주문 가공 데이터 Cell 바꾸기 Ajax -->
+    <things-ajax id="swap-cell-ajax" resource-url="order_preprocesses/:id/swap_cell" resource-action="update">
+    </things-ajax>
+
+    <!-- 주문 가공 데이터 완료 Ajax -->
+    <things-ajax id="complete-preprocessing-ajax" resource-url="order_preprocesses/:id/complete_preprocess"
+      resource-action="update">
+    </things-ajax>
+
+    <!-- 주문 가공 Ajax -->
     <things-ajax id="generate-order-ajax" resource-url="order_preprocesses/generate_order" method="POST"
       content-type="application/json">
     </things-ajax>
@@ -53,7 +65,8 @@
       is: 'sms-control',
 
       behaviors: [
-        Polymer.IronResizableBehavior
+        Polymer.IronResizableBehavior,
+        Things.ResourceMenuContentBehavior
       ],
 
       properties: {
@@ -70,10 +83,6 @@
           type: Object
         },
 
-        chuteCellCnt: {
-          type: Object
-        },
-
         chuteStatusResponse: {
           type: Object,
           observer: '_onChuteStatusResponse'
@@ -82,17 +91,44 @@
         customButtons: {
           type: Array,
           value: [{
+            id: 'assign-btn',
+            text: 'assign_cell'
+          }, {
             id: 'complete-btn',
             text: 'complete'
           }]
+        },
+
+        chuteClick: {
+          type: Boolean,
+          value: false
+        },
+
+        generateClick: {
+          type: Boolean,
+          value: false
+        },
+
+        fromIdx: {
+          type: Number,
+          value: 0
+        },
+
+        toIdx: {
+          type: Number,
+          value: 0
         }
       },
 
       listeners: {
         'iron-resize': '_onIronResize',
+        'assign-btn-tap': '_assignBtnTap',
         'complete-btn-tap': '_completeBtnTap',
-        'chute-select-ajax.things-ajax-response': '_chuteSelectResponse',
-        'generate-order-ajax.things-ajax-response': '_generateCompleted'
+        'search-preprocessing-ajax.things-ajax-response': '_preprocessListChanged',
+        'generate-order-ajax.things-ajax-response': '_generateCompleted',
+        'search-cell-ajax.things-ajax-response': '_getCellInfo',
+        'swap-cell-ajax.things-ajax-response': '_refreshCellInfo',
+        'complete-preprocessing-ajax.things-ajax-response': '_preprocessingCompleted',
       },
 
       observers: [
@@ -114,8 +150,21 @@
 
       _onRouteChanged(route) {
         this.jobBatch = route.detail.initialParams;
-        let chuteStatus = this.$['chute-select-ajax'];
-        chuteStatus.generateRequest();
+        this.generateClick = false;
+        if (!this.jobBatch.id) {
+          this.openInfoMsg({
+            title: Things.DataGlobal.t('label.failure'),
+            type: 'info',
+            text: Things.DataGlobal.t('text.no_batch_id'),
+            closeOnConfirm: true
+          });
+        } else {
+          var queryFields = [{
+            name: 'batchId',
+            value: this.jobBatch.id
+          }];
+          this._confirmTransaction('search-preprocessing-ajax', '', '', queryFields);
+        }
       },
 
       /**
@@ -123,32 +172,47 @@
        **************
        * @param {Object} event
        */
-      _chuteSelectResponse: function (event) {
-        this.chuteStatusResponse = event.detail.items;
+      _preprocessListChanged: function (event) {
+        this.chuteStatusResponse = event.detail;
       },
 
       // 데이터 리스폰 시, 화면 데이터 세팅
       _onChuteStatusResponse(response) {
+        let batchInfo = response['batch-info'];
+        let chuteInfo = response['chute-info'];
         let data = {};
-        this.chuteCellCnt = {};
+        let rChuteInfo = [];
+        let lChuteINfo = [];
 
-        response.forEach(v => {
+        data['batch-info'] = batchInfo;
+
+        chuteInfo.forEach(v => {
           if (v.chute_no) {
-            if(v.active_flag && v.status == 'W') {
-              data['chute-' + v.chute_no] = 'Y';
+            var chuteBar = this.scene.findById('chute-bar-' + v.chute_no);
+            if(v.remain_cell > 0) {
+              data['chute-check-' + v.chute_no] = 'Y';
+              chuteBar.fillStyle = 'rgba(75, 172, 241, 0.6)';
             } else {
-              data['chute-' + v.chute_no] = 'N';
+              data['chute-check-' + v.chute_no] = 'N';
+              chuteBar.fillStyle = 'rgba(119, 119, 119, 0.6)';
             }
-
-            if(v.ext_flag) {
-              this.chuteCellCnt[v.chute_no + '-ext_cell_cnt'] = v.ext_cell_cnt;
+            let tempMap = {};
+            if(v.chute_no > 9) {
+              tempMap['cell_cnt'] = v.remain_cell;
+              tempMap['sku_cnt'] = v.sku_cnt;
+              tempMap['pcs_cnt'] = v.pcs_cnt;
+              lChuteINfo.push(tempMap);
             } else {
-              this.chuteCellCnt[v.chute_no + '-ext_cell_cnt'] = 0;
+              tempMap['cell_cnt'] = v.remain_cell;
+              tempMap['sku_cnt'] = v.sku_cnt;
+              tempMap['pcs_cnt'] = v.pcs_cnt;
+              rChuteInfo.push(tempMap);
             }
           }
         });
+        data['r-chute-info'] = rChuteInfo;
+        data['l-chute-info'] = lChuteINfo;
         this.scene.data = data;
-        console.log(this.scene.data);
       },
 
       _disposeScene() {
@@ -163,10 +227,84 @@
         var origin = hint.origin
         var id = origin.get('id')
         var type = origin.get('type')
+        var fromCell = this.scene.findById('from-select-cell');
+        var toCell = this.scene.findById('to-select-cell');
 
-        if (id && (type == 'local-ref' && id.indexOf('chute') != -1) || (type == 'local-ref' && id.indexOf('input') != -1)) {
+        if (id && (type == 'local-ref' && id.indexOf('chute-check') != -1) || (type == 'local-ref' && id.indexOf('input') != -1)) {
           var state = origin.data
           origin.data = state == 'Y' ? 'N' : 'Y'
+
+          var chuteNo = id.split('-')[2];
+          var chuteBar = this.scene.findById('chute-bar-' + chuteNo);
+          if(origin.data == 'Y') {
+            chuteBar.fillStyle = 'rgba(75, 172, 241, 0.6)';
+          } else {
+            chuteBar.fillStyle = 'rgba(119, 119, 119, 0.6)';
+          }
+        } else if(id && id.indexOf('chute-bar') != -1) {
+          this.getChuteCellInfo(id);
+          fromCell.value = '';
+          toCell.value = '';
+
+          var fromDataList = this.scene.findById('from-chute-cell-info');
+          var toDataList = this.scene.findById('to-chute-cell-info');
+
+          var prevCells = fromDataList.getCellsByRow(this.fromIdx);
+          var currentCells = toDataList.getCellsByRow(this.toIdx);
+
+          this._selectRowFillStyle(prevCells, []);
+          this._selectRowFillStyle(currentCells, []);
+        } else if(type == 'data-cell') {
+          if(origin.parent.get('id') == 'from-chute-cell-info') {
+            if(toCell.value == origin.data.cell_cd) {
+              this.openInfoMsg({
+                title: Things.DataGlobal.t('label.failure'),
+                type: 'info',
+                text: 'From Cell Equal To Cell',
+                closeOnConfirm: true
+              });
+            } else {
+              var prevCells = origin.parent.getCellsByRow(this.fromIdx);
+              var currentCells = origin.parent.getCellsByRow(origin.data._idx);
+
+              this._selectRowFillStyle(prevCells, currentCells);
+              this.fromIdx = origin.data._idx;
+              fromCell.value = origin.data.cell_cd;
+            }
+          } else if(origin.parent.get('id') == 'to-chute-cell-info') {
+            if (fromCell.value == origin.data.cell_cd) {
+              this.openInfoMsg({
+                title: Things.DataGlobal.t('label.failure'),
+                type: 'info',
+                text: 'From Cell Equal To Cell',
+                closeOnConfirm: true
+              });
+            } else {
+              var prevCells = origin.parent.getCellsByRow(this.toIdx);
+              var currentCells = origin.parent.getCellsByRow(origin.data._idx);
+
+              this._selectRowFillStyle(prevCells, currentCells);
+              this.toIdx = origin.data._idx;
+              toCell.value = origin.data.cell_cd;
+            }
+          }
+        } else if(id && id.indexOf('swap-btn') != -1) {
+          if(fromCell.value && toCell.value) {
+            var params = {
+              batch_id: this.jobBatch.id,
+              prev_cell_cd: fromCell.value,
+              current_cell_cd: toCell.value
+            };
+            var title = Things.DataGlobal.t(event.detail.text);
+            this._confirmTransaction('swap-cell-ajax', '', params);
+          } else {
+            this.openInfoMsg({
+              title: Things.DataGlobal.t('label.failure'),
+              type: 'info',
+              text: Things.DataGlobal.t('text.select_item'),
+              closeOnConfirm: true
+            });
+          }
         }
       },
 
@@ -205,14 +343,46 @@
           this._fit();
       },
 
-      _completeBtnTap() {
-        let chuteStatusSet = this.$['generate-order-ajax'];
-        chuteStatusSet.body = {
-          chuteStatus: this.scene.data,
-          batchId: this.jobBatch.id
-        };
+      _assignBtnTap() {
+        if(!this.jobBatch.id) {
+          this.openInfoMsg({
+            title: Things.DataGlobal.t('label.failure'),
+            type: 'info',
+            text: Things.DataGlobal.t('text.no_batch_id'),
+            closeOnConfirm: true
+          });
+        } else {
+          var body = {
+            chuteStatus: this.scene.data,
+            batchId: this.jobBatch.id
+          };
 
-        chuteStatusSet.generateRequest();
+          this._confirmTransaction('generate-order-ajax', '', body, '');
+        }
+      },
+
+      _completeBtnTap() {
+        if(this.generateClick) {
+          var batchId = this.jobBatch.id;
+
+          var title = Things.DataGlobal.t('button.end_preprocess');
+          var ajax = this.$['complete-preprocessing-ajax'];
+          var text = Things.DataGlobal.t('text.Sure to X', { x: title });
+
+          this.openConfirmMsg({
+            type: 'info', title: title, text: text, showCancelButton: true
+          }, function () {
+            ajax.resourceUrl = 'order_preprocesses/' + batchId + '/complete_preprocess';
+            ajax.generateRequest();
+          });
+        } else {
+          this.openInfoMsg({
+            title: Things.DataGlobal.t('label.failure'),
+            type: 'info',
+            text: Things.DataGlobal.t('error.A_IS_NOT_COMPLETED', {A: Things.DataGlobal.t('label.assigned_orders')}),
+            closeOnConfirm: true
+          });
+        }
       },
 
       /**
@@ -222,8 +392,12 @@
        */
       _generateCompleted: function (event) {
         if(event.detail > 0 ) {
-          var routing = '/sms_preprocess';
-          page(routing, this.jobBatch)
+          var queryFields = [{
+            name: 'batchId',
+            value: this.jobBatch.id
+          }];
+          this._confirmTransaction('search-preprocessing-ajax', '', '', queryFields);
+          this.generateClick = true;
         } else {
           this.openInfoMsg({
             title: Things.DataGlobal.t('label.failure'),
@@ -232,6 +406,90 @@
             closeOnConfirm: true
           });
         }
+      },
+
+      /**
+        * 주문 generate 완료 처리 후
+        **************
+        * @param {Object} event
+      */
+      getChuteCellInfo: function(id) {
+        if (!this.jobBatch.id) {
+          this.openInfoMsg({
+            title: Things.DataGlobal.t('label.failure'),
+            type: 'info',
+            text: Things.DataGlobal.t('text.no_batch_id'),
+            closeOnConfirm: true
+          });
+        } else {
+          var chuteNo = id.split('-')[2];
+          var ajax = this.$['search-cell-ajax'];
+          ajax.resourceUrl = 'order_preprocesses/' + this.jobBatch.id + '/' + chuteNo + '/cell_info';
+          ajax.generateRequest();
+        }
+      },
+
+      _getCellInfo: function(event) {
+        var data = this.scene.data;
+
+        if(this.chuteClick) {
+          data['to-chute-cell-info'] = event.detail;
+        } else {
+          data['from-chute-cell-info'] = event.detail;
+        }
+        
+        this.scene.data = data;
+        this.chuteClick = !this.chuteClick;
+      },
+
+      _refreshCellInfo: function(event) {
+        var data = this.scene.data;
+        data['to-chute-cell-info'] = event.detail.toChuteCellInfo;
+        data['from-chute-cell-info'] = event.detail.fromChuteCellInfo;
+        this.scene.data = data;
+      },
+
+      /**
+       * 트랜잭션 확인 후 실행
+       ****************
+       * @param {String} ajaxId Ajax Id
+       * @param {String} title 트랜잭션 확인용 타이틀
+       * @param {Object} params ajax 호출용 파라미터
+       * @param {Object} bodyObj ajax 호출용 body 파라미터
+       */
+      _confirmTransaction: function (ajaxId, params, bodyObj, queryField) {
+        var batchId = this.jobBatch.id;
+        if (batchId) {
+          var ajax = this.$[ajaxId];
+          if (params) ajax.params = params;
+          if (bodyObj) ajax.body = bodyObj;
+          if (queryField) ajax.queryFields = queryField;
+
+          ajax.resourceId = batchId;
+          ajax.generateRequest();
+        }
+      },
+
+      /**
+      * 해당 data-list Row 에 색상 변경
+      */
+      _selectRowFillStyle: function(prevCells, currentCells) {
+        prevCells.forEach(function (cell) {
+          cell.fillStyle = '#fff';
+        });
+
+        currentCells.forEach(function (cell) {
+          cell.fillStyle = 'rgb(229, 243, 218)';
+        });
+      },
+
+      /**
+       * 주문 가공 완료 처리 후
+       **************
+       * @param {Object} event
+       */
+      _preprocessingCompleted: function (event) {
+        page('/sms_job_batches', {});
       }
     });
   </script>
