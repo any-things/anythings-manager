@@ -273,6 +273,12 @@ Copyright © HatioLab Inc. All rights reserved.
               b.hidden = false;
             }
             return Object.assign(new Object(), b);
+          } else if (jobType === 'SRTN') {
+            if (b.id === 'merge_batch-btn' && status === 'READY') {
+              b.hidden = false;
+            } else if (b.id === 'merge_batch-btn' && status === 'WAIT') {
+              b.hidden = true;
+            }
           }
         });
 
@@ -582,7 +588,19 @@ Copyright © HatioLab Inc. All rights reserved.
         var checkedRow = this._checkedGridRow();
 
         if (checkedRow) {
-          if (checkedRow.job_type != 'DPS' && checkedRow.status != 'WAIT') { // DPS 외 작업은 가공 대기 상태에서 가능 
+          if (checkedRow.job_type == 'SRTN' && checkedRow.status == 'READY') { // SRTN은 작업지시 대기 상태에서 병합 가능
+            var title = Things.DataGlobal.t(event.detail.text);
+            var mergePopup = this.newMergeBatchPopup(checkedRow, title);
+
+            // 작업 병합 팝업 표시
+            this.fire('things-open-popup-view', {
+              view: mergePopup,
+              modal: true,
+              closeCallback: function () {
+                this.$['search-form'].submitMyForm();
+              }.bind(this)
+            });
+          } else if (checkedRow.job_type != 'DPS' && checkedRow.status != 'WAIT') { // DPS 외 작업은 가공 대기 상태에서 가능 
             this.openInfoMsg({
               type: 'warning',
               title: Things.DataGlobal.t('text.is_not_wait_state')
