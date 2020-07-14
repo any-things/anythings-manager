@@ -84,7 +84,7 @@ Copyright © HatioLab Inc. All rights reserved.
     </things-search-form>
 
     <!-- Job Batch Grid -->
-    <things-resource-grid id="grid" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]"
+    <things-resource-grid id="grid" config="[[gridConfig]]" model="[[gridModel]]" columns="[[batchGridColumns]]"
       fixed-column-count="[[menuInfo.fixed_columns]]" buttons="[[buttons]]" current-page="{{page}}" limit="{{limit}}"
       total-count="[[itemCount]]" data="[[items]]" grid-save-action="[[menuInfo.grid_save_url]]">
     </things-resource-grid>
@@ -99,6 +99,11 @@ Copyright © HatioLab Inc. All rights reserved.
       ],
 
       properties: {
+        gridColumns: {
+          observer: '_gridColumnsChanged'
+        },
+
+
         /**
          * 그리드 설정
          *******
@@ -111,6 +116,22 @@ Copyright © HatioLab Inc. All rights reserved.
               options: {
                 checkBar: {
                   exclusive: true
+                },
+                // header: {
+                //   summary: {
+                //     visible: true,
+                //     styles: {
+                //       background: "#20ffa500"
+                //     }
+                //   }
+                // },
+                footer: {
+                  visible: true,
+                  summary: {
+                    styles: {
+                      background: "#800"
+                    }
+                  }
                 }
               }
             }
@@ -151,6 +172,42 @@ Copyright © HatioLab Inc. All rights reserved.
         'group-complete-batch-ajax.things-ajax-response': '_groupCompleteResponsed', // '그룹 마감' 처리 완료시
         'group-complete-batch-ajax.things-ajax-error': '_groupCompleteError', // '그룹 마감' 처리 실패시
         'instruct-job-rack-check-ajax.things-ajax-response': '_transactionInstructRackCheckCompleted' // '작업 지시 호기 체크' 처리 완료시
+      },
+
+      _gridColumnsChanged: function(gridColumns) {
+        // if (this.menuInfo.title.indexOf('B2BBatch') >= 0) {  // B2B(DAS)
+        if (location.hash.indexOf('b2b_job_batches') >= 0) {  // B2B(DAS)
+          for (let i = 11; i < 20; i++) {
+            gridColumns[i].footer = {
+              // spanPrev: 2,
+              "expression": "sum",
+              // "value": 0,
+              "text": 0,
+              "styles": {
+                "background": "#60cccc99",
+                "prefix": '합계' + ": ",
+                "numberFormat": "#,##0"
+              }
+            }
+          }
+        }
+        // if (this.menuInfo.title.indexOf('B2CBatch') >= 0) {  // B2C(DPS)
+        else if (location.hash.indexOf('job_batches') >= 0) {  // B2C(DPS)
+          for (let i = 10; i < 17; i++) {
+            gridColumns[i].footer = {
+              // spanPrev: 2,
+              "expression": "sum",
+              "text": 0,
+              "styles": {
+                "background": "#60cccc99",
+                "prefix": '합계' + ": ",
+                "numberFormat": "#,##0"
+              }
+            }
+          }
+        }
+
+        this.batchGridColumns = gridColumns;
       },
 
       /**
