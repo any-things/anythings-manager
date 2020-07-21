@@ -112,29 +112,7 @@ Copyright © HatioLab Inc. All rights reserved.
         gridConfig: {
           type: Object,
           value: function() {
-            return {
-              options: {
-                checkBar: {
-                  exclusive: true
-                },
-                // header: {
-                //   summary: {
-                //     visible: true,
-                //     styles: {
-                //       background: "#20ffa500"
-                //     }
-                //   }
-                // },
-                footer: {
-                  visible: true,
-                  summary: {
-                    styles: {
-                      background: "#800"
-                    }
-                  }
-                }
-              }
-            }
+            
           }
         },
 
@@ -174,38 +152,86 @@ Copyright © HatioLab Inc. All rights reserved.
         'instruct-job-rack-check-ajax.things-ajax-response': '_transactionInstructRackCheckCompleted' // '작업 지시 호기 체크' 처리 완료시
       },
 
+      attached: function() {
+        
+      },
+
       _gridColumnsChanged: function(gridColumns) {
+        if (location.hash.indexOf('b2b_job_batches') >= 0) {  // B2B(DAS)
+          this.gridConfig = {
+            options: {
+              checkBar: {
+                exclusive: true
+              },
+              header: {
+                summary: {
+                  visible: true,
+                  styles: {
+                    background: "#60cccc99"
+                  }
+                }
+              },
+              // footer: {
+              //   visible: true,
+              //   summary: {
+              //     styles: {
+              //       background: "#60cccc99"
+              //     }
+              //   }
+              // }
+            }
+          }
+        } else {
+          this.gridConfig = {
+            options: {
+              checkBar: {
+                exclusive: true
+              }
+            }
+          }
+        }
+
         // if (this.menuInfo.title.indexOf('B2BBatch') >= 0) {  // B2B(DAS)
         if (location.hash.indexOf('b2b_job_batches') >= 0) {  // B2B(DAS)
           for (let i = 11; i < 20; i++) {
-            gridColumns[i].footer = {
+            // gridColumns[i].footer = {
+            //   // spanPrev: 2,
+            //   "expression": "sum",
+            //   // "value": 0,
+            //   "text": 0,
+            //   "styles": {
+            //     "background": "#60cccc99",
+            //     "prefix": '합계' + ": ",
+            //     "numberFormat": "#,##0"
+            //   }
+            // }
+            gridColumns[i].header.summary = {
               // spanPrev: 2,
               "expression": "sum",
               // "value": 0,
               "text": 0,
               "styles": {
                 "background": "#60cccc99",
-                "prefix": '합계' + ": ",
+                // "prefix": '합계' + ": ",
                 "numberFormat": "#,##0"
               }
             }
           }
         }
-        // if (this.menuInfo.title.indexOf('B2CBatch') >= 0) {  // B2C(DPS)
-        else if (location.hash.indexOf('job_batches') >= 0) {  // B2C(DPS)
-          for (let i = 10; i < 17; i++) {
-            gridColumns[i].footer = {
-              // spanPrev: 2,
-              "expression": "sum",
-              "text": 0,
-              "styles": {
-                "background": "#60cccc99",
-                "prefix": '합계' + ": ",
-                "numberFormat": "#,##0"
-              }
-            }
-          }
-        }
+        // else if (location.hash.indexOf('job_batches') >= 0) {  // B2C(DPS)
+        //   for (let i = 10; i < 17; i++) {
+        //     gridColumns[i].footer = {
+        //       // spanPrev: 2,
+        //       "expression": "sum",
+        //       "text": 0,
+        //       "styles": {
+        //         "background": "#60cccc99",
+        //         "prefix": '합계' + ": ",
+        //         "numberFormat": "#,##0"
+        //       }
+        //     }
+        //   }
+        // }
 
         this.batchGridColumns = gridColumns;
       },
