@@ -67,6 +67,13 @@ Copyright © HatioLab Inc. All rights reserved.
       resource-action="update_multiple">
     </things-ajax>
 
+    <!-- 대상 분류 Ajax -->
+    <things-ajax 
+      id="target-class-ajax" 
+      resource-url="job_batches/:id/target_class" 
+      resource-action="create">
+    </things-ajax>
+
     <!-- 작업 지시 Ajax -->
     <things-ajax 
       id="instruct-job-ajax" 
@@ -171,6 +178,7 @@ Copyright © HatioLab Inc. All rights reserved.
       listeners: {
         'receive_order-btn-tap': '_onReceiveOrderTap', // '주문 수신' 버튼 클릭시
         'cancel_order-btn-tap': '_onCancelBatchTap', // '주문 취소' 버튼 클릭시
+        'target_class-btn-tap': '_onTargetClassingTap', // '대상 분류' 버튼 클릭시
         'order_preprocess-btn-tap': '_onOrderPreprocessTap', // '주문 가공' 버튼 클릭시
         'total_picking_instruct-btn-tap': '_onTotalPickingInstructTap', // '토탈 피킹 지시' 버튼 클릭시
         'job_instruct-btn-tap': '_onJobInstructTap', // '작업 지시' 버튼 클릭시
@@ -443,6 +451,35 @@ Copyright © HatioLab Inc. All rights reserved.
             title: title,
             text: text,
             showCancelButton: true
+          }, function() {
+            ajax.resourceId = batchId;
+            ajax.generateRequest();
+          }.bind(this));
+        }
+      },
+
+      /**
+       * @description 대상 분류 버튼 클릭 핸들러
+       **************
+       * @param {Object} event
+       */
+      _onTargetClassingTap: function(event) {
+        var row = this._checkedGridRow();
+
+        if (row) {
+          var ajax = this.$['target-class-ajax'];
+          var title = Things.DataGlobal.t(event.detail.text);
+          var text = Things.DataGlobal.t('text.Sure to X', {
+            x: title
+          });
+          var batchId = row.id;
+
+          this.openConfirmMsg({
+            type: 'info',
+            title: title,
+            text: text,
+            showCancelButton: true
+
           }, function() {
             ajax.resourceId = batchId;
             ajax.generateRequest();
