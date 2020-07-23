@@ -11,7 +11,7 @@ Copyright © HatioLab Inc. All rights reserved.
 -->
 
 <dom-module id="print-report">
-	<template>
+  <template>
 		<style>
 			:host {
 				@apply(--layout-flex);
@@ -31,20 +31,45 @@ Copyright © HatioLab Inc. All rights reserved.
 			}
 		</style>
 
-		<things-ajax auto id="resource-meta" method="GET" resource-url="[[menuMetaUrl]]" last-response="{{metaData}}">
+    <!-- 메뉴 메타 데이터 조회 Ajax -->
+    <things-ajax 
+      auto 
+      id="resource-meta" 
+      method="GET" 
+      resource-url="[[menuMetaUrl]]" 
+      last-response="{{metaData}}">
 		</things-ajax>
 
-		<things-search-form id="search-form" form-fields="[[searchFormFields]]" select-fields="[[selectFields]]"
-			sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]" page="{{page}}" limit="[[limit]]"
+    <!-- 검색 폼 -->
+    <things-search-form 
+      id="search-form" 
+      form-fields="[[searchFormFields]]" 
+      select-fields="[[selectFields]]"
+      sort-fields="[[sortFields]]" 
+      action-url="[[menuInfo.resource_url]]" 
+      page="{{page}}" 
+      limit="[[limit]]"
 			last-response="{{lastResponse}}">
 		</things-search-form>
 
+    <!-- 그리드 -->
 		<div class="container">
-			<things-resource-grid id="print-report-grid" grid-height="[[gridHeight]]" model="[[gridModel]]"
-				columns="[[gridColumns]]" config="[[gridConfig]]" buttons="[[buttons]]" enable-detail-column
-				current-page="{{page}}" limit="{{limit}}" data="[[items]]" total-count="[[itemCount]]"
-				grid-save-action="[[menuInfo.grid_save_url]]" fixed-column-count="[[menuInfo.fixed_columns]]"
-				export-file-name="[[menuInfo.title]]" export-sheet-name="[[menuInfo.title]]"
+      <things-resource-grid 
+        id="print-report-grid" 
+        grid-height="[[gridHeight]]" 
+        model="[[gridModel]]"
+        columns="[[gridColumns]]" 
+        config="[[gridConfig]]" 
+        buttons="[[buttons]]" 
+        enable-detail-column
+        current-page="{{page}}" 
+        limit="{{limit}}" 
+        data="[[items]]" 
+        total-count="[[itemCount]]"
+        grid-save-action="[[menuInfo.grid_save_url]]" 
+        fixed-column-count="[[menuInfo.fixed_columns]]"
+        export-file-name="[[menuInfo.title]]" 
+        export-sheet-name="[[menuInfo.title]]"
 				diy-template-id="[[menuInfo.diy_template_id]]">
 			</things-resource-grid>
 		</div>
@@ -52,139 +77,164 @@ Copyright © HatioLab Inc. All rights reserved.
 		<input hidden id="uploaderinput" type="file" />
 	</template>
 
-	<script>
-		Polymer({
-			is: 'print-report',
+  <script>
+    Polymer({
+      is: 'print-report',
 
-			behaviors: [
-				Things.MenuGridContentBehavior
-			],
+      behaviors: [
+        Things.MenuGridContentBehavior
+      ],
 
-			listeners: {
-				'print-report-grid.things-grid-configure': '_onBeforeGridConfigure',
-				'print-report-grid.things-grid-detail-tap': '_detailTapped',
-				'print-report-grid.things-grid-image-selector-edit': '_openFilePicker',
-				'print-report-grid.things-grid-save-success': '_onSave'
-			},
+      listeners: {
+        'print-report-grid.things-grid-configure': '_onBeforeGridConfigure',
+        'print-report-grid.things-grid-detail-tap': '_detailTapped',
+        'print-report-grid.things-grid-image-selector-edit': '_openFilePicker',
+        'print-report-grid.things-grid-save-success': '_onSaveSuccess'
+      },
 
-			ready: function () {
-				this.addClickListener();
-			},
+      /** 
+       * @description ready
+       **********************
+       */
+      ready: function() {
+        this.addClickListener();
+      },
 
-			_onSave: function (e) {
-				this.$['search-form'].submitMyForm();
-			},
+      /** 
+       * @description 저장 액션 성공시 
+       **********************
+       * @param {Object} e
+       */
+      _onSaveSuccess: function(e) {
+        this.$['search-form'].submitMyForm();
+      },
 
-			/**
-			* 그리드에 이미지 컬럼 추가
-			*/
-			_onBeforeGridConfigure: function (event) {
-				var imageColumn = {
-					name: "image",
-					fieldName: "image",
-					width: 350,
-					header: {
-						text: Things.DataGlobal.t('label.image')
-					},
-					styles: {
-						iconIndex: "image-renderer"
-					},
-					validations: [],
-					editable: false,
-					type: "calced",
-					renderer: {
-						type: "image",
-						imageDisplay: "auto"
-					},
-					valueCallback: function (column, row) {
-						return row.getValue('image');
-					},
-					nullable: true
-				};
+      /** 
+       * @description 그리드에 이미지 컬럼 추가
+       **********************
+       * @param {Object} event
+       */
+      _onBeforeGridConfigure: function(event) {
+        var imageColumn = {
+          name: 'image',
+          fieldName: 'image',
+          width: 350,
+          header: {
+            text: Things.DataGlobal.t('label.image')
+          },
+          styles: {
+            iconIndex: 'image-renderer'
+          },
+          validations: [],
+          editable: false,
+          type: 'calced',
+          renderer: {
+            type: 'image',
+            imageDisplay: 'auto'
+          },
+          valueCallback: function(column, row) {
+            return row.getValue('image');
+          },
+          nullable: true
+        };
 
-				event.detail.columns.forEach(function (col) {
-					if (col.name === imageColumn.name) {
-						Object.assign(col, imageColumn);
-					}
-				});
-			},
+        event.detail.columns.forEach(function(col) {
+          if (col.name === imageColumn.name) {
+            Object.assign(col, imageColumn);
+          }
+        });
+      },
 
-			/**
-			* 그리드의 상세 버튼을 클릭했을 때, /pdf_viewer 로 라우팅
-			*/
-			_detailTapped: function (event) {
-				var row = event.detail;
-				var routing = '/pdf_viewer';
-				page(routing, row);
-			},
+      /**
+       * @description 그리드의 상세 버튼을 클릭했을 때, /pdf_viewer 로 라우팅
+       **********************
+       * @param {Object} event
+       */
+      _detailTapped: function(event) {
+        var row = event.detail;
+        var routing = '/pdf_viewer';
+        page(routing, row);
+      },
 
-			/**
-		  * 그리드의 이미지 셀을 더블클릭했을 때, File Picker 창을 오픈
-		  */
-			_openFilePicker: function (e) {
-				e.preventDefault();
-				this.$.uploaderinput.click();
-			},
+      /**
+       * @description 그리드의 이미지 셀을 더블클릭했을 때, File Picker 창을 오픈
+       **********************
+       * @param {Object} e
+       */
+      _openFilePicker: function(e) {
+        e.preventDefault();
+        this.$.uploaderinput.click();
+      },
 
-			/**
-		  * input에 change Event Listener추가
-		  */
-			addClickListener() {
-				var self = this;
-				this.$.uploaderinput.addEventListener('change', function (event) {
-					self.processFile();
-				});
-			},
+      /**
+       * @description input에 change Event Listener 추가
+       **********************
+       */
+      addClickListener() {
+        var self = this;
+        this.$.uploaderinput.addEventListener('change', function(event) {
+          self.processFile();
+        });
+      },
 
-			/**
-		  * input된 파일을 폼에 넣어 submit
-		  */
-			processFile: function () {
-				this.uploading = true;
-				this.success = false;
-				var files = this.$.uploaderinput.files;
-				if (files.length > 0) {
-					for (var i = 0; i < files.length; i++) {
-						var file = files[i];
-						this.getBase64(file);
-					}
-				}
-			},
+      /**
+       * @description input된 파일을 폼에 넣어 submit
+       **********************
+       */
+      processFile: function() {
+        this.uploading = true;
+        this.success = false;
+        var files = this.$.uploaderinput.files;
 
-			/**
-		  * input된 파일을 Base64로 인코딩
-		  */
-			getBase64: function (file) {
-				var reader = new FileReader();
-				reader.readAsDataURL(file);
-				var self = this;
+        if (files.length > 0) {
+          for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            this.getBase64(file);
+          }
+        }
+      },
 
-				reader.onload = function () {
-					self._updateGridData(reader.result);
-				};
+      /**
+       * @description input된 파일을 Base64로 인코딩
+       **********************
+       * @param {Object} file
+       */
+      getBase64: function(file) {
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        var self = this;
 
-				reader.onerror = function (error) {
-					console.log('Error: ', error);
-				};
-			},
+        reader.onload = function() {
+          self._updateGridData(reader.result);
+        };
 
-			/**
-		  * input된 파일을 해당 그리드에 적용
-		  */
-			_updateGridData: function (renderedImage) {
-				var grid = this.$['print-report-grid'].getGridObject();
-				var dataSet = this.$['print-report-grid'].getGridDataSet();
-				var rowIdx = grid.focusedRow().dataIndex();
+        reader.onerror = function(error) {
+          console.log('Error: ', error);
+        };
+      },
 
-				// 그리드에서 포커스된 행의 순서에 대응하는 items의 요소 중에서 선택했던 이미지를 image 프로퍼티에 넣음
-				this.items[rowIdx] = { image: renderedImage };
+      /**
+       * @description input된 파일을 해당 그리드에 적용
+       **********************
+       * @param {Object} renderedImage
+       */
+      _updateGridData: function(renderedImage) {
+        var grid = this.$['print-report-grid'].getGridObject();
+        var dataSet = this.$['print-report-grid'].getGridDataSet();
+        var rowIdx = grid.focusedRow().dataIndex();
 
-				// 같은 파일을 넣어도 change 이벤트가 발생하도록 초기화
-				this.$.uploaderinput.value = '';
+        // 그리드에서 포커스된 행의 순서에 대응하는 items의 요소 중에서 선택했던 이미지를 image 프로퍼티에 넣음
+        this.items[rowIdx] = {
+          image: renderedImage
+        };
 
-				dataSet.updateRow(rowIdx, this.items[rowIdx]);
-				grid.refreshView();
-			}
-		});
-	</script>
+        // 같은 파일을 넣어도 change 이벤트가 발생하도록 초기화
+        this.$.uploaderinput.value = '';
+        dataSet.updateRow(rowIdx, this.items[rowIdx]);
+
+        // 그리드 리프레쉬
+        grid.refreshView();
+      }
+    });
+  </script>
 </dom-module>
