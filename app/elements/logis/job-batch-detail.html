@@ -216,7 +216,7 @@ MPS 작업 배치 상세 화면
         ajax.resourceId = this.sourceBatch.id;
         var jobType = this.sourceBatch.job_type;
 
-        if (jobType == 'DAS' || jobType == 'RTN' || jobType == 'DPS' || jobType == 'SRTN') {
+        if (jobType == 'DAS' || jobType == 'RTN' || jobType == 'DPS' || jobType == 'SRTN' || jobType == 'SDAS' || jobType == 'SDPS') {
           ajax.queryFields = [{
             name: 'status',
             value: 'RUN'

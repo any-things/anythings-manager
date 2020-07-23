@@ -356,7 +356,7 @@ Copyright © HatioLab Inc. All rights reserved.
               b.hidden = false;
             }
             return Object.assign(new Object(), b);
-          } else if (jobType === 'SRTN') {
+          } else if (jobType === 'SRTN' || jobType === 'SDAS' || jobType === 'SDPS') {
             if (b.id === 'merge_batch-btn' && status === 'READY') {
               b.hidden = false;
             } else if (b.id === 'merge_batch-btn' && status === 'WAIT') {
@@ -487,7 +487,7 @@ Copyright © HatioLab Inc. All rights reserved.
               var routing = '/' + jobType + '_preprocess';
               if (jobType === 'rtn3') {
                 jobType = 'rtn';
-              } else if (jobType === 'srtn' || jobType === 'sdas') {
+              } else if (jobType === 'srtn' || jobType === 'sdas' || jobType === 'sdps') {
                 jobType = 'sms';
                 routing = '/' + jobType + '_control';
                 //routing = '/' + jobType + '_preprocess';
@@ -530,7 +530,16 @@ Copyright © HatioLab Inc. All rights reserved.
                 }
                 break;
               case 'SDAS':
+                {
+                  this._instructSMSBatchProcess(checkedRow);
+                }
+                break;
               case 'SRTN':
+                {
+                  this._instructSMSBatchProcess(checkedRow);
+                }
+                break;
+              case 'SDPS':
                 {
                   this._instructSMSBatchProcess(checkedRow);
                 }
@@ -672,6 +681,30 @@ Copyright © HatioLab Inc. All rights reserved.
 
         if (checkedRow) {
           if (checkedRow.job_type == 'SRTN' && checkedRow.status == 'READY') { // SRTN은 작업지시 대기 상태에서 병합 가능
+            var title = Things.DataGlobal.t(event.detail.text);
+            var mergePopup = this.newMergeBatchPopup(checkedRow, title);
+
+            // 작업 병합 팝업 표시
+            this.fire('things-open-popup-view', {
+              view: mergePopup,
+              modal: true,
+              closeCallback: function () {
+                this.$['search-form'].submitMyForm();
+              }.bind(this)
+            });
+          } else if(checkedRow.job_type == 'SDAS' && checkedRow.status == 'READY') { // SDAS는 작업지시 대기 상태에서 병합 가능
+            var title = Things.DataGlobal.t(event.detail.text);
+            var mergePopup = this.newMergeBatchPopup(checkedRow, title);
+
+            // 작업 병합 팝업 표시
+            this.fire('things-open-popup-view', {
+              view: mergePopup,
+              modal: true,
+              closeCallback: function () {
+                this.$['search-form'].submitMyForm();
+              }.bind(this)
+            });
+          } else if(checkedRow.job_type == 'SDPS' && checkedRow.status == 'READY') { // SDPS는 작업지시 대기 상태에서 병합 가능
             var title = Things.DataGlobal.t(event.detail.text);
             var mergePopup = this.newMergeBatchPopup(checkedRow, title);
 
