@@ -9,7 +9,7 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
 <link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
 
-<dom-module id="sms-rtn-box-result">
+<dom-module id="sms-das-box-result">
   <template>
     <style>
       :host {
@@ -43,7 +43,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
   <script>
     Polymer({
-      is: 'sms-rtn-box-result',
+      is: 'sms-das-box-result',
 
       behaviors: [
         Things.ResourceMenuContentBehavior
@@ -122,7 +122,7 @@ Copyright © HatioLab Inc. All rights reserved.
           }
           if (isRequired) {
             element.label = "* " + element.label;
-            element.initialParams = 'equip_type=SORTER,job_type=SRTN';
+            element.initialParams = 'equip_type=SORTER,job_type=SDAS';
           }
         });
       }
