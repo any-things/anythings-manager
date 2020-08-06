@@ -1,0 +1,141 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<!--
+  ExPAS 작업 > 작업 배치 > Order Upload 팝업 화면
+-->
+
+<dom-module id="upload-order-popup">
+  <template>
+    <style>
+      :host {
+        @apply --layout-flex;
+        @apply --layout-vertical;
+      }
+
+      #contents {
+        @apply --layout-flex;
+        @apply --things-default-padding;
+        display: grid;
+        grid-template:
+          "pro"auto "gri"1fr "bar"auto / calc(100% - calc(10px / 2));
+        grid-gap: 10px;
+      }
+
+      #contents>#grid {
+        grid-area: gri;
+      }
+
+      #contents>#editor {
+        grid-area: edi;
+      }
+
+      #contents>#bar {
+        grid-area: bar;
+      }
+
+      /* 바깥 여백 제거 */
+      .margin-zero {
+        margin: 0px;
+      }
+
+      /* 안쪽 여백 제거 */
+      .padding-zero {
+        padding: 0px;
+      }
+
+      paper-toolbar::shadow #bottomBar {
+        @apply --layout-horizontal;
+        @apply --layout-end-justified;
+      }
+    </style>
+
+    <!-- 메타 호출 ajax -->
+    <things-ajax auto id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index"
+      last-response="{{metaData}}">
+    </things-ajax>
+
+    <div id="contents">
+      <things-resource-grid id="grid" class="padding-zero" config="[[gridConfig]]" model="[[gridModel]]"
+        columns="[[gridColumns]]" buttons="[[buttons]]" paginatable=[[menuInfo.pagination]] show-paginator=[[menuInfo.pagination]]
+        current-page="{{page}}" limit="{{limit}}" data="[[items]]" total-count="[[itemCount]]"
+        fixed-column-count="[[menuInfo.fixed_columns]]" grid-save-action="[[menuInfo.grid_save_url]]">
+      </things-resource-grid>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'upload-order-popup',
+
+      behaviors: [
+        Things.MsgBoxBehavior,
+        Things.NamedMetaBehavior
+      ],
+
+      listeners: {
+        "close-btn-tap": "closeReceivingPop",
+        'grid.things-grid-handle-save': '_beforeSave',
+        "grid.things-grid-save-success": "_onSaveSuccess"
+      },
+
+      /**
+       * 주문 수신 팝업 닫기 
+       **********************
+       * @param {Object} event
+       */
+      closeReceivingPop: function (event) {
+        document.dispatchEvent(new CustomEvent('things-dialog-close'));
+      },
+
+      _onSaveSuccess: function (event) {
+        if(event.detail) {
+          document.dispatchEvent(new CustomEvent('things-dialog-close'));
+        } else {
+          this.openConfirmMsg({
+            type: 'error',
+            title: Things.DataGlobal.t('title.error'),
+            text: Things.DataGlobal.t('text.process_did_not_complete')
+          });
+        }
+      },
+
+      /**
+       * 그리드 데이터 저장 전 처리 ...
+       *****************
+       * @param {Object} event
+       */
+      _beforeSave: function (event) {
+        var grid = event.target;
+        var changedList = grid.writeData;
+        if (!changedList || changedList.length == 0) {
+          return event;
+        }
+
+        var tempAreaCd = this.metaData.menu_params.find(function (item) {
+          return item.name == 'temp_area_cd';
+        });
+        var tempStageCd = this.metaData.menu_params.find(function (item) {
+          return item.name == 'temp_stage_cd';
+        });
+
+        changedList.forEach(function (changedData) {
+          if (changedData.cud_flag_ == 'c') {
+            changedData['area_cd'] = tempAreaCd.value;
+            changedData['stage_cd'] = tempStageCd.value;
+          }
+        }.bind(this));
+
+        return event;
+      },
+    });
+  </script>
+</dom-module>

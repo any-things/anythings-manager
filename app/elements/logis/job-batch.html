@@ -18,6 +18,8 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="./job-batch-instruct-popup.html">
 <link rel="import" href="./job-batch-rtn-instruct-popup.html">
 
+<link rel="import" href="./upload-order-popup.html">
+
 <link rel="import" href="./dps-rack-assignment.html">
 
 <!--
@@ -44,6 +46,10 @@ Copyright © HatioLab Inc. All rights reserved.
 
     <!-- 주문 수신 Ajax -->
     <things-ajax id="receive-order-ajax" resource-url="job_batches/receive_batches/ready/:id" method="POST">
+    </things-ajax>
+
+    <!-- Job_Type 변경 Ajax -->
+    <things-ajax id="change-status-ajax" resource-url="job_batches/:id" resource-action="update">
     </things-ajax>
 
     <!-- 수신 주문 취소 ajax -->
@@ -137,6 +143,8 @@ Copyright © HatioLab Inc. All rights reserved.
         'job_complete-btn-tap': '_onJobCompleteTap', // '작업 완료' 버튼 클릭시
         'group_complete-btn-tap': '_onGroupCompleteTap', // '그룹 마감' 버튼 클릭시 (그룹 마감은 선택한 배치의 배치 그룹 ID에 해당하는 모든 배치를 한꺼번에 마감하는 기능)
         'copy_region-btn-tap': '_onCopyRegion', // '호기 복사' 버튼 클릭시
+        'change_status-btn-tap': '_onChangeStatus', // 'DAS -> SDAS, SDAS -> DAS' Job_Type 변경 버튼 클릭시
+        'upload_order-btn-tap': '_onUploadOrder', // 상품 분류 오더 업로드 버튼 클릭시
         'grid.things-grid-configure': '_onGridConfigure', // 그리드 구성 시작시
         'grid.things-grid-data-changed': '_onGridDataChanged', // 그리드 데이터 변경시
         'grid.things-grid-column-dblclicked': '_gridColumnDoubleClicked', // 그리드 컬럼 더블 클릭시
@@ -146,6 +154,7 @@ Copyright © HatioLab Inc. All rights reserved.
         'instruct-job-ajax.things-ajax-response': '_transactionCompleted', // '작업 지시' 처리 완료시
         'cancel-instruct-job-ajax.things-ajax-response': '_transactionCompleted', // '작업 지시 취소' 처리 완료시
         'complete-job-ajax.things-ajax-response': '_jobCompleteResponsed', // '작업 완료' 처리 완료시
+        'change-status-ajax.things-ajax-response': '_transactionCompleted', // 'JOB_TYPE 변경' 처리 완료시
         'complete-job-ajax.things-ajax-error': '_jobCompleteError', // '작업 완료' 처리 실패시
         'group-complete-batch-ajax.things-ajax-response': '_groupCompleteResponsed', // '그룹 마감' 처리 완료시
         'group-complete-batch-ajax.things-ajax-error': '_groupCompleteError', // '그룹 마감' 처리 실패시
@@ -321,7 +330,7 @@ Copyright © HatioLab Inc. All rights reserved.
             return Object.assign(new Object(), b);
 
           } else if (status === 'WAIT') {
-            b.hidden = !(b.id == 'order_preprocess-btn' || b.id == 'merge_batch-btn' || b.id == 'cancel_order-btn');
+            b.hidden = !(b.id == 'order_preprocess-btn' || b.id == 'merge_batch-btn' || b.id == 'cancel_order-btn' || b.id == 'change_status-btn');
             return Object.assign(new Object(), b);
 
           } else if (status === 'READY') {
@@ -344,19 +353,22 @@ Copyright © HatioLab Inc. All rights reserved.
 
         btns.map(function(b) {
           if (jobType === 'RTN' || jobType === 'RTN3') {
-            if (b.id === 'copy_region-btn' || b.id === 'merge_batch-btn') {
+            if (b.id === 'copy_region-btn' || b.id === 'merge_batch-btn' || b.id == 'change_status-btn') {
               b.hidden = true;
             }
             return Object.assign(new Object(), b);
 
           } else if (jobType === 'DPS' || jobType === 'QPS') {
-            if (b.id == 'order_preprocess-btn') {
+            if (b.id == 'order_preprocess-btn' || b.id == 'change_status-btn') {
               b.hidden = true;
             } else if (b.id === 'merge_batch-btn' && status === 'READY') {
               b.hidden = false;
             }
             return Object.assign(new Object(), b);
           } else if (jobType === 'SRTN' || jobType === 'SDAS' || jobType === 'SDPS') {
+            if (jobType != 'SDAS' && b.id == 'change_status-btn') {
+              b.hidden = true;
+            }
             if (b.id === 'merge_batch-btn' && status === 'READY') {
               b.hidden = false;
             } else if (b.id === 'merge_batch-btn' && status === 'WAIT') {
@@ -545,6 +557,120 @@ Copyright © HatioLab Inc. All rights reserved.
                 }
                 break;
             }
+          }
+        }
+      },
+
+      /**
+      * @description Upload Order 버튼 클릭 핸들러
+      **************
+      * @param {Object} event
+      */
+      _onUploadOrder: function (event) {
+        /*var props = {
+          title: Things.DataGlobal.t('button.receive_order'),
+          resourceName: 'ReceiveOrderPopup',
+          receiptSummaryId: receiptSummary.id, // 수신 서머리 ID
+          receiptSummary: event && event.detail // 수신 서머리 정보
+        };
+        var receiveOrderPopup = this.create('receive-order-popup', props);
+        var searchForm = this.$['search-form'];
+
+        // 팝업 띄우기
+        this.fire('things-open-popup-view', {
+          view: receiveOrderPopup,
+          modal: true,
+          closeCallback: function () {
+            searchForm.submitMyForm();
+          }
+        });*/
+
+        var props = {
+          title: Things.DataGlobal.t('button.receive_order'),
+          resourceName: 'UploadOrderPopup'
+        };
+        var uploadOrderPopup = this.create('upload-order-popup', props);
+
+        var searchForm = this.$['search-form'];
+
+        // 팝업 띄우기
+        this.fire('things-open-popup-view', {
+          view: uploadOrderPopup,
+          modal: true,
+          closeCallback: function () {
+            searchForm.submitMyForm();
+          }
+        });
+      },
+
+      /**
+       * @description JOB_TYPE 변경 버튼 클릭 핸들러
+       **************
+       * @param {Object} event
+       */
+      _onChangeStatus: function (event) {
+        var title = Things.DataGlobal.t(event.detail.text);
+        var row = this._checkedGridRow();
+
+        if (row) {
+          if (row && (row.job_type == 'SDAS' || row.job_type == 'DAS')) {
+            var ajax = this.$['change-status-ajax'];
+            if(row.job_type === 'SDAS') {
+              row.job_type = 'DAS';
+              row.stage_cd = '';
+              row.equip_group_cd = '';
+              row.equip_cd = '';
+              row.equip_type = 'Rack'
+
+              title = 'SDAS -> DAS ';
+            } else if(row.job_type === 'DAS') {
+              var tempEquipCd = this.metaData.menu_params.find(function (item) {
+                return item.name == 'temp_equip_cd';
+              });
+              var tempStageCd = this.metaData.menu_params.find(function (item) {
+                return item.name == 'temp_stage_cd';
+              });
+
+
+              row.job_type = 'SDAS';
+              row.stage_cd = tempStageCd.value;
+              row.equip_group_cd = tempEquipCd.value;
+              row.equip_cd = tempEquipCd.value;
+              row.equip_type = 'SORTER'
+
+              title = 'DAS -> SDAS ';
+            }
+            title += Things.DataGlobal.t('button.type_change');
+
+            var text = Things.DataGlobal.t('text.Sure to X', {
+              x: title
+            });
+
+            setTimeout(() => {
+              this.openConfirmMsg({
+                type: 'info',
+                title: title,
+                text: text,
+                showCancelButton: true,
+                closeOnConfirm: false
+
+              }, function () {
+                this.openConfirmMsg({
+                  type: 'info',
+                  title: Things.DataGlobal.t('text.Server Processing'),
+                  text: Things.DataGlobal.t('text.processing_msg'),
+                  showCancelButton: false,
+                  showConfirmButton: false
+                });
+                ajax.resourceId = row.id;
+                ajax.params = {
+                  id: row.id
+                };
+                ajax.body = row;
+                ajax.generateRequest();
+
+              }.bind(this));
+            }, 100);
           }
         }
       },
@@ -1263,6 +1389,8 @@ Copyright © HatioLab Inc. All rights reserved.
 
           var searchParams = searchForm.serializeMyForm();
           if (searchParams && searchParams.job_date) {
+            searchForm.submitMyForm();
+          } else if (searchParams) {
             searchForm.submitMyForm();
           }
         } else {
