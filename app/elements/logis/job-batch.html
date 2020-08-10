@@ -348,6 +348,9 @@ Copyright © HatioLab Inc. All rights reserved.
           } else if (status === 'MERGED') {
             b.hidden = (b.id != 'total_picking_instruct-btn');
             return Object.assign(new Object(), b);
+          } else if (status === 'WORKING') {
+            b.hidden = !(b.id == 'cancel_job_instruct-btn' || b.id == 'job_complete-btn' || b.id == 'copy_region-btn' || b.id == 'group_complete-btn' || b.id == 'total_picking_instruct-btn');
+            return Object.assign(new Object(), b);
           }
         });
 
