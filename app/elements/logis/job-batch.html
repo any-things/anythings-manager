@@ -372,6 +372,9 @@ Copyright © HatioLab Inc. All rights reserved.
             if (jobType != 'SDAS' && b.id == 'change_status-btn') {
               b.hidden = true;
             }
+            if (jobType === 'SDAS' && b.id == 'job_complete-btn') {
+              b.hidden = true;
+            }
             if (b.id === 'merge_batch-btn' && status === 'READY') {
               b.hidden = false;
             } else if (b.id === 'merge_batch-btn' && status === 'WAIT') {
