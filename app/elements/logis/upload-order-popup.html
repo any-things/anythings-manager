@@ -8,6 +8,7 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/things-form/things-search-form.html">
 <link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
 <link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+<link rel="import" href="../../bower_components/things-spinner/things-spinner-behavior.html">
 
 <!--
   ExPAS 작업 > 작업 배치 > Order Upload 팝업 화면
@@ -64,6 +65,7 @@ Copyright © HatioLab Inc. All rights reserved.
     </things-ajax>
 
     <div id="contents">
+      <things-spinner id="thingsSpinner"></things-spinner>
       <things-resource-grid id="grid" class="padding-zero" config="[[gridConfig]]" model="[[gridModel]]"
         columns="[[gridColumns]]" buttons="[[buttons]]" paginatable=[[menuInfo.pagination]] show-paginator=[[menuInfo.pagination]]
         current-page="{{page}}" limit="{{limit}}" data="[[items]]" total-count="[[itemCount]]"
@@ -78,7 +80,8 @@ Copyright © HatioLab Inc. All rights reserved.
 
       behaviors: [
         Things.MsgBoxBehavior,
-        Things.NamedMetaBehavior
+        Things.NamedMetaBehavior,
+        Things.SpinnerBehavior
       ],
 
       listeners: {
@@ -133,7 +136,6 @@ Copyright © HatioLab Inc. All rights reserved.
             changedData['stage_cd'] = tempStageCd.value;
           }
         }.bind(this));
-
         return event;
       },
     });
