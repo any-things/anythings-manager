@@ -1,0 +1,87 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<link rel="import" href="./things-handle-custom-buttons-behavior.html">
+
+<!--
+  RESOURCE 타입과 동일하지만 기본 버튼 외 커스텀 버튼을 등록하여 커스텀 버튼과 서비스 URL에 연결시킬 수 있는 화면
+  커스텀 버튼은 메뉴의 버튼에서 등록하고 버튼의 이벤트에 연결할 서비스 URL은 메뉴 파라미터로 등록한다.
+  예를 들어서 기본 화면에서 기본으로 제공하는 버튼 (추가, 삭제, 저장, 내보내기) 외에 transaction 버튼을 추가시키려면 
+  메뉴의 버튼 탭에서 transaction 버튼을 추가하고 용어에 button.transaction을 추가한 다음 
+  메뉴의 매개변수 셋업 탭에서 키 / 값 / 설명에 transaction-btn-tap / 커스텀 서비스 URL / 그리드 파라미터 개수 (1, n, 최대 개수) 등록해주면 
+  시스템은 이 화면에서 자동으로 등록한 transaction-btn-tap 이벤트 발생시 연결한 커스텀 서비스 URL로 호출해준다.
+  버튼과 서비스 연결시 기본적으로 그리드에서 선택한 Row 데이터와 검색 폼 정보를 파라미터로 전달한다.
+-->
+<dom-module id="things-resource-custom-content">
+  <template>
+      <style>
+        :host {
+          @apply --layout-flex;
+          @apply --layout-vertical;
+        }
+
+        things-resource-grid {
+          @apply --layout-vertical;
+          @apply --layout-flex;
+        }
+      </style>
+
+      <!-- 메뉴 메타 정보 조회 AJAX -->
+      <things-ajax 
+        auto 
+        id="resource-meta" 
+        resource-url="[[menuMetaUrl]]" 
+        resource-action="index" 
+        last-response="{{metaData}}">
+      </things-ajax>
+
+      <!-- 검색 폼 -->
+      <things-search-form 
+        id="search-form" 
+        title="[[menuInfo.title]]" 
+        form-fields="[[searchFormFields]]" 
+        select-fields="[[selectFields]]"
+        sort-fields="[[sortFields]]" 
+        action-url="[[menuInfo.resource_url]]" 
+        page="{{page}}" 
+        limit="{{limit}}"
+        last-response="{{lastResponse}}">
+      </things-search-form>
+
+      <!-- 그리드 -->
+      <things-resource-grid 
+        id="grid" 
+        config="[[gridConfig]]" 
+        model="[[gridModel]]" 
+        columns="[[gridColumns]]" 
+        buttons="[[buttons]]"
+        paginatable=[[menuInfo.pagination]] 
+        show-paginator=[[menuInfo.pagination]] 
+        current-page="{{page}}" 
+        limit="{{limit}}" 
+        data="[[items]]"
+        total-count="[[itemCount]]" 
+        fixed-column-count="[[menuInfo.fixed_columns]]" 
+        grid-save-action="[[menuInfo.grid_save_url]]">
+      </things-resource-grid>
+   </template>
+
+  <script>
+    Polymer({
+      is: 'things-resource-custom-content',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior,
+        Things.HandleCustomButtonsBehavior
+      ]
+    });
+  </script>
+</dom-module>

@@ -76,33 +76,47 @@ Copyright © HatioLab Inc. All rights reserved.
             if (!menuData.isRegistered) {
               var routingType = menuData.routing_type;
 
+              // 1. (Dynamic) 메뉴 메타 기반 자동 생성 화면 (기본 화면, 상세 화면은 팝업으로 ...)
               if (routingType == 'RESOURCE') {
                 me._registerResourceScreen(menuData);
 
+                // 2. (Dynamic) 메뉴 메타 기반 자동 생성 화면 (상세 화면은 그리드 옆에 표시됨)
               } else if (routingType == 'RESOURCE-VIEW') {
                 me._registerResourceViewScreen(menuData);
 
+                // 3. (Dynamic) RESOURCE 화면과 동일하지만 커스텀 버튼을 커스텀 서비스와 연결시킬 수 있는 화면
+              } else if (routingType == 'RESOURCE-CUSTOM') {
+                me._registerResourceCustomScreen(menuData);
+
+                // 4. (Dynamic) 마스터 - 디테일 구조의 자동 생성 화면
               } else if (routingType == 'MASTER-DETAIL') {
                 me._registerMasterDetailScreen(menuData);
 
+                // 5. (Dynamic) 메뉴 메타 기반으로 단순히 조회만 할 수 있는 화면
               } else if (routingType == 'PLAIN') {
                 me._registerPlainScreen(menuData);
 
+                // 6. (Dynamic) 검색 폼 & 차트로 구성된 화면 
               } else if (routingType == 'CHART') {
                 me._registerChartScreen(menuData);
 
+                // 7. (Dynamic) 검색 폼 & 차트 & 그리드로 구성된 화면 
               } else if (routingType == 'GRID-CHART') {
                 me._registerGridChartScreen(menuData);
 
+                // 8. DEPRECATED 
               } else if (routingType == 'REPORT') {
                 me._registerReportScreen(menuData);
 
+                // 9. DEPRECATED
               } else if (routingType == 'VIEWER') {
                 me._registerSceneViewerScreen(menuData);
 
+                // 10. DEPRECATED
               } else if (routingType == 'PLAYER') {
                 me._registerScenePlayerScreen(menuData);
 
+                // 11. (Static) 개발자가 직접 클라이언트 소스를 작성하여 만든 완전 커스터마이징 화면
               } else {
                 me._registerStaticScreen(menuData);
               }
@@ -188,6 +202,16 @@ Copyright © HatioLab Inc. All rights reserved.
     },
 
     /**
+     * RESOURCE-CUSTOM 타입 - RESOURCE 타입과 동일하지만 기본 버튼 외 커스텀 버튼을 등록하여 서비스 URL에 연결시킬 수 있는 화면
+     * ********
+     * @param {Object} menuData 현재 선택된 메뉴 정보
+     */
+    _registerResourceCustomScreen: function(menuData) {
+      var screen = document.createElement('things-resource-custom-content');
+      this._setCommonScreenInfo(screen, menuData);
+    },
+
+    /**
      * MASTER-DETAIL 타입 (화면 유형 : 검색 폼 - 마스터 그리드 - 디테일 그리드)의 Dynamic Screen을 등록한다.
      * ********
      * @param {Object} menuData 현재 선택된 메뉴 정보
@@ -205,7 +229,8 @@ Copyright © HatioLab Inc. All rights reserved.
      * @param {Object} menuData 현재 선택된 메뉴 정보
      */
     _registerPlainScreen: function(menuData) {
-      var screen = document.createElement('things-menu-grid-content');
+      //var screen = document.createElement('things-menu-grid-content');
+      var screen = document.createElement('things-plain-custom-content');
       this._setCommonScreenInfo(screen, menuData);
     },
 

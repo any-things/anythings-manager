@@ -1,0 +1,268 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<script>
+  window.Things = window.Things || {};
+
+  /**
+   * 메뉴 버튼 & 메뉴 파라미터 정보로 커스텀 버튼을 커스텀 서비스와 연결하여 처리해주는 Behavior
+   *
+   * @polymerBehavior Things.HandleCustomButtonsBehavior
+   */
+  Things.HandleCustomButtonsBehaviorImpl = {
+
+    properties: {
+      /**
+       * @description 그리드 설정
+       ****************
+       * @type {Object}
+       */
+      gridConfig: {
+        type: Object,
+        value: function() {
+          return {}
+        }
+      }
+    },
+
+    listeners: {
+      'grid.things-grid-configure': '_onGridConfigureStarted', // 그리드 구성 시작시
+      'grid.things-grid-configured': '_onGridConfigureFinished' // 그리드 구성 완료시
+    },
+
+    /**
+     * @description 그리드 구성 시작시
+     **************
+     * @param {Object} event
+     */
+    _onGridConfigureStarted: function(event) {
+      // 그리드 Config를 메뉴 메타의 메뉴 파라미터에서 조회하여 적용
+      let menuParams = this.metaData.menu_params;
+      let gridConfigStr = this._findMenuParamValue(menuParams, 'grid_config');
+
+      if (gridConfigStr && gridConfigStr.length > 5) {
+        this.gridConfig = JSON.parse(gridConfigStr);
+      }
+    },
+
+    /**
+     * @description 그리드 구성 완료 시
+     **************
+     * @param {Object} event
+     */
+    _onGridConfigureFinished: function(event) {
+      let menuParams = this.metaData.menu_params;
+      let buttonEvents = this._extractButtonEvents(menuParams);
+
+      if (buttonEvents && buttonEvents.length > 0) {
+        let grid = this.$['grid'];
+        for (i = 0; i < buttonEvents.length; i++) {
+          let buttonEvent = buttonEvents[i];
+          grid.addEventListener(buttonEvent.name, function(event) {
+            this._customButtonEventHandler(event);
+          }.bind(this));
+        }
+      }
+    },
+
+    /**
+     * @description 커스텀 버튼 클릭 이벤트 핸들러 
+     **************
+     * @param {Object} event
+     */
+    _customButtonEventHandler: function(event) {
+      if (!event || !event.detail) {
+        return;
+      }
+
+      // 1. 메뉴 파라미터 
+      let menuParams = this.metaData.menu_params;
+      // 2. 버튼 정보 추출 
+      let button = event.detail;
+      // 3. 어떤 버튼에서 이벤트가 발생했는지 확인
+      let buttonName = button.id;
+      // 4. 버튼과 연결된 이벤트 파라미터 항목을 찾아서 
+      let menuParam = this._findMenuParamObj(menuParams, buttonName + '-tap');
+      // 5. 메뉴 파라미터를 찾았다면 처리 
+      if (menuParam) {
+        // 6. 선택된 그리드 항목 리스트를 추출 
+        let dataRows = this._extractSelectedItems(menuParam.description, true);
+        if (dataRows != false && dataRows.length > 0) {
+          // 7. 서비스 호출 
+          this._callCustomService(button, menuParam, dataRows);
+        }
+      }
+    },
+
+    /**
+     * @description 버튼 처리 액션  
+     **************
+     * @param {Object} button
+     * @param {Object} menuParam
+     * @param {Array} dataRows
+     */
+    _callCustomService: function(button, menuParam, dataRows) {
+      this.openConfirmMsg({
+        type: 'info',
+        title: Things.DataGlobal.t(button.text),
+        text: Things.DataGlobal.t('text.Sure to process'),
+        showCancelButton: true
+      }, function() {
+        if (button.auth == 'show') {
+          // 커스텀 서비스 조회용 - 별도 화면을 출력하는 기능 필요 
+          this._callCustomServiceGet(button, menuParam, dataRows);
+        } else {
+          // 커스텀 서비스 호출 - 트랜잭션 처리 후 그리드 리프레쉬만 처리 
+          this._callCustomServiceTrx(button, menuParam, dataRows);
+        }
+      }.bind(this));
+    },
+
+    /**
+     * @description 커스텀 버튼 처리 액션  
+     **************
+     * @param {Object} button
+     * @param {Object} menuParam
+     * @param {Array} dataRows
+     */
+    _callCustomServiceTrx: function(button, menuParam, dataRows) {
+      var callAjax = document.createElement('things-ajax');
+      callAjax.resourceUrl = menuParam.value;
+      callAjax.resourceAction = 'create';
+      var formData = this.$['search-form'].serializeMyForm();
+      callAjax.body = {
+        input: {
+          form: formData,
+          list: dataRows
+        }
+      };
+      callAjax.addEventListener('things-ajax-response', function(event) {
+        this.refreshData();
+      }.bind(this));
+
+      callAjax.generateRequest();
+    },
+
+    /**
+     * @description 커스텀 서비스 GET 방식 버튼 처리 액션  
+     **************
+     * @param {Object} button
+     * @param {Object} menuParam
+     * @param {Array} dataRows
+     */
+    _callCustomServiceGet: function(button, menuParam, dataRows) {
+      this.openInfoMsg({
+        type: 'info',
+        title: '이 기능은 현재 지원하지 않습니다.',
+        closeOnConfirm: true
+      });
+    },
+
+    /**
+     * @description 메뉴 파라미터 값 추출 
+     *******************
+     * @param {String} menuParams
+     * @param {String} menuParamName
+     * @param {String} defaultValue
+     * @return
+     */
+    _findMenuParamValue: function(menuParams, menuParamName, defaultValue) {
+      var paramItem = menuParams.find(function(item) {
+        return item.name == menuParamName;
+      });
+
+      return (paramItem && paramItem.value) ? (paramItem.value.trim().length >= 1 ? paramItem.value : defaultValue) : defaultValue;
+    },
+
+    /**
+     * @description 메뉴 파라미터 추출 
+     *******************
+     * @param {String} menuParams
+     * @param {String} menuParamName
+     * @return
+     */
+    _findMenuParamObj: function(menuParams, menuParamName) {
+      return menuParams.find(function(item) {
+        return item.name == menuParamName;
+      });
+    },
+
+    /**
+     * @description 버튼 용도의 파라미터 값 추출 
+     *******************
+     * @param {String} menuParams
+     * @param {String} menuParamName
+     * @param {String} defaultValue
+     * @return
+     */
+    _extractButtonEvents: function(menuParams) {
+      return menuParams.filter(function(item) {
+        return item.name.endsWith('btn-tap');
+      });
+    },
+
+    /**
+     * @description 현재 그리드에서 선택된 항목 추출 
+     *******************
+     * @param {String} selectCount
+     * @param {Boolean} errorWhenEmpty
+     * @return
+     */
+    _extractSelectedItems: function(selectCount, errorWhenEmpty) {
+      var rowObjs = this._extractSelectedRowObjects();
+
+      if ((!rowObjs || rowObjs.length == 0) && errorWhenEmpty && errorWhenEmpty === true) {
+        this.openInfoMsg({
+          type: 'warning',
+          title: Things.DataGlobal.t('text.select_item')
+        });
+        return false;
+      }
+
+      if (selectCount === '1') {
+        return rowObjs[0];
+      } else if (selectCount == 'n') {
+        return rowObjs;
+      } else {
+        let cnt = Number(selectCount);
+        cnt = rowObjs.length > cnt ? cnt : rowObjs.length;
+        let items = [];
+        for (var i = 0; i < cnt; i++) {
+          items.push(rowObjs[i]);
+        }
+        return items;
+      }
+    },
+
+    /**
+     * @description 현재 그리드에서 선택된 데이터 추출 
+     *******************
+     * @return
+     */
+    _extractSelectedRowObjects: function() {
+      var resourceGrid = this.$['grid'];
+      var grid = resourceGrid.getGridObject();
+      var rows = grid.getCheckedRows();
+
+      if (!rows || rows.length == 0) {
+        return [];
+      }
+
+      var ds = resourceGrid.getGridDataSet();
+      var dataRows = rows.map(function(row) {
+        var idx = row.dataIndex();
+        return ds.getRowObject(idx);
+      });
+
+      return dataRows;
+    }
+  };
+
+  Things.HandleCustomButtonsBehavior = [
+    Things.HandleCustomButtonsBehaviorImpl,
+    Things.MenuGridContentBehavior
+  ];
+</script>

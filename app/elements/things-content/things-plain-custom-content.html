@@ -1,0 +1,103 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/social-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="../../bower_components/iron-iconset/iron-iconset.html">
+<link rel="import" href="../../bower_components/iron-iconset-svg/iron-iconset-svg.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-button/things-button.html">
+<link rel="import" href="../../bower_components/things-form/things-resource-form.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-full-dialog/things-full-dialog.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+
+<link rel="import" href="../../bower_components/things-content/things-menu-grid-content-behavior.html">
+<link rel="import" href="../../bower_components/things-content/things-detail-popup-behavior.html">
+
+<link rel="import" href="./things-handle-custom-buttons-behavior.html">
+
+<!--
+메뉴 설정 정보를 기반으로 그리드 기반의 화면을 제공하는 화면 셋. 
+Detail View 및 추가, 저장, 삭제, 임포트 기본 기능은 없다.
+
+	Example:
+
+	<things-plain-custom-content 
+		menu-info="{{menuInfo}}">
+	</things-plain-custom-content>
+
+@demo ./things-content/demo/index.html
+-->
+
+<dom-module id="things-plain-custom-content">
+  <template>
+		<style>
+			:host {
+				display: block;
+				@apply(--layout-vertical);
+				@apply(--layout-flex);
+			}
+			
+			things-resource-grid {
+				@apply(--layout-flex);
+			}
+		</style>
+
+    <!-- 메뉴 메타 정보 조회 AJAX -->
+		<things-ajax 
+			auto
+			id="resource-meta"
+			method="GET"
+			resource-url="[[menuMetaUrl]]"
+			last-response="{{metaData}}">
+		</things-ajax>
+
+    <!-- 검색 폼 -->
+		<things-search-form 
+			id="search-form"
+			form-fields="[[searchFormFields]]" 
+			select-fields="[[selectFields]]"
+			sort-fields="[[sortFields]]"
+			action-url="[[menuInfo.resource_url]]" 
+			page="{{page}}"
+			limit="[[limit]]"
+			last-response="{{lastResponse}}">
+		</things-search-form>
+
+    <!-- 그리드 -->
+		<things-resource-grid 
+			id="grid"
+			grid-height="[[gridHeight]]"
+			model="[[gridModel]]" 
+			columns="[[gridColumns]]"
+			config="[[gridConfig]]"
+			buttons="[[buttons]]"
+			current-page="{{page}}"
+			limit="{{limit}}"
+			data="[[items]]"
+			total-count="[[itemCount]]"
+			fixed-column-count="[[menuInfo.fixed_columns]]"
+			export-file-name="[[menuInfo.title]]"
+			export-sheet-name="[[menuInfo.title]]">
+		</things-resource-grid>
+	</template>
+
+  <script>
+    Polymer({
+      is: 'things-plain-custom-content',
+
+      behaviors: [
+        Things.MenuGridContentBehavior,
+        Things.HandleCustomButtonsBehavior
+      ]
+    });
+  </script>
+</dom-module>
