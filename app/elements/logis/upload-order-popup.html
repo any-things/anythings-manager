@@ -33,6 +33,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
       #contents>#grid {
         grid-area: gri;
+        border:1px solid rgba(0,0,0,.3)
       }
 
       #contents>#editor {
@@ -57,12 +58,41 @@ Copyright © HatioLab Inc. All rights reserved.
         @apply --layout-horizontal;
         @apply --layout-end-justified;
       }
+
+      .textbox {
+        position: relative;
+        padding:20px 20px 0 20px
+      } 
+      .textbox label { 
+        display:inline-block;
+        min-width:100px;
+        position: relative; 
+        padding-right:5px;
+        color: #999; cursor: text; 
+        font-weight:bold;
+        text-align:right;
+      } 
+      .textbox input[type="text"] { 
+        width: 40%; /* 원하는 너비 설정 */ 
+        padding: .3em .8em; /* 원하는 여백 설정, 상하단 여백으로 높이를 조절 */ 
+        font-family: inherit; /* 폰트 상속 */ 
+        border: 1px solid #999; 
+        border-radius: 0; /* iSO 둥근모서리 제거 */ 
+        outline-style: none; /* 포커스시 발생하는 효과 제거를 원한다면 */ 
+        -webkit-appearance: none; /* 브라우저별 기본 스타일링 제거 */ 
+        -moz-appearance: none; appearance: none; 
+      }
     </style>
 
     <!-- 메타 호출 ajax -->
     <things-ajax auto id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index"
       last-response="{{metaData}}">
     </things-ajax>
+
+    <div class="textbox">
+      <label for="ex_input">Title</label> <input type="text" id="title"> 
+    </div>
+    
 
     <div id="contents">
       <things-spinner id="thingsSpinner"></things-spinner>
@@ -134,6 +164,7 @@ Copyright © HatioLab Inc. All rights reserved.
           if (changedData.cud_flag_ == 'c') {
             changedData['area_cd'] = tempAreaCd.value;
             changedData['stage_cd'] = tempStageCd.value;
+            changedData['title'] = this.$.title.value;
           }
         }.bind(this));
         return event;
