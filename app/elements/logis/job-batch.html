@@ -410,18 +410,20 @@ Copyright © HatioLab Inc. All rights reserved.
         var stageCd = searchFormData.stage_cd ? searchFormData.stage_cd : '_na_';
         var needField = '';
 
-        //Stage 코드 선택 체크
-        if (stageCd == '' || stageCd == '_na_') {
-          this.openInfoMsg({
-            type: 'info',
-            title: 'Stage 설정하세요.',
-            closeOnConfirm: true
-          });
-          return;
-        }
-
         var searchFormData = this.$['search-form'].serializeMyForm();
         var jobType = searchFormData.job_type;
+
+        //Stage 코드 선택 체크
+        if (jobType === 'srtn' || jobType === 'SRTN') {
+          if (stageCd == '' || stageCd == '_na_') {
+            this.openInfoMsg({
+              type: 'info',
+              title: 'Stage 설정하세요.',
+              closeOnConfirm: true
+            });
+            return;
+          }
+        }
 
         switch (true) {
           case !jobDate:
