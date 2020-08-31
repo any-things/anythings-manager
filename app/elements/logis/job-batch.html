@@ -78,6 +78,14 @@ Copyright © HatioLab Inc. All rights reserved.
     <things-ajax id="complete-job-ajax" resource-url="job_batches/:id/close_batch" resource-action="update">
     </things-ajax>
 
+    <!-- 일시정지 Ajax -->
+    <things-ajax id="pause-job-ajax" resource-url="job_batches/:id/pause_batch" resource-action="update">
+    </things-ajax>
+
+    <!-- 재시작 Ajax -->
+    <things-ajax id="restart-job-ajax" resource-url="job_batches/:id/restart_batch" resource-action="update">
+    </things-ajax>
+
     <!-- 배치 그룹 전체 작업 완료 Ajax -->
     <things-ajax id="group-complete-batch-ajax" resource-url="job_batches/:id/close_batches/by_group"
       resource-action="update">
@@ -144,6 +152,8 @@ Copyright © HatioLab Inc. All rights reserved.
         'group_complete-btn-tap': '_onGroupCompleteTap', // '그룹 마감' 버튼 클릭시 (그룹 마감은 선택한 배치의 배치 그룹 ID에 해당하는 모든 배치를 한꺼번에 마감하는 기능)
         'copy_region-btn-tap': '_onCopyRegion', // '호기 복사' 버튼 클릭시
         'change_status-btn-tap': '_onChangeStatus', // 'DAS -> SDAS, SDAS -> DAS' Job_Type 변경 버튼 클릭시
+        'job_pause-btn-tap': '_onPauseBatch', // '일시정지 버튼 클릭시
+        'job_restart-btn-tap': '_onRestartBatch', // '작업 재시작 버튼 클릭시
         'upload_order-btn-tap': '_onUploadOrder', // 상품 분류 오더 업로드 버튼 클릭시
         'grid.things-grid-configure': '_onGridConfigure', // 그리드 구성 시작시
         'grid.things-grid-data-changed': '_onGridDataChanged', // 그리드 데이터 변경시
@@ -158,7 +168,11 @@ Copyright © HatioLab Inc. All rights reserved.
         'complete-job-ajax.things-ajax-error': '_jobCompleteError', // '작업 완료' 처리 실패시
         'group-complete-batch-ajax.things-ajax-response': '_groupCompleteResponsed', // '그룹 마감' 처리 완료시
         'group-complete-batch-ajax.things-ajax-error': '_groupCompleteError', // '그룹 마감' 처리 실패시
-        'instruct-job-rack-check-ajax.things-ajax-response': '_transactionInstructRackCheckCompleted' // '작업 지시 호기 체크' 처리 완료시
+        'instruct-job-rack-check-ajax.things-ajax-response': '_transactionInstructRackCheckCompleted', // '작업 지시 호기 체크' 처리 완료시
+        'pause-job-ajax.things-ajax-response': '_jobCompleteResponsed', // '작업 일시정지' 처리 완료시
+        'pause-job-ajax.things-ajax-error': '_jobCompleteError', // '작업 일시정지' 처리 실패시
+        'restart-job-ajax.things-ajax-response': '_jobCompleteResponsed', // '작업 재시작' 처리 완료시
+        'restart-job-ajax.things-ajax-error': '_jobCompleteError' // '작업 재시작' 처리 실패시
       },
 
       attached: function() {
@@ -338,7 +352,7 @@ Copyright © HatioLab Inc. All rights reserved.
             return Object.assign(new Object(), b);
 
           } else if (status === 'RUN') {
-            b.hidden = !(b.id == 'cancel_job_instruct-btn' || b.id == 'job_complete-btn' || b.id == 'copy_region-btn' || b.id == 'group_complete-btn' || b.id == 'total_picking_instruct-btn');
+            b.hidden = !(b.id == 'cancel_job_instruct-btn' || b.id == 'job_complete-btn' || b.id == 'copy_region-btn' || b.id == 'group_complete-btn' || b.id == 'total_picking_instruct-btn' || b.id == 'job_pause-btn');
             return Object.assign(new Object(), b);
 
           } else if (status === 'END') {
@@ -350,6 +364,9 @@ Copyright © HatioLab Inc. All rights reserved.
             return Object.assign(new Object(), b);
           } else if (status === 'WORKING') {
             b.hidden = !(b.id == 'cancel_job_instruct-btn' || b.id == 'job_complete-btn' || b.id == 'copy_region-btn' || b.id == 'group_complete-btn' || b.id == 'total_picking_instruct-btn');
+            return Object.assign(new Object(), b);
+          } else if (status === 'PAUSE') {
+            b.hidden = !(b.id == 'job_restart-btn');
             return Object.assign(new Object(), b);
           }
         });
@@ -378,6 +395,12 @@ Copyright © HatioLab Inc. All rights reserved.
             if (b.id === 'merge_batch-btn' && status === 'READY') {
               b.hidden = false;
             } else if (b.id === 'merge_batch-btn' && status === 'WAIT') {
+              b.hidden = true;
+            } else if (b.id === 'job_pause-btn' && status === 'RUN') {
+              b.hidden = false;
+            } else if (b.id === 'job_restart-btn' && status === 'PAUSE') {
+              b.hidden = false;
+            } else if (b.id === 'job_instruct-btn' && status === 'PAUSE') {
               b.hidden = true;
             }
           }
@@ -609,6 +632,44 @@ Copyright © HatioLab Inc. All rights reserved.
             searchForm.submitMyForm();
           }
         });
+      },
+
+      /**
+        * @description 배치 일시정지 버튼 클릭 핸들러
+        **************
+        * @param {Object} event
+        */
+      _onPauseBatch: function (event) {
+        var checkedRow = this._checkedGridRow();
+
+        if (checkedRow) {
+          if (checkedRow && (checkedRow.status == 'RUN')) {
+            var ajax = this.$['pause-job-ajax'];
+            var title = checkedRow ? '[' + checkedRow.equip_nm + '] ' : '';
+            title += Things.DataGlobal.t(event.detail.text);
+            this._showButton('job_pause-btn', false);
+            this._confirmTransaction(event.detail.id, 'pause-job-ajax', title);
+          }
+        }
+      },
+
+      /**
+        * @description 배치 재시작 버튼 클릭 핸들러
+        **************
+        * @param {Object} event
+        */
+      _onRestartBatch: function (event) {
+        var checkedRow = this._checkedGridRow();
+
+        if (checkedRow) {
+          if (checkedRow && (checkedRow.status == 'PAUSE')) {
+            var ajax = this.$['restart-job-ajax'];
+            var title = checkedRow ? '[' + checkedRow.equip_nm + '] ' : '';
+            title += Things.DataGlobal.t(event.detail.text);
+            this._showButton('job_restart-btn', false);
+            this._confirmTransaction(event.detail.id, 'restart-job-ajax', title);
+          }
+        }
       },
 
       /**
@@ -1111,6 +1172,68 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
+       * @description 작업 일시정지 성공 처리 핸들러
+       **************
+       * @param {Object} event
+       */
+      _jobPauseResponsed: function (event) {
+        this._showButton('job_pause-btn', true);
+
+        if (event.detail.result === 'ng') {
+          this.openConfirmMsg({
+            type: 'warning',
+            title: event.detail.msg,
+            text: Things.DataGlobal.t('text.Sure to Complete'),
+            showCancelButton: true
+
+          }, function () {
+          }.bind(this));
+
+        } else {
+          this._transactionCompleted();
+        }
+      },
+
+      /**
+       * @description 작업 일시정지 요청 에러 발생시 작업 일시정지 버튼을 다시 활성화 함
+       **************
+       */
+      _jobPauseError: function () {
+        this._showButton('job_pause-btn', true);
+      },
+
+      /**
+       * @description 작업 일시정지 성공 처리 핸들러
+       **************
+       * @param {Object} event
+       */
+      _jobPauseResponsed: function (event) {
+        this._showButton('job_restart-btn', true);
+
+        if (event.detail.result === 'ng') {
+          this.openConfirmMsg({
+            type: 'warning',
+            title: event.detail.msg,
+            text: Things.DataGlobal.t('text.Sure to Complete'),
+            showCancelButton: true
+
+          }, function () {
+          }.bind(this));
+
+        } else {
+          this._transactionCompleted();
+        }
+      },
+
+      /**
+       * @description 작업 일시정지 요청 에러 발생시 작업 일시정지 버튼을 다시 활성화 함
+       **************
+       */
+      _jobRestartError: function () {
+        this._showButton('job_restart-btn', true);
+      },
+
+      /**
        * @description 그룹 마감 완료 처리 핸들러
        **************
        * @param {Object} event
@@ -1209,7 +1332,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 ajax.generateRequest();
 
               }.bind(this), function() {
-                if (buttonId === 'job_complete-btn' || buttonId === 'group_complete-btn') {
+                if (buttonId === 'job_complete-btn' || buttonId === 'group_complete-btn' || buttonId === 'job_pause-btn' || buttonId === 'job_restart-btn') {
                   this._showButton(buttonId, true);
                 }
 
