@@ -90,7 +90,7 @@ Copyright © HatioLab Inc. All rights reserved.
       if (menuParam) {
         // 6. 선택된 그리드 항목 리스트를 추출 
         let dataRows = this._extractSelectedItems(menuParam.description, true);
-        if (dataRows != false && dataRows.length > 0) {
+        if (dataRows && dataRows != false) {
           // 7. 서비스 호출 
           this._callCustomService(button, menuParam, dataRows);
         }
@@ -133,11 +133,18 @@ Copyright © HatioLab Inc. All rights reserved.
       callAjax.resourceUrl = menuParam.value;
       callAjax.resourceAction = 'create';
       var formData = this.$['search-form'].serializeMyForm();
+      var input = {
+        form: formData
+      };
+      if (Array.isArray(dataRows)) {
+        input['list'] = dataRows;
+      } else {
+        input['data'] = dataRows;
+      }
+
+      console.log(input);
       callAjax.body = {
-        input: {
-          form: formData,
-          list: dataRows
-        }
+        input: input
       };
       callAjax.addEventListener('things-ajax-response', function(event) {
         this.refreshData();
