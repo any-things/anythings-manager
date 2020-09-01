@@ -9,6 +9,8 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
 <link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
 
+<link rel="import" href="../things-content/things-handle-custom-buttons-behavior.html">
+
 <link rel="import" href="./job-batch-detail.html">
 <link rel="import" href="./receive-order-popup.html">
 <link rel="import" href="./simple-receive-order-popup.html">
@@ -98,7 +100,8 @@ Copyright © HatioLab Inc. All rights reserved.
       is: 'das-job-batch',
 
       behaviors: [
-        Things.ResourceMenuContentBehavior
+        Things.ResourceMenuContentBehavior,
+        Things.HandleCustomButtonsBehavior
       ],
 
       properties: {
@@ -307,7 +310,12 @@ Copyright © HatioLab Inc. All rights reserved.
         });
 
         btns.map(function(b) {
-          if (jobType === 'RTN' || jobType === 'RTN3') {
+          if (b.id == 'recommend_box_type-btn') {
+            b.hidden = false;
+            return Object.assign(new Object(), b);
+          }
+
+          if (jobType === 'RTN') {
             if (b.id === 'copy_region-btn' || b.id === 'merge_batch-btn') {
               b.hidden = true;
             }
@@ -320,12 +328,14 @@ Copyright © HatioLab Inc. All rights reserved.
               b.hidden = false;
             }
             return Object.assign(new Object(), b);
+
           } else if (jobType === 'SRTN') {
             if (b.id === 'merge_batch-btn' && status === 'READY') {
               b.hidden = false;
             } else if (b.id === 'merge_batch-btn' && status === 'WAIT') {
               b.hidden = true;
             }
+            return Object.assign(new Object(), b);
           }
         });
 
@@ -457,10 +467,7 @@ Copyright © HatioLab Inc. All rights reserved.
               var jobType = row.job_type.toLowerCase();
               var routing = '/' + jobType + '_preprocess';
 
-              if (jobType === 'rtn3') {
-                jobType = 'rtn';
-
-              } else if (jobType === 'srtn' || jobType === 'sdas') {
+              if (jobType === 'srtn' || jobType === 'sdas') {
                 jobType = 'sms';
                 routing = '/' + jobType + '_control';
               }
@@ -622,16 +629,16 @@ Copyright © HatioLab Inc. All rights reserved.
         var checkedRow = this._checkedGridRow();
 
         var props = {
-          id: "qps-total-picking-instruct-job-ajax",
+          id: "total-picking-instruct-job-ajax",
           method: "POST",
           contentType: "application/json",
           resourceUrl: "job_batches/:id/instruct/total_picking",
           resourceId: checkedRow.id
         };
 
-        var qpsAssignAjax = this.create('things-ajax', props);
-        this.listen(qpsAssignAjax, 'things-ajax-response', 'refreshData');
-        qpsAssignAjax.generateRequest();
+        var assignAjax = this.create('things-ajax', props);
+        this.listen(assignAjax, 'things-ajax-response', 'refreshData');
+        assignAjax.generateRequest();
       },
 
       /**
