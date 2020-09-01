@@ -22,7 +22,7 @@ Copyright © HatioLab Inc. All rights reserved.
        */
       gridConfig: {
         type: Object,
-        value: function() {
+        value: function () {
           return {}
         }
       }
@@ -38,7 +38,7 @@ Copyright © HatioLab Inc. All rights reserved.
      **************
      * @param {Object} event
      */
-    _onGridConfigureStarted: function(event) {
+    _onGridConfigureStarted: function (event) {
       // 그리드 Config를 메뉴 메타의 메뉴 파라미터에서 조회하여 적용
       let menuParams = this.metaData.menu_params;
       let gridConfigStr = this._findMenuParamValue(menuParams, 'grid_config');
@@ -53,7 +53,7 @@ Copyright © HatioLab Inc. All rights reserved.
      **************
      * @param {Object} event
      */
-    _onGridConfigureFinished: function(event) {
+    _onGridConfigureFinished: function (event) {
       let menuParams = this.metaData.menu_params;
       let buttonEvents = this._extractButtonEvents(menuParams);
 
@@ -61,7 +61,7 @@ Copyright © HatioLab Inc. All rights reserved.
         let grid = this.$['grid'];
         for (i = 0; i < buttonEvents.length; i++) {
           let buttonEvent = buttonEvents[i];
-          grid.addEventListener(buttonEvent.name, function(event) {
+          grid.addEventListener(buttonEvent.name, function (event) {
             this._customButtonEventHandler(event);
           }.bind(this));
         }
@@ -73,7 +73,7 @@ Copyright © HatioLab Inc. All rights reserved.
      **************
      * @param {Object} event
      */
-    _customButtonEventHandler: function(event) {
+    _customButtonEventHandler: function (event) {
       if (!event || !event.detail) {
         return;
       }
@@ -104,13 +104,13 @@ Copyright © HatioLab Inc. All rights reserved.
      * @param {Object} menuParam
      * @param {Array} dataRows
      */
-    _callCustomService: function(button, menuParam, dataRows) {
+    _callCustomService: function (button, menuParam, dataRows) {
       this.openConfirmMsg({
         type: 'info',
         title: Things.DataGlobal.t(button.text),
         text: Things.DataGlobal.t('text.Sure to process'),
         showCancelButton: true
-      }, function() {
+      }, function () {
         if (button.auth == 'show') {
           // 커스텀 서비스 조회용 - 별도 화면을 출력하는 기능 필요 
           this._callCustomServiceGet(button, menuParam, dataRows);
@@ -128,7 +128,7 @@ Copyright © HatioLab Inc. All rights reserved.
      * @param {Object} menuParam
      * @param {Array} dataRows
      */
-    _callCustomServiceTrx: function(button, menuParam, dataRows) {
+    _callCustomServiceTrx: function (button, menuParam, dataRows) {
       var callAjax = document.createElement('things-ajax');
       callAjax.resourceUrl = menuParam.value;
       callAjax.resourceAction = 'create';
@@ -140,7 +140,7 @@ Copyright © HatioLab Inc. All rights reserved.
       if (Array.isArray(dataRows)) {
         input['list'] = dataRows;
       } else {
-        if (typeof(dataRows) != 'boolean') {
+        if (typeof (dataRows) != 'boolean') {
           input['data'] = dataRows;
         }
       }
@@ -148,7 +148,7 @@ Copyright © HatioLab Inc. All rights reserved.
       callAjax.body = {
         input: input
       };
-      callAjax.addEventListener('things-ajax-response', function(event) {
+      callAjax.addEventListener('things-ajax-response', function (event) {
         this.refreshData();
       }.bind(this));
 
@@ -162,7 +162,7 @@ Copyright © HatioLab Inc. All rights reserved.
      * @param {Object} menuParam
      * @param {Array} dataRows
      */
-    _callCustomServiceGet: function(button, menuParam, dataRows) {
+    _callCustomServiceGet: function (button, menuParam, dataRows) {
       this.openInfoMsg({
         type: 'info',
         title: '이 기능은 현재 지원하지 않습니다.',
@@ -178,8 +178,8 @@ Copyright © HatioLab Inc. All rights reserved.
      * @param {String} defaultValue
      * @return
      */
-    _findMenuParamValue: function(menuParams, menuParamName, defaultValue) {
-      var paramItem = menuParams.find(function(item) {
+    _findMenuParamValue: function (menuParams, menuParamName, defaultValue) {
+      var paramItem = menuParams.find(function (item) {
         return item.name == menuParamName;
       });
 
@@ -193,8 +193,8 @@ Copyright © HatioLab Inc. All rights reserved.
      * @param {String} menuParamName
      * @return
      */
-    _findMenuParamObj: function(menuParams, menuParamName) {
-      return menuParams.find(function(item) {
+    _findMenuParamObj: function (menuParams, menuParamName) {
+      return menuParams.find(function (item) {
         return item.name == menuParamName;
       });
     },
@@ -207,8 +207,8 @@ Copyright © HatioLab Inc. All rights reserved.
      * @param {String} defaultValue
      * @return
      */
-    _extractButtonEvents: function(menuParams) {
-      return menuParams.filter(function(item) {
+    _extractButtonEvents: function (menuParams) {
+      return menuParams.filter(function (item) {
         return item.name.endsWith('btn-tap');
       });
     },
@@ -220,7 +220,11 @@ Copyright © HatioLab Inc. All rights reserved.
      * @param {Boolean} errorWhenEmpty
      * @return
      */
-    _extractSelectedItems: function(selectCount, errorWhenEmpty) {
+    _extractSelectedItems: function (selectCount, errorWhenEmpty) {
+      if (selectCount === '*') {
+        return true;
+      }
+
       var rowObjs = this._extractSelectedRowObjects();
 
       if ((!rowObjs || rowObjs.length == 0) && errorWhenEmpty && errorWhenEmpty === true) {
@@ -231,9 +235,7 @@ Copyright © HatioLab Inc. All rights reserved.
         return false;
       }
 
-      if (selectCount === '*') {
-        return true;
-      } else if (selectCount === '1') {
+      if (selectCount === '1') {
         return rowObjs[0];
       } else if (selectCount == 'n') {
         return rowObjs;
@@ -253,7 +255,7 @@ Copyright © HatioLab Inc. All rights reserved.
      *******************
      * @return
      */
-    _extractSelectedRowObjects: function() {
+    _extractSelectedRowObjects: function () {
       var resourceGrid = this.$['grid'];
       var grid = resourceGrid.getGridObject();
       var rows = grid.getCheckedRows();
@@ -263,7 +265,7 @@ Copyright © HatioLab Inc. All rights reserved.
       }
 
       var ds = resourceGrid.getGridDataSet();
-      var dataRows = rows.map(function(row) {
+      var dataRows = rows.map(function (row) {
         var idx = row.dataIndex();
         return ds.getRowObject(idx);
       });
