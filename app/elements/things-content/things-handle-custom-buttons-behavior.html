@@ -136,13 +136,15 @@ Copyright © HatioLab Inc. All rights reserved.
       var input = {
         form: formData
       };
+
       if (Array.isArray(dataRows)) {
         input['list'] = dataRows;
       } else {
-        input['data'] = dataRows;
+        if (typeof(dataRows) != 'boolean') {
+          input['data'] = dataRows;
+        }
       }
 
-      console.log(input);
       callAjax.body = {
         input: input
       };
@@ -229,7 +231,9 @@ Copyright © HatioLab Inc. All rights reserved.
         return false;
       }
 
-      if (selectCount === '1') {
+      if (selectCount === '*') {
+        return true;
+      } else if (selectCount === '1') {
         return rowObjs[0];
       } else if (selectCount == 'n') {
         return rowObjs;
