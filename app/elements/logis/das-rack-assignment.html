@@ -1,0 +1,276 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<!--
+  주문 및 작업 > 작업 배치 > DAS 랙 지정 팝업
+ -->
+<dom-module id="das-rack-assignment">
+  <template>
+		<style>
+			:host {
+				@apply --layout-flex;
+				@apply --layout-vertical;
+			}
+
+			things-resource-grid {
+				@apply --layout-vertical;
+				@apply --layout-flex;
+			}
+		</style>
+
+		<!-- Get Menu Meta Ajax -->
+		<things-ajax 
+			id="resource-meta" 
+			resource-url="[[menuMetaUrl]]" 
+			resource-action="index"
+			last-response="{{metaData}}">
+		</things-ajax>
+
+		<!-- 할당 가능한 랙 조회 Ajax -->
+		<things-ajax 
+			query-support 
+			id="assignable-das-rack-ajax" 
+			method="GET"
+			resource-url="/racks" 
+			last-response="{{lastResponse}}">
+		</things-ajax>
+
+		<!-- 랙 할당 Ajax -->
+		<things-ajax 
+			id="assign-rack-ajax" 
+			method="POST" 
+			content-type="application/json"
+			resource-url="job_batches/:id/change_equipment/:to_equip_cd">
+		</things-ajax>
+
+		<!-- 그리드 -->
+		<things-resource-grid 
+			id="grid" 
+			config="[[gridConfig]]" 
+			model="[[gridModel]]" 
+			columns="[[gridColumns]]"
+			buttons="[[buttons]]"
+			data="[[lastResponse.items]]" 
+			total-count="[[lastResponse.total]]"
+			fixed-column-count="[[menuInfo.fixed_columns]]" 
+			grid-save-action="[[menuInfo.grid_save_url]]">
+		</things-resource-grid>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'das-rack-assignment',
+
+      behaviors: [
+        Things.MsgBoxBehavior,
+        Things.NamedMetaBehavior
+      ],
+
+      properties: {
+        /**
+         * @description 그리드 Configuration
+         *************************
+         * @type {Object}
+         */
+        gridConfig: {
+          type: Object,
+          value: function() {
+            return {
+              options: {
+                displayOptions: {
+                  fitStyle: 'fill'
+                },
+                checkBar: {
+                  exclusive: true
+                }
+              }
+            }
+          }
+        },
+
+        /**
+         * @description 작업 배치 화면에서 선택된 배치
+         *************************
+         * @type {Object}
+         */
+        batch: {
+          type: Object,
+          observer: '_batchChanged'
+        },
+
+        /**
+         * @description 조회 필드
+         *************************
+         * @type {String}
+         */
+        selectFields: {
+          type: String,
+          value: function() {
+            return "id,rack_cd,rack_nm";
+          }
+        },
+
+        /**
+         * @description 소팅을 위한 필드
+         *************************
+         * @type {Array}
+         */
+        sortFields: {
+          type: Array,
+          value: function() {
+            return [{
+              field: 'rack_cd',
+              ascending: true
+            }];
+          }
+        },
+
+        /**
+         * @description 검색 조건 필드
+         *************************
+         * @type {Array}
+         */
+        queryFields: {
+          type: Array,
+          value: function() {
+            return [{
+              name: 'job_type',
+              operator: 'eq',
+              value: 'DAS'
+            }, {
+              name: 'active_flag',
+              operator: 'eq',
+              value: true
+            }];
+          }
+        }
+      },
+
+      listeners: {
+        "grid.change_rack-btn-tap": "_onRackAssignment",
+        "assign-rack-ajax.things-ajax-response": "_onAssignmentSuccess",
+        "assign-rack-ajax.things-ajax-error": "_onAssignmentSuccess"
+      },
+
+      /**
+       * @description 조회를 위한 각종 조건들 설정 
+       ****************************
+       * @param {String} batch
+       * @param {String} select
+       * @param {String} sort
+       * @param {String} query
+       * @return 
+       */
+      _paramMaker: function(batch, select, sort, query) {
+        if (batch.area_cd) {
+          query.push({
+            name: 'area_cd',
+            operator: 'eq',
+            value: batch.area_cd
+          });
+        }
+
+        if (batch.stage_cd) {
+          query.push({
+            name: 'stage_cd',
+            operator: 'eq',
+            value: batch.stage_cd
+          });
+        }
+
+        return {
+          select: select,
+          sort: JSON.stringify(sort),
+          query: JSON.stringify(query)
+        };
+      },
+
+      /**
+       * @description 호기 전환 버튼 처리 
+       ****************************
+       * @param {Object} event
+       */
+      _onRackAssignment: function(event) {
+        var ajax = this.$['assign-rack-ajax'];
+        var grid = this.$['grid'].grid;
+        var checkedRow = this._checkedGridRow();
+
+        if (checkedRow == null || checkedRow.length == 0) {
+          this.openConfirmMsg({
+            type: 'error',
+            title: Things.DataGlobal.t('text.rack_is_not_selected'),
+            text: Things.DataGlobal.t('text.rack_is_not_selected')
+          });
+        } else {
+          var equipCd = checkedRow.rack_cd;
+          ajax.resourceUrl = `job_batches/${this.batch.id}/change_equipment/${equipCd}`;
+          event.target.disabled = true;
+          ajax.generateRequest();
+        }
+      },
+
+      /**
+       * @description 그리드에서 체크된 Row의 데이터를 리턴
+       *****************
+       * @return {Object} 그리드에 체크된 행 데이터
+       */
+      _checkedGridRow: function() {
+        var resourceGrid = this.$.grid;
+        var rows = resourceGrid.getGridObject().getCheckedRows();
+
+        if (rows && rows.length > 0) {
+          var ds = resourceGrid.getGridDataSet();
+          return ds.getRowObject(rows[0].dataIndex());
+
+        } else {
+          this.openConfirmMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('title.info'),
+            text: Things.DataGlobal.t('text.select_item'),
+            closeOnConfirm: true,
+            showCancelButton: false
+
+          }, function() {
+            this._showButton('job_complete-btn', true);
+            this._showButton('group_complete-btn', true);
+
+          }.bind(this));
+
+          return null;
+        }
+      },
+
+      /**
+       * @description 호기 전환 응답 후 ... 
+       ****************************
+       */
+      _onAssignmentSuccess: function() {
+        this.fire('things-dialog-close');
+      },
+
+      /**
+       * @description 배치가 변경 되면 배치에 해당하는 Rack 리스트 조회 
+       ****************************
+       * @param {Object} batch
+       */
+      _batchChanged: function(batch) {
+        if (batch) {
+          var rackListAjax = this.$['assignable-das-rack-ajax'];
+          rackListAjax.params = this._paramMaker(batch, this.selectFields, this.sortFields, this.queryFields);
+          rackListAjax.generateRequest();
+
+          var resourceMetaAjax = this.$['resource-meta'];
+          resourceMetaAjax.generateRequest();
+        }
+      },
+    });
+  </script>
+</dom-module>
