@@ -502,6 +502,10 @@ Copyright © HatioLab Inc. All rights reserved.
                   this._instructSMSBatchProcess(checkedRow);
                 }
                 break;
+              default:
+                {
+                  this._requestInstructJob(checkedRow);
+                }
             }
           }
         }
@@ -590,22 +594,32 @@ Copyright © HatioLab Inc. All rights reserved.
       },*/
 
       /**
-       * @description QPS 작업 지시
+       * @description 작업 지시
        **************
        * @param {Object} event
        */
-      /*_requestDpsQpsInstructJob: function(checkedRow) {
-        var props = {
-          id: "instruct-job-ajax",
-          method: "POST",
-          contentType: "application/json",
-          resourceUrl: "job_batches/:id/instruct/batch",
-          resourceId: checkedRow.id
-        };
-        var instructJobAjax = this.create('things-ajax', props);
-        this.listen(instructJobAjax, 'things-ajax-response', 'refreshData');
-        instructJobAjax.generateRequest();
-      },*/
+      _requestInstructJob: function(checkedRow) {
+        let msg = Things.DataGlobal.t('text.Sure to X', {
+          x: Things.DataGlobal.t('button.job_instruct')
+        });
+
+        this.openConfirmMsg({
+          type: 'warning',
+          title: msg,
+          showCancelButton: true
+        }, function() {
+          var props = {
+            id: "instruct-job-ajax",
+            method: "POST",
+            contentType: "application/json",
+            resourceUrl: "job_batches/:id/instruct/batch",
+            resourceId: checkedRow.id
+          };
+          var instructJobAjax = this.create('things-ajax', props);
+          this.listen(instructJobAjax, 'things-ajax-response', 'refreshData');
+          instructJobAjax.generateRequest();
+        }.bind(this));
+      },
 
       /**
        * @description 호기 변경 버튼 클릭 핸들러
