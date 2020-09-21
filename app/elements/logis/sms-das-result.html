@@ -23,7 +23,7 @@ Copyright © HatioLab Inc. All rights reserved.
         @apply(--layout-flex);
         display: grid;
         grid-template-rows: 30px auto;
-        grid-template-columns: 0.7fr auto;
+        grid-template-columns: 0.65fr auto;
       }
 
       .grid-subtitle {
@@ -184,7 +184,10 @@ Copyright © HatioLab Inc. All rights reserved.
             return [{
               name: 'chute_no',
               fieldName: 'chute_no',
-              width: 80,
+              header: {
+                text: Things.DataGlobal.t('label.chute_no')
+              },
+              width: 0,
               styles: {
                 textAlignment: 'center'
               }
@@ -192,6 +195,9 @@ Copyright © HatioLab Inc. All rights reserved.
               name: 'cell_no',
               fieldName: 'cell_no',
               width: 80,
+              header: {
+                text: Things.DataGlobal.t('label.cell_cd')
+              },
               styles: {
                 textAlignment: 'center'
               }
@@ -213,7 +219,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 text: Things.DataGlobal.t('label.shop_nm')
               },
               editable: false,
-              width: 120,
+              width: 160,
               styles: {
                 textAlignment: 'center'
               }
@@ -237,12 +243,12 @@ Copyright © HatioLab Inc. All rights reserved.
                 }
               },
               editable: false,
-              width: 70
+              width: 80
             }, {
               name: 'das_qty',
               fieldName: 'das_qty',
               header: {
-                text: Things.DataGlobal.t('button.das_qty')
+                text: Things.DataGlobal.t('label.das_qty')
               },
               styles: {
                 textAlignment: 'far',
@@ -258,7 +264,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 }
               },
               editable: false,
-              width: 70
+              width: 80
             }]
           }
         },

@@ -91,6 +91,10 @@ Copyright © HatioLab Inc. All rights reserved.
       resource-action="update">
     </things-ajax>
 
+    <!-- 작업 강제 완료 Ajax -->
+    <things-ajax id="forced-complete-job-ajax" resource-action="create" resource-url="wcs/das_batch_close">
+    </things-ajax>
+
     <!-- Search form -->
     <things-search-form id="search-form" title="[[menuInfo.title]]" form-fields="[[searchFormFields]]"
       select-fields="[[selectFields]]" sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]"
@@ -172,7 +176,10 @@ Copyright © HatioLab Inc. All rights reserved.
         'pause-job-ajax.things-ajax-response': '_jobCompleteResponsed', // '작업 일시정지' 처리 완료시
         'pause-job-ajax.things-ajax-error': '_jobCompleteError', // '작업 일시정지' 처리 실패시
         'restart-job-ajax.things-ajax-response': '_jobCompleteResponsed', // '작업 재시작' 처리 완료시
-        'restart-job-ajax.things-ajax-error': '_jobCompleteError' // '작업 재시작' 처리 실패시
+        'restart-job-ajax.things-ajax-error': '_jobCompleteError', // '작업 재시작' 처리 실패시
+        'job_forced_complete-btn-tap': '_onJobForcedCompleteTap', // '작업 강제 완료' 버튼 클릭시
+        'forced-complete-job-ajax.things-ajax-response': '_jobCompleteResponsed',
+        'forced-complete-job-ajax.things-ajax-error': '_jobCompleteError' // '작업 완료' 처리 실패시
       },
 
       attached: function() {
@@ -352,7 +359,7 @@ Copyright © HatioLab Inc. All rights reserved.
             return Object.assign(new Object(), b);
 
           } else if (status === 'RUN') {
-            b.hidden = !(b.id == 'cancel_job_instruct-btn' || b.id == 'job_complete-btn' || b.id == 'copy_region-btn' || b.id == 'group_complete-btn' || b.id == 'total_picking_instruct-btn' || b.id == 'job_pause-btn');
+            b.hidden = !(b.id == 'cancel_job_instruct-btn' || b.id == 'job_complete-btn' || b.id == 'copy_region-btn' || b.id == 'group_complete-btn' || b.id == 'total_picking_instruct-btn' || b.id == 'job_pause-btn' || b.id == 'job_forced_complete-btn');
             return Object.assign(new Object(), b);
 
           } else if (status === 'END') {
@@ -392,6 +399,13 @@ Copyright © HatioLab Inc. All rights reserved.
             if (jobType === 'SDAS' && b.id == 'job_complete-btn') {
               b.hidden = true;
             }
+            if (b.id === 'job_forced_complete-btn' && status === 'RUN') {
+              if(jobType === 'SDAS') {
+                b.hidden = false;
+              } else {
+                b.hidden = true;
+              }
+            }
             if (b.id === 'merge_batch-btn' && status === 'READY') {
               b.hidden = false;
             } else if (b.id === 'merge_batch-btn' && status === 'WAIT') {
@@ -401,6 +415,8 @@ Copyright © HatioLab Inc. All rights reserved.
             } else if (b.id === 'job_restart-btn' && status === 'PAUSE') {
               b.hidden = false;
             } else if (b.id === 'job_instruct-btn' && status === 'PAUSE') {
+              b.hidden = true;
+            } else if (b.id === 'job_forced_complete-btn' && status != 'RUN') {
               b.hidden = true;
             }
           }
@@ -668,6 +684,23 @@ Copyright © HatioLab Inc. All rights reserved.
             title += Things.DataGlobal.t(event.detail.text);
             this._showButton('job_restart-btn', false);
             this._confirmTransaction(event.detail.id, 'restart-job-ajax', title);
+          }
+        }
+      },
+
+      /**
+        * @description 배치 강제완료 버튼 클릭 핸들러
+        **************
+        * @param {Object} event
+        */
+      _onJobForcedCompleteTap: function (event) {
+        var checkedRow = this._checkedGridRow();
+
+        if (checkedRow) {
+          if (checkedRow && (checkedRow.status == 'RUN')) {
+            var title = checkedRow ? '[' + checkedRow.equip_nm + '] ' : '';
+            title += Things.DataGlobal.t(event.detail.text);
+            this._confirmTransaction(event.detail.id, 'forced-complete-job-ajax', title);
           }
         }
       },
