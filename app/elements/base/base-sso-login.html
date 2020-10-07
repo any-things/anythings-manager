@@ -597,18 +597,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {String} 이동할 url
        */
       _moveToSelectedDomain: function(url) {
-        // 개발 모드가 아니라면 url로 이동
-        if (url.indexOf('http://localhost') < 0 && url.indexOf('http://127.0.0.1') < 0) {
-          location.href = url;
-        } else {
-          // 개발 모드인 경우 로그인 페이지에서 로그인 한 경우는 이동, 그 외 이동안 함...
-          if (location.href.endsWith('/#!/login')) {
-            location.href = url;
-          }
-        }
-
-        // 원래 코드는 아래 코드인데 크롬 85 이후 버전에서 로그인 후 무한루프되는 현상 픽스
-        // location.href = url;
+        location.href = url;
       },
 
       /**
