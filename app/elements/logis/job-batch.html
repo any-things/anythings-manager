@@ -1359,9 +1359,16 @@ Copyright © HatioLab Inc. All rights reserved.
                   showConfirmButton: false
                 });
                 ajax.resourceId = checkedRow.id;
-                ajax.params = {
-                  id: checkedRow.id
-                };
+                if(buttonId === 'job_forced_complete-btn') {
+                  ajax.body = {
+                    id: checkedRow.id
+                  };
+                } else {
+                  ajax.params = {
+                    id: checkedRow.id
+                  };
+                }
+                
                 ajax.generateRequest();
 
               }.bind(this), function() {
