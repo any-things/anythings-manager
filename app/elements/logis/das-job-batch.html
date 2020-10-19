@@ -282,7 +282,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
         var btns = this.buttons.map(function(b) {
           if (!status || status === '') {
-            b.hidden = true;
+            b.hidden = !(b.id == 'save-btn');
             return Object.assign(new Object(), b);
 
           } else if (status === 'RECEIVING') {
