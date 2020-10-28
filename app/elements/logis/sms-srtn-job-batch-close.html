@@ -1,0 +1,235 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<!--
+  ExPAS > 반품실적 강제 전송
+ -->
+<dom-module id="sms-srtn-job-batch-close">
+  <template>
+    <style>
+      :host {
+        display: block;
+        @apply --layout-vertical;
+        @apply --layout-flex;
+      }
+
+      things-resource-grid {
+        @apply --layout-flex;
+      }
+    </style>
+
+    <!-- Get Menu Meta Ajax -->
+    <things-ajax auto id="resource-meta" resource-url="[[menuMetaUrl]]" resource-action="index"
+      last-response="{{metaData}}">
+    </things-ajax>
+
+    <things-ajax id="complete-job-ajax" resource-action="create" resource-url="wcs/sms_srtn_batch_close">
+    </things-ajax>
+
+    <things-search-form id="search-form" title="[[menuInfo.title]]" form-fields="[[searchFormFields]]"
+      select-fields="[[selectFields]]" sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]"
+      page="{{page}}" limit="{{limit}}" last-response="{{lastResponse}}">
+    </things-search-form>
+
+    <things-resource-grid id="grid" config="[[gridConfig]]" model="[[gridModel]]" columns="[[gridColumns]]"
+      fixed-column-count="[[menuInfo.fixed_columns]]" buttons="[[buttons]]" current-page="{{page}}" limit="{{limit}}"
+      total-count="[[itemCount]]" data="[[items]]" grid-save-action="[[menuInfo.grid_save_url]]">
+    </things-resource-grid>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'sms-srtn-job-batch-close',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
+
+      properties: {
+        /**
+         * 그리드 설정
+         *******
+         * @type {Object}
+         */
+        gridConfig: {
+          type: Object,
+          value: function () {
+            return {
+              options: {
+                checkBar: {
+                  exclusive: true
+                }
+              }
+            }
+          }
+        }
+      },
+
+      listeners: {
+        'job_complete-btn-tap': '_onJobCompleteTap', // '작업 완료' 버튼 클릭시
+        'complete-job-ajax.things-ajax-response': '_jobCompleteResponsed',
+        'complete-job-ajax.things-ajax-error': '_jobCompleteError', // '작업 완료' 처리 실패시
+      },
+
+      /**
+       * 작업 종료 버튼 클릭 핸들러
+       **************
+       * @param {Object} event
+       */
+      _onJobCompleteTap: function (event) {
+        var checkedRow = this._checkedGridRow();
+        var title = checkedRow ? '[' + checkedRow.id + '] ' : '';
+        title += Things.DataGlobal.t(event.detail.text);
+        this._confirmTransaction(event.detail.id, 'complete-job-ajax', title);
+      },
+
+      /**
+       * @description 트랜잭션 성공 처리 핸들러
+       **************
+       * @param {Object} event
+       */
+      _transactionCompleted: function (event) {
+        var text = Things.DataGlobal.t('text.processed_msg');
+        this.openInfoMsg({
+          type: 'info',
+          title: text,
+          closeOnConfirm: true
+        });
+        this.refreshData();
+      },
+
+      /**
+       * @description 트랜잭션 처리 실패 핸들러
+       **************
+       * @param {Object} event
+       */
+      _transactionFailed: function (event) {
+        this.openConfirmMsg({
+          type: 'error',
+          title: Things.DataGlobal.t('title.error'),
+          text: Things.DataGlobal.t('text.process_did_not_complete')
+        });
+      },
+
+      /**
+       * @description 작업 완료 성공 처리 핸들러
+       **************
+       * @param {Object} event
+       */
+      _jobCompleteResponsed: function (event) {
+        this._transactionCompleted();
+      },
+
+      /**
+       * @description 작업 완료 요청 에러 발생시 작업 완료 버튼을 다시 활성화 함
+       **************
+       */
+      _jobCompleteError: function () {
+        // this._showButton('job_complete-btn', true);
+      },
+
+      /**
+       * @description 트랜잭션 확인 후 실행
+       ****************
+       * @param {String} buttonId 트랜잭션 버튼 ID
+       * @param {String} ajaxId Ajax Id
+       * @param {String} title 트랜잭션 확인용 타이틀
+       */
+      _confirmTransaction: function (buttonId, ajaxId, title) {
+        var checkedRow = this._checkedGridRow();
+        if (checkedRow) {
+          var ajax = this.$[ajaxId];
+          var text = Things.DataGlobal.t('text.Sure to X', {
+            x: title
+          });
+
+          setTimeout(() => {
+            this.openConfirmMsg({
+              type: 'info',
+              title: title,
+              text: text,
+              showCancelButton: true,
+              closeOnConfirm: false
+
+            }, function () {
+              this.openConfirmMsg({
+                type: 'info',
+                title: Things.DataGlobal.t('text.Server Processing'),
+                text: Things.DataGlobal.t('text.processing_msg'),
+                showCancelButton: false,
+                showConfirmButton: false
+              });
+              ajax.resourceId = checkedRow.id;
+              ajax.body = {
+                id: checkedRow.id
+              };
+              ajax.generateRequest();
+
+            }.bind(this), function () {
+
+            }.bind(this));
+          }, 100);
+        }
+      },
+
+      /**
+       * @description 그리드에서 체크된 Row의 데이터를 리턴
+       *****************
+       * @return {Object} 그리드에 체크된 행 데이터
+       */
+      _checkedGridRow: function () {
+        var resourceGrid = this.$.grid;
+        var rows = resourceGrid.getGridObject().getCheckedRows();
+
+        if (rows && rows.length > 0) {
+          var ds = resourceGrid.getGridDataSet();
+          return ds.getRowObject(rows[0].dataIndex());
+
+        } else {
+          this.openConfirmMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('title.info'),
+            text: Things.DataGlobal.t('text.select_item'),
+            closeOnConfirm: true,
+            showCancelButton: false
+
+          }, function () {
+
+          }.bind(this));
+
+          return null;
+        }
+      },
+
+      /**
+       * @description 데이터 새로 조회
+       * ***********************
+       */
+      refreshData: function () {
+        if (this.initialSearchFlag) {
+          var searchForm = this.getResourceSearchForm();
+          if (this.initialSearchParams) {
+            searchForm.setFormData(this.initialSearchParams);
+          }
+
+          var searchParams = searchForm.serializeMyForm();
+          if (searchParams && searchParams.job_date) {
+            searchForm.submitMyForm();
+          } else if (searchParams) {
+            searchForm.submitMyForm();
+          }
+        } else {
+          this.initialSearchFlag = true;
+        }
+      }
+    })
+  </script>
+</dom-module>
