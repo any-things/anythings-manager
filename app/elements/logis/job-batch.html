@@ -130,7 +130,7 @@ Copyright © HatioLab Inc. All rights reserved.
         gridConfig: {
           type: Object,
           value: function() {
-            
+
           }
         },
 
@@ -183,11 +183,11 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       attached: function() {
-        
+
       },
 
       _gridColumnsChanged: function(gridColumns) {
-        if (location.hash.indexOf('b2b_job_batches') >= 0) {  // B2B(DAS)
+        if (location.hash.indexOf('b2b_job_batches') >= 0) { // B2B(DAS)
           this.gridConfig = {
             options: {
               checkBar: {
@@ -222,7 +222,7 @@ Copyright © HatioLab Inc. All rights reserved.
         }
 
         // if (this.menuInfo.title.indexOf('B2BBatch') >= 0) {  // B2B(DAS)
-        if (location.hash.indexOf('b2b_job_batches') >= 0) {  // B2B(DAS)
+        if (location.hash.indexOf('b2b_job_batches') >= 0) { // B2B(DAS)
           for (let i = 11; i < 20; i++) {
             // gridColumns[i].footer = {
             //   // spanPrev: 2,
@@ -400,7 +400,7 @@ Copyright © HatioLab Inc. All rights reserved.
               b.hidden = true;
             }
             if (b.id === 'job_forced_complete-btn' && status === 'RUN') {
-              if(jobType === 'SDAS') {
+              if (jobType === 'SDAS') {
                 b.hidden = false;
               } else {
                 b.hidden = true;
@@ -609,11 +609,11 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
-      * @description Upload Order 버튼 클릭 핸들러
-      **************
-      * @param {Object} event
-      */
-      _onUploadOrder: function (event) {
+       * @description Upload Order 버튼 클릭 핸들러
+       **************
+       * @param {Object} event
+       */
+      _onUploadOrder: function(event) {
         /*var props = {
           title: Things.DataGlobal.t('button.receive_order'),
           resourceName: 'ReceiveOrderPopup',
@@ -644,18 +644,18 @@ Copyright © HatioLab Inc. All rights reserved.
         this.fire('things-open-popup-view', {
           view: uploadOrderPopup,
           modal: true,
-          closeCallback: function () {
+          closeCallback: function() {
             searchForm.submitMyForm();
           }
         });
       },
 
       /**
-        * @description 배치 일시정지 버튼 클릭 핸들러
-        **************
-        * @param {Object} event
-        */
-      _onPauseBatch: function (event) {
+       * @description 배치 일시정지 버튼 클릭 핸들러
+       **************
+       * @param {Object} event
+       */
+      _onPauseBatch: function(event) {
         var checkedRow = this._checkedGridRow();
 
         if (checkedRow) {
@@ -670,11 +670,11 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
-        * @description 배치 재시작 버튼 클릭 핸들러
-        **************
-        * @param {Object} event
-        */
-      _onRestartBatch: function (event) {
+       * @description 배치 재시작 버튼 클릭 핸들러
+       **************
+       * @param {Object} event
+       */
+      _onRestartBatch: function(event) {
         var checkedRow = this._checkedGridRow();
 
         if (checkedRow) {
@@ -689,11 +689,11 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
-        * @description 배치 강제완료 버튼 클릭 핸들러
-        **************
-        * @param {Object} event
-        */
-      _onJobForcedCompleteTap: function (event) {
+       * @description 배치 강제완료 버튼 클릭 핸들러
+       **************
+       * @param {Object} event
+       */
+      _onJobForcedCompleteTap: function(event) {
         var checkedRow = this._checkedGridRow();
 
         if (checkedRow) {
@@ -710,14 +710,14 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _onChangeStatus: function (event) {
+      _onChangeStatus: function(event) {
         var title = Things.DataGlobal.t(event.detail.text);
         var row = this._checkedGridRow();
 
         if (row) {
           if (row && (row.job_type == 'SDAS' || row.job_type == 'DAS')) {
             var ajax = this.$['change-status-ajax'];
-            if(row.job_type === 'SDAS') {
+            if (row.job_type === 'SDAS') {
               row.job_type = 'DAS';
               row.stage_cd = '';
               row.equip_group_cd = '';
@@ -725,11 +725,11 @@ Copyright © HatioLab Inc. All rights reserved.
               row.equip_type = 'Rack'
 
               title = 'SDAS -> DAS ';
-            } else if(row.job_type === 'DAS') {
-              var tempEquipCd = this.metaData.menu_params.find(function (item) {
+            } else if (row.job_type === 'DAS') {
+              var tempEquipCd = this.metaData.menu_params.find(function(item) {
                 return item.name == 'temp_equip_cd';
               });
-              var tempStageCd = this.metaData.menu_params.find(function (item) {
+              var tempStageCd = this.metaData.menu_params.find(function(item) {
                 return item.name == 'temp_stage_cd';
               });
 
@@ -756,7 +756,7 @@ Copyright © HatioLab Inc. All rights reserved.
                 showCancelButton: true,
                 closeOnConfirm: false
 
-              }, function () {
+              }, function() {
                 this.openConfirmMsg({
                   type: 'info',
                   title: Things.DataGlobal.t('text.Server Processing'),
@@ -916,11 +916,11 @@ Copyright © HatioLab Inc. All rights reserved.
             this.fire('things-open-popup-view', {
               view: mergePopup,
               modal: true,
-              closeCallback: function () {
+              closeCallback: function() {
                 this.$['search-form'].submitMyForm();
               }.bind(this)
             });
-          } else if(checkedRow.job_type == 'SDAS' && checkedRow.status == 'READY') { // SDAS는 작업지시 대기 상태에서 병합 가능
+          } else if (checkedRow.job_type == 'SDAS' && checkedRow.status == 'READY') { // SDAS는 작업지시 대기 상태에서 병합 가능
             var title = Things.DataGlobal.t(event.detail.text);
             var mergePopup = this.newMergeBatchPopup(checkedRow, title);
 
@@ -928,11 +928,11 @@ Copyright © HatioLab Inc. All rights reserved.
             this.fire('things-open-popup-view', {
               view: mergePopup,
               modal: true,
-              closeCallback: function () {
+              closeCallback: function() {
                 this.$['search-form'].submitMyForm();
               }.bind(this)
             });
-          } else if(checkedRow.job_type == 'SDPS' && checkedRow.status == 'READY') { // SDPS는 작업지시 대기 상태에서 병합 가능
+          } else if (checkedRow.job_type == 'SDPS' && checkedRow.status == 'READY') { // SDPS는 작업지시 대기 상태에서 병합 가능
             var title = Things.DataGlobal.t(event.detail.text);
             var mergePopup = this.newMergeBatchPopup(checkedRow, title);
 
@@ -940,7 +940,7 @@ Copyright © HatioLab Inc. All rights reserved.
             this.fire('things-open-popup-view', {
               view: mergePopup,
               modal: true,
-              closeCallback: function () {
+              closeCallback: function() {
                 this.$['search-form'].submitMyForm();
               }.bind(this)
             });
@@ -1209,7 +1209,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _jobPauseResponsed: function (event) {
+      _jobPauseResponsed: function(event) {
         this._showButton('job_pause-btn', true);
 
         if (event.detail.result === 'ng') {
@@ -1219,8 +1219,7 @@ Copyright © HatioLab Inc. All rights reserved.
             text: Things.DataGlobal.t('text.Sure to Complete'),
             showCancelButton: true
 
-          }, function () {
-          }.bind(this));
+          }, function() {}.bind(this));
 
         } else {
           this._transactionCompleted();
@@ -1231,7 +1230,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @description 작업 일시정지 요청 에러 발생시 작업 일시정지 버튼을 다시 활성화 함
        **************
        */
-      _jobPauseError: function () {
+      _jobPauseError: function() {
         this._showButton('job_pause-btn', true);
       },
 
@@ -1240,7 +1239,7 @@ Copyright © HatioLab Inc. All rights reserved.
        **************
        * @param {Object} event
        */
-      _jobPauseResponsed: function (event) {
+      _jobPauseResponsed: function(event) {
         this._showButton('job_restart-btn', true);
 
         if (event.detail.result === 'ng') {
@@ -1250,8 +1249,7 @@ Copyright © HatioLab Inc. All rights reserved.
             text: Things.DataGlobal.t('text.Sure to Complete'),
             showCancelButton: true
 
-          }, function () {
-          }.bind(this));
+          }, function() {}.bind(this));
 
         } else {
           this._transactionCompleted();
@@ -1262,7 +1260,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @description 작업 일시정지 요청 에러 발생시 작업 일시정지 버튼을 다시 활성화 함
        **************
        */
-      _jobRestartError: function () {
+      _jobRestartError: function() {
         this._showButton('job_restart-btn', true);
       },
 
@@ -1359,7 +1357,7 @@ Copyright © HatioLab Inc. All rights reserved.
                   showConfirmButton: false
                 });
                 ajax.resourceId = checkedRow.id;
-                if(buttonId === 'job_forced_complete-btn') {
+                if (buttonId === 'job_forced_complete-btn') {
                   ajax.body = {
                     id: checkedRow.id
                   };
@@ -1368,7 +1366,7 @@ Copyright © HatioLab Inc. All rights reserved.
                     id: checkedRow.id
                   };
                 }
-                
+
                 ajax.generateRequest();
 
               }.bind(this), function() {
@@ -1422,7 +1420,7 @@ Copyright © HatioLab Inc. All rights reserved.
        */
       newMergeBatchPopup: function(batch, title) {
         var mergeBatchPopup = document.createElement('job-batch-detail');
-        mergeBatchPopup.title = title + ' (' + batch.job_id + ')';
+        mergeBatchPopup.title = title + ' (' + batch.id + ')';
         mergeBatchPopup.sourceBatch = batch;
         mergeBatchPopup.gridModel = JSON.parse(JSON.stringify(this.gridModel));
         mergeBatchPopup.gridColumns = JSON.parse(JSON.stringify(this.gridColumns));
