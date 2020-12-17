@@ -111,7 +111,7 @@ Copyright © HatioLab Inc. All rights reserved.
         selectFields: {
           type: String,
           value: function() {
-            return "id,rack_cd,rack_nm,batch_id";
+            return 'id,rack_cd,rack_nm,batch_id';
           }
         },
 
@@ -139,10 +139,6 @@ Copyright © HatioLab Inc. All rights reserved.
           type: Array,
           value: function() {
             return [{
-              name: 'job_type',
-              operator: 'eq',
-              value: 'DPS'
-            }, {
               name: 'active_flag',
               operator: 'eq',
               value: true
@@ -183,6 +179,14 @@ Copyright © HatioLab Inc. All rights reserved.
             name: 'stage_cd',
             operator: 'eq',
             value: batch.stage_cd
+          });
+        }
+
+        if (batch.job_type) {
+          query.push({
+            name: 'job_type',
+            operator: 'eq',
+            value: batch.job_type
           });
         }
 
