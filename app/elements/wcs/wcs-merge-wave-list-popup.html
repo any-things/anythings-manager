@@ -1,0 +1,461 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-resource-combo/things-resource-combo.html">
+<link rel="import" href="../../bower_components/things-button/things-button-bar.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+
+<link rel="import" href="../../bower_components/things-msg-box-behavior/things-msg-box-behavior.html">
+
+<!--
+  WCS > Wave 수신 및 분배 > 작업 병합 팝업
+-->
+<dom-module id="wcs-merge-wave-list-popup">
+  <template>
+    <style>
+      :host {
+        display: block;
+        @apply(--layout-vertical);
+        @apply(--layout-flex);
+      }
+
+      .horizontal {
+        @apply(--layout-horizontal);
+      }
+
+      #top-section {
+        padding: 15px 15px 0 15px;
+      }
+
+      .button-group {
+        display: flex;
+        @apply(--layout-end-justified);
+        @apply(--layout-flex);
+      }
+
+      things-resource-grid {
+        @apply(--layout-flex);
+      }
+    </style>
+
+    <!-- 작업 배치 리스트 Ajax -->
+    <things-ajax 
+      id="search-batch-ajax" 
+      resource-url="job_batches" 
+      resource-action="index"
+      last-response="{{batchResult}}">
+    </things-ajax>
+
+    <!-- 작업 병합 Ajax -->
+    <things-ajax 
+      id="merge-batch-ajax" 
+      resource-url="job_batches/:source_batch_id/instruct/merge_batch/:main_batch_id"
+      resource-action="update">
+    </things-ajax>
+
+    <!-- 작업 병합 버튼 -->
+    <div id="top-section">
+      <div class="horizontal">
+        <div class="button-group">
+          <things-button-bar id="job-btn-group" buttons="[[buttons]]"></things-button-bar>
+        </div>
+      </div>
+    </div>
+
+    <!-- 진행 중인 배치 리스트 -->
+    <things-resource-grid 
+      id="grid" 
+      model="[[gridModel]]" 
+      columns="[[gridColumns]]" 
+      config="[[gridConfig]]"
+      fixed-column-count="[[fixedColumnCount]]" 
+      data="[[items]]">
+    </things-resource-grid>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'wcs-merge-wave-list-popup',
+
+      behaviors: [
+        Things.MsgBoxBehavior
+      ],
+
+      properties: {
+        /**
+         * @description 배치 그리드 설정
+         ************************
+         * @type {Object}
+         */
+        gridConfig: {
+          type: Object,
+          value: function() {
+            return {
+              options: {
+                checkBar: {
+                  exclusive: true
+                }
+              }
+            }
+          }
+        },
+
+        /**
+         * @description resource combo에서 조회시 사용하는 select fields
+         ************************
+         * @type {Array}
+         */
+        comboSelectFields: {
+          type: Array,
+          value: function() {
+            return ['id', 'region_cd', 'region_nm'];
+          }
+        },
+
+        /**
+         * @description resource combo label
+         ************************
+         * @type {String}
+         */
+        regionComboLabel: {
+          type: String,
+          value: function() {
+            return Things.DataGlobal.t('label.region');
+          }
+        },
+
+        /**
+         * @description 메인 작업 배치
+         ************************
+         * @type {Object}
+         */
+        sourceBatch: {
+          type: Object
+        },
+
+        /**
+         * @description 배치 결과
+         ************************
+         * @type {Object}
+         */
+        batchResult: {
+          type: Object,
+          observer: '_batchResultChanged'
+        },
+
+        /**
+         * @description 조회 버튼 리스트
+         ************************
+         * @type {Array}
+         */
+        searchButton: {
+          type: Array,
+          value: function() {
+            return [{
+              id: 'search-btn',
+              text: 'search'
+            }]
+          }
+        },
+
+        /**
+         * @description 버튼 리스트
+         ************************
+         * @type {Array}
+         */
+        buttons: {
+          type: Array,
+          value: function() {
+            return [{
+              id: 'merge_batch-btn',
+              text: 'merge_batch'
+            }]
+          }
+        }
+      },
+
+      listeners: {
+        'grid.things-grid-configured': '_onGridConfigured',
+        'job-btn-group.merge_batch-btn-tap': '_mergeBtnTapped',
+        'merge-batch-ajax.things-ajax-request': '_mergeRequest',
+        'merge-batch-ajax.things-ajax-response': '_mergeResponse'
+          //'search-btn-group.search-btn-tap': '_searchBtnTapped',
+          //'job-btn-group.assign-region-btn-tap': '_assignRegionBtnTapped',
+          //'job-btn-group.job-instruct-btn-tap': '_jobInstructBtnTapped',
+          //'job-btn-group.job-complete-btn-tap': '_jobCompleteBtnTapped'
+      },
+
+      /**
+       * @description 병합 요청시 
+       **************
+       * @param {Object} event
+       */
+      _mergeRequest: function(event) {
+        this.openConfirmMsg({
+          type: 'info',
+          title: Things.DataGlobal.t('button.merge_batch'),
+          text: Things.DataGlobal.t('text.Server Processing'),
+          showConfirmButton: false
+        });
+      },
+
+      /**
+       * @description 병합 완료시
+       **************
+       * @param {Object} event
+       */
+      _mergeResponse: function(event) {
+        var title = Things.DataGlobal.t('text.Success to Process');
+        var text = Things.DataGlobal.t('button.merge_batch') + ' ' + Things.DataGlobal.t('text.processed');
+        var view = this;
+
+        var closeView = function() {
+          view.fire('things-dialog-close');
+        };
+
+        this.openConfirmMsg({
+          type: 'info',
+          title: title,
+          text: text,
+          showCancelButton: false
+        }, closeView);
+      },
+
+      /**
+       * @description 작업 배치 그리드 구성 완료시
+       **************
+       * @param {Object} event
+       */
+      _onGridConfigured: function(event) {
+        var ajax = this.$['search-batch-ajax'];
+        ajax.resourceId = this.sourceBatch.id;
+        var jobType = this.sourceBatch.job_type;
+
+        if (jobType == 'DAS' || jobType == 'RTN' || jobType == 'DPS' || jobType == 'PDAS' || jobType == 'SRTN' || jobType == 'SDAS' || jobType == 'SDPS') {
+          ajax.queryFields = [{
+            name: 'status',
+            value: 'RUN'
+          }, {
+            name: 'job_type',
+            operator: 'eq',
+            value: this.sourceBatch.job_type
+          }];
+        }
+
+        ajax.generateRequest();
+      },
+
+      /**
+       * @description 배치 조회 결과 변경시
+       **************
+       * @param {Object} batchResult
+       */
+      _batchResultChanged: function(batchResult) {
+        this.items = (batchResult && batchResult.items) ? batchResult.items : [];
+      },
+
+      /**
+       * @description 작업 병합 버튼 클릭 이벤트 핸들러
+       * 병합 버튼 클릭시 실행되며 validateBeforeMerge 통과하면
+       * 병합을 수행 실패하면 showInvalidMessage를 통해 메시지 출력
+       *******************
+       * @param {Object} event
+       */
+      _mergeBtnTapped: function(event) {
+        try {
+          var row = this._checkedGridRows();
+          if (row) {
+            var title = Things.DataGlobal.t('button.merge_batch');
+            var text = Things.DataGlobal.t('text.Sure to X', {
+              x: title
+            });
+            var ajax = this.$['merge-batch-ajax'];
+            ajax.resourceUrl = `job_batches/${this.sourceBatch.id}/instruct/merge_batch/${row.id}`;
+
+            this.openConfirmMsg({
+              type: 'info',
+              title: title,
+              text: text,
+              showCancelButton: true,
+              closeOnConfirm: false
+            }, function() {
+              ajax.generateRequest();
+            });
+          }
+        } catch (error) {
+          this.showInvalidMessage(error);
+        }
+      },
+
+      /**
+       * @description 그리드에서 체크된 Row의 데이터를 리턴
+       *****************
+       * @return {Object} 그리드에 체크된 행 데이터
+       */
+      _checkedGridRows: function() {
+        var resourceGrid = this.$.grid;
+        var checkedRows = resourceGrid.getGridObject().getCheckedRows();
+
+        if (checkedRows && checkedRows.length > 0) {
+          if (checkedRows.length > 1) {
+            this.openInfoMsg({
+              type: 'info',
+              title: Things.DataGlobal.t('title.info'),
+              text: Things.DataGlobal.t('text.select_only_one_item'),
+              closeOnConfirm: true
+            });
+            return null;
+          }
+          var rowItems = checkedRows.map(row => row.getRowObject());
+          return rowItems[0];
+
+        } else {
+          this.openInfoMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('title.info'),
+            text: Things.DataGlobal.t('text.select_item'),
+            closeOnConfirm: true
+          });
+          return null;
+        }
+      },
+
+      /**
+       * @description search-btn-tap event handler
+       * 조회 버튼 클릭시 실행되며 validateBeforeSeach를 통과하면
+       * 조회를 수행 실패하면 showInvalidMessage를 통해 메시지 출력
+       ************************
+       */
+      _searchBtnTapped: function() {
+        try {
+          this.validateBeforeSeach();
+          console.log('Do search');
+        } catch (error) {
+          this.showInvalidMessage(error);
+        }
+      },
+
+      /**
+       * @description assign-region-btn-tap event handler
+       * 호기지정 버튼 클릭시 실행되며 validateBeforeAssign 통과하면
+       * 호기지정을 수행 실패하면 showInvalidMessage를 통해 메시지 출력
+       ************************
+       */
+      _assignRegionBtnTapped: function() {
+        try {
+          this.validateBeforeAssign();
+        } catch (error) {
+          this.showInvalidMessage(error);
+        }
+      },
+
+      /**
+       * @description job-instruct-btn-tap event handler
+       * 작업지시 버튼 클릭시 실행되며 validateBeforeJobInstruct 통과하면
+       * 작업지시를 수행 실패하면 showInvalidMessage를 통해 메시지 출력
+       ************************
+       */
+      _jobInstructBtnTapped: function() {
+        try {
+          this.validateBeforeJobInstruct();
+        } catch (error) {
+          this.showInvalidMessage(error);
+        }
+      },
+
+      /**
+       * @description job-complete-btn-tap event handler
+       * 작업완료 버튼 클릭시 실행되며 validateBeforeJobInstruct 통과하면
+       * 작업완료를 수행 실패하면 showInvalidMessage를 통해 메시지 출력
+       ************************
+       */
+      _jobCompleteBtnTapped: function() {
+        try {
+          this.validateBeforeJobComplte();
+        } catch (error) {
+          this.showInvalidMessage(error);
+        }
+      },
+
+      /**
+       * @description 조회 전 실행하는 validation
+       * validation 실패시 화면에 출력할 title, text를 throw
+       */
+      validateBeforeSeach: function() {
+        throw {
+          title: Things.DataGlobal.t('title.failure'),
+          text: Things.DataGlobal.t('text.region_is_not_selected')
+        }
+      },
+
+      /**
+       * @description 병합 전 실행하는 validation
+       * validation 실패시 화면에 출력할 title, text를 throw
+       ************************
+       */
+      validateBeforeMerge: function() {
+        throw {
+          title: Things.DataGlobal.t('title.failure'),
+          text: Things.DataGlobal.t('text.failed_to_x', {
+            x: Things.DataGlobal.t('text.merge')
+          })
+        }
+      },
+
+      /**
+       * @description 호기 지정 전 실행하는 validation
+       * validation 실패시 화면에 출력할 title, text를 throw
+       ************************
+       */
+      validateBeforeAssign: function() {
+        throw {
+          title: Things.DataGlobal.t('title.failure'),
+          text: Things.DataGlobal.t('text.failed_to_x', {
+            x: Things.DataGlobal.t('text.assign')
+          })
+        }
+      },
+
+      /**
+       * @description 작업지시 전 실행하는 validation
+       * validation 실패시 화면에 출력할 title, text를 throw
+       ************************
+       */
+      validateBeforeJobInstruct: function() {
+        throw {
+          title: Things.DataGlobal.t('title.failure'),
+          text: Things.DataGlobal.t('text.failed_to_x', {
+            x: Things.DataGlobal.t('text.instruct_job')
+          })
+        }
+      },
+
+      /**
+       * @description 작업완료 전 실행하는 validation
+       * validation 실패시 화면에 출력할 title, text를 throw
+       ************************
+       */
+      validateBeforeJobComplte: function() {
+        throw {
+          title: Things.DataGlobal.t('title.failure'),
+          text: Things.DataGlobal.t('text.process_did_not_complete')
+        }
+      },
+
+      /**
+       * @description validation에서 발생한 error를 통해 메시지를 출력
+       ************************
+       */
+      showInvalidMessage: function(config) {
+        this.openInfoMsg({
+          type: 'error',
+          title: config.title,
+          text: config.text
+        });
+      }
+    })
+  </script>
+</dom-module>

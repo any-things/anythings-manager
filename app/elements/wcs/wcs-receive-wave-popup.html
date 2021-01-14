@@ -1,0 +1,416 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-form/things-search-form.html">
+<link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
+<link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
+
+<!--
+  WCS > Wave 수신 및 분배 > Wave 수신 팝업 화면
+-->
+<dom-module id="wcs-receive-wave-popup">
+  <template>
+    <style>
+      :host {
+        @apply --layout-flex;
+        @apply --layout-vertical;
+      }
+
+      #contents {
+        @apply --layout-flex;
+        @apply --things-default-padding;
+        display: grid;
+        grid-template: "pro"auto "gri"1fr "bar"auto / calc(100% - calc(10px / 2));
+        grid-gap: 10px;
+      }
+
+      #contents>#grid {
+        grid-area: gri;
+      }
+
+      #contents>#editor {
+        grid-area: edi;
+      }
+
+      #contents>#bar {
+        grid-area: bar;
+      }
+
+      /* 바깥 여백 제거 */
+      .margin-zero {
+        margin: 0px;
+      }
+
+      /* 안쪽 여백 제거 */
+      .padding-zero {
+        padding: 0px;
+      }
+
+      paper-toolbar::shadow #bottomBar {
+        @apply --layout-horizontal;
+        @apply --layout-end-justified;
+      }
+    </style>
+
+    <!-- 메타 호출 ajax -->
+    <things-ajax 
+      auto 
+      id="resource-meta" 
+      resource-url="[[menuMetaUrl]]" 
+      resource-action="index"
+      last-response="{{metaData}}">
+    </things-ajax>
+
+    <!-- 주문 수신 시작 ajax -->
+    <things-ajax 
+      id="start-receiving-ajax" 
+      resource-id="[[receiptSummaryId]]"
+      resource-url="job_batches/receive_batches/start" 
+      resource-action="update_multiple">
+    </things-ajax>
+
+    <!-- 진행 상황 ajax -->
+    <things-ajax 
+      id="progress-status-ajax" 
+      resource-id="[[receiptSummaryId]]"
+      resource-url="job_batches/receive_batches/rate/:id" 
+      resource-action="get">
+    </things-ajax>
+
+    <div id="contents">
+      <!-- 스피너 -->
+      <things-spinner id="thingsSpinner"></things-spinner>
+
+      <!-- 수신할 Wave 리스트 -->
+      <things-resource-grid 
+        id="grid" 
+        class="padding-zero" 
+        config="[[gridConfig]]" 
+        model="[[gridModel]]"
+        columns="[[gridColumns]]" 
+        buttons="" 
+        paginatable=[[menuInfo.pagination]]
+        show-paginator=[[menuInfo.pagination]] 
+        current-page="{{page}}" 
+        limit="{{limit}}" 
+        data="[[items]]"
+        total-count="[[itemCount]]" 
+        fixed-column-count="[[menuInfo.fixed_columns]]"
+        grid-save-action="[[menuInfo.grid_save_url]]">
+      </things-resource-grid>
+
+      <!-- 버튼 리스트 -->
+      <paper-toolbar id="bar">
+        <div class="bottom">
+          <things-button-bar id="button-group" buttons="[[buttons]]"></things-button-bar>
+        </div>
+      </paper-toolbar>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'wcs-receive-wave-popup',
+
+      behaviors: [
+        Things.MsgBoxBehavior,
+        Things.NamedMetaBehavior
+      ],
+
+      properties: {
+        /**
+         * @description 프로그레스 바 숨기기
+         **************
+         * @type {Number}
+         */
+        hideProgressBar: {
+          type: Boolean,
+          value: false
+        },
+
+        /**
+         * @description 진행 상황 업데이트 주기
+         **************
+         * @type {Number}
+         */
+        updateInterval: {
+          type: Number,
+          value: function() {
+            return 3000;
+          }
+        },
+
+        /**
+         * @description 그리드 구성
+         ***************
+         * @type {Object}
+         */
+        gridConfig: {
+          type: Object,
+          value: function() {
+            return {
+              options: {
+                edit: {
+                  editable: false,
+                  pasteEnabled: false
+                },
+                displayOptions: {
+                  fitStyle: 'fill'
+                }
+              }
+            };
+          }
+        },
+
+        /**
+         * @description 에디터의 값. 그리드의 config 컬럼 값과 동기화할 용도
+         ***************
+         * @type {String}
+         */
+        configValue: {
+          type: String
+        },
+
+        /**
+         * @description 주문 수신 상태 업데이트를 위한 주문 수신 서머리 ID
+         ***************
+         * @type {String}
+         */
+        receiptSummaryId: {
+          type: String
+        },
+
+        /**
+         * @description 주문 수신 상태 업데이트를 위한 주문 수신 서머리 값
+         ***************
+         * @type {Object}
+         */
+        receiptSummary: {
+          type: Object,
+          observer: 'receiptSummaryChanged'
+        },
+
+        /**
+         * @description 그리드 내용
+         ***************
+         * @type {Array}
+         */
+        items: {
+          type: Array
+        },
+
+        /**
+         * @description 주문 수신 ajax 호출 후 응답 데이터
+         ***************
+         * @type {Object}
+         */
+        receiveOrderResponse: {
+          type: Object
+        },
+
+        /**
+         * @description 진행 상황 ajax 호출 후 응답 데이터
+         ***************
+         * @type {Object}
+         */
+        currentProgressResponse: {
+          type: Object
+        },
+
+        /**
+         * @description 수신 주문 완료 여부
+         ***************
+         * @type {Boolean}
+         */
+        isFinished: {
+          type: Boolean,
+          value: function() {
+            return false;
+          }
+        }
+      },
+
+      listeners: {
+        "grid.things-grid-configured": "_onGridConfigured",
+        "start-receiving-ajax.things-ajax-response": "onReceivingStarted",
+        "progress-status-ajax.things-ajax-response": "updateProgressRate",
+        "button-group.receive_order-btn-tap": "startReceiving",
+        "button-group.close-btn-tap": "closePopup"
+      },
+
+      /**
+       * @description 그리드 구성 완료 시
+       ***********************
+       */
+      _onGridConfigured: function() {
+        var gridObj = this.$['grid'].getGridObject();
+        // status 컬럼 값에 따라 행의 스타일 변경
+        gridObj.body().setCellDynamicStyles([{
+          // '완료' 상태에서 녹색
+          expression: "values['status'] == 'F'",
+          styles: {
+            background: '#e5ffe2',
+            foreground: '#494f48'
+          }
+        }, {
+          // '스킵' 상태에서 녹색 ( Skip )
+          expression: "values['status'] == 'S'",
+          styles: {
+            background: '#e5ffe2',
+            foreground: '#494f48'
+          }
+        }, {
+          // '에러' 상태에서 붉은색
+          expression: "values['status'] == 'E'",
+          styles: {
+            background: '#fce5e5',
+            foreground: '#740000'
+          }
+        }]);
+
+        gridObj.checkAll(true);
+      },
+
+      /**
+       * @description Wave 수신 서머리 변경시
+       **********************
+       * @param {Object} receiptSummary
+       */
+      receiptSummaryChanged: function(receiptSummary) {
+        this.items = receiptSummary && receiptSummary.items;
+      },
+
+      /**
+       * Wave 수신 시작 호출 성공시
+       **********************
+       * @param {Object} event
+       */
+      onReceivingStarted: function(event) {
+        // 진행율 체크 호출
+        var progressAjax = this.$['progress-status-ajax'];
+        progressAjax.generateRequest();
+      },
+
+      /**
+       * @description Wave 수신 팝업 닫기 
+       **********************
+       * @param {Object} event
+       */
+      closePopup: function(event) {
+        document.dispatchEvent(new CustomEvent('things-dialog-close'));
+      },
+
+      /**
+       * @description Wave 수신 시작
+       **********************
+       * @param {Object} event
+       */
+      startReceiving: function(event) {
+        this.isFinished = false;
+        var summaryItems = this.receiptSummary.items;
+
+        // 1. 그리드에서 체크 안 된 항목은 skip_flag를 true로 설정
+        var grid = this.$['grid'];
+        let rows = grid.grid.getCheckedRows();
+
+        // 2. 체크된 항목만 skip_flag를 false로 설정
+        if (rows && rows.length > 0) {
+          // 3. skip_flag를 모두 true로 설정
+          summaryItems.forEach(function(item) {
+            item.skip_flag = true;
+          });
+
+          rows.forEach(function(row) {
+            var rowObj = row.getRowObject();
+            var summaryItem = summaryItems.find(function(item) {
+              return rowObj.id == item.id;
+            });
+
+            if (summaryItem != null) {
+              summaryItem.skip_flag = false;
+            }
+          }.bind(this));
+
+          // 4. Wave 수신 시작
+          var startAjax = this.$['start-receiving-ajax'];
+          startAjax.body = this.receiptSummary;
+          startAjax.generateRequest();
+
+        } else {
+          // 항목을 선택해주세요.
+          this.openInfoMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('text.select_item')
+          });
+        }
+      },
+
+      /**
+       * @description 상태 업데이트
+       **********************
+       * @param {Object} event
+       */
+      updateProgressRate: function(event) {
+        // 서버에서 내려주는 그리드 목록, 수신 진행율을 적용
+        this.items = event.detail.items;
+        var receiptStatus = event.detail.status;
+
+        // progressRate가 100이면 완료
+        if (receiptStatus === 'F') {
+          this.isFinished = true;
+          // 수신이 완료되었습니다
+          this.openInfoMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('text.Success to Process')
+          });
+        }
+
+        // 수신 서머리 상태가 취소이면 중지
+        if (!this.isFinished) {
+          if (receiptStatus === 'C') {
+            this.isFinished = true;
+            this.openInfoMsg({
+              type: 'info',
+              title: 'Receiving orders canceled.'
+            });
+
+          } else if (receiptStatus === 'E') {
+            this.isFinished = true;
+            var errTitle = 'Receiving was stopped because error occurred when receiving orders';
+            this.items.forEach(function(item) {
+              if (item.err_msg && item.err_msg.length > 2) {
+                errTitle = item.err_msg;
+                return;
+              }
+            });
+            this.openInfoMsg({
+              type: 'error',
+              title: errTitle
+            });
+          }
+        }
+
+        // 수신이 완료되었는지 확인 후 안 되어있으면
+        if (!this.isFinished) {
+          var runningItem = this.items.find(function(item) {
+            return item.status === 'R';
+          });
+
+          if (runningItem != null) {
+            var received_cnt = runningItem.received_cnt + runningItem.err_cnt;
+          }
+
+          // 완료되지 않았다면 updateInterval 후 다시 진행율 조회
+          var ajax = this.$['progress-status-ajax'];
+          setTimeout(function() {
+            ajax.generateRequest();
+          }.bind(this), this.updateInterval);
+        }
+      }
+    });
+  </script>
+</dom-module>

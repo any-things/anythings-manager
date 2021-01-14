@@ -703,7 +703,7 @@ Copyright © HatioLab Inc. All rights reserved.
         'button-group.back-btn-tap': 'goBack',
         'button-group.reset-btn-tap': 'generatePreprocessing',
         'button-group.auto_assign-btn-tap': 'autoAssignment',
-        'button-group.assign_region-btn-tap': 'manualAssignRack',
+        'button-group.assign_rack-btn-tap': 'manualAssignRack',
         'button-group.reset_assign-btn-tap': 'resetAssignment',
         'button-group.swap-btn-tap': 'popupSwapView',
         'button-group.end_preprocess-btn-tap': 'completePreprocessing',
@@ -1103,7 +1103,7 @@ Copyright © HatioLab Inc. All rights reserved.
         assignPopup.equipCd = equipCd;
         assignPopup.equipNm = equipNm;
         // 2. 그리드 구성
-        assignPopup.title = Things.DataGlobal.t('button.assign_region');
+        assignPopup.title = Things.DataGlobal.t('button.assign_rack');
         assignPopup.batchId = batchId;
         assignPopup.gridModel = JSON.parse(JSON.stringify(this.gridModel));
         assignPopup.assignedGridColumns = JSON.parse(JSON.stringify(this.gridColumns));
