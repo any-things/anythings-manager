@@ -244,7 +244,7 @@ Copyright © HatioLab Inc. All rights reserved.
         if (grid) {
           var cRow = grid.getCheckedRows();
           if (cRow.length === 0) {
-            this.changeButtonStatus('');
+            this.changeButtonStatus(null);
           }
         }
       },
@@ -260,15 +260,13 @@ Copyright © HatioLab Inc. All rights reserved.
         grid._onGridCheckCellClicked = function(grid, rowIndex) {
           var cRow = grid.getCheckedRows();
 
-          // 어떤 행이 체크된 상태에서 다른 행의 체크셀을 체크하지않고 그 주변 영역을 클릭했을 때는 반응하지 않도록
+          // 어떤 행이 체크된 상태에서 다른 행의 체크셀을 체크하지 않고 그 주변 영역을 클릭했을 때는 반응하지 않도록
           if (cRow.length > 0 && cRow[0]._index === rowIndex) {
             var checkedRow = cRow[0].getRowObject();
-            var status = checkedRow.status;
-            var jobType = checkedRow.job_type;
-            this.changeButtonStatus(status, jobType);
+            this.changeButtonStatus(checkedRow);
 
           } else if (cRow.length === 0) {
-            this.changeButtonStatus('');
+            this.changeButtonStatus(null);
           }
         }.bind(this);
 
@@ -303,66 +301,27 @@ Copyright © HatioLab Inc. All rights reserved.
       /**
        * @description 상태에 따라 버튼 상태를 변경한다.
        **************
-       * @param {String} status 작업 배치 상태
-       * @param {String} jobType 작업 배치의 작업 유형
+       * @param {Object} wave Wave 정보
        */
-      changeButtonStatus: function(status, jobType) {
+      changeButtonStatus: function(wave) {
+        if (wave == null) {
+          return;
+        }
 
-        /*var btns = this.buttons.map(function(b) {
-          if (!status || status === '') {
-            b.hidden = !(b.id == 'save-btn');
-            return Object.assign(new Object(), b);
-
-          } else if (status === 'RECEIVING') {
-            b.hidden = !(b.id == 'receive_order-btn' || b.id == 'cancel_order-btn');
-            return Object.assign(new Object(), b);
-
-          } else if (status === 'WAIT') {
-            b.hidden = !(b.id == 'order_preprocess-btn' || b.id == 'merge_batch-btn' || b.id == 'cancel_order-btn' || b.id == 'classify-wave-btn' || b.id == 'order_split_2sku-btn' || b.id == 'order_split_3sku-btn');
-            return Object.assign(new Object(), b);
-
-          } else if (status === 'READY') {
-            b.hidden = !(b.id == 'change_rack-btn' || b.id == 'order_preprocess-btn' || b.id == 'job_instruct-btn' || b.id == 'total_picking_instruct-btn' || b.id == 'cancel_order-btn' || b.id == 'split_cancel-btn' || b.id == 'change_type_to_hw-btn' || b.id == 'batch_job_seq_up-btn');
-            return Object.assign(new Object(), b);
-
-          } else if (status === 'RUN') {
-            b.hidden = !(b.id == 'cancel_job_instruct-btn' || b.id == 'job_complete-btn' || b.id == 'copy_region-btn' || b.id == 'group_complete-btn' || b.id == 'total_picking_instruct-btn');
-            return Object.assign(new Object(), b);
-
-          } else if (status === 'END') {
-            b.hidden = true;
-            return Object.assign(new Object(), b);
-
-          } else if (status === 'MERGED') {
-            b.hidden = (b.id != 'total_picking_instruct-btn');
-            return Object.assign(new Object(), b);
+        var equipGroupCd = wave.equip_group_cd;
+        var btns = this.buttons.map(function(b) {
+          if (!equipGroupCd || equipGroupCd === '') {
+            // 1. wave의 설비 그룹이 확정되지 않은 경우
+            b.hidden = (b.id == 'confirm_wave-btn');
+          } else {
+            // 2. wave의 설비 그룹이 확정된 경우
+            b.hidden = (b.id != 'confirm_wave-btn');
           }
+
+          return Object.assign(new Object(), b);
         });
 
-        btns.map(function(b) {
-          if (b.id == 'recommend_box_type-btn') {
-            b.hidden = false;
-            return Object.assign(new Object(), b);
-          }
-
-          if (jobType === 'RTN') {
-            if (b.id === 'copy_region-btn' || b.id === 'merge_batch-btn') {
-              b.hidden = true;
-            }
-            return Object.assign(new Object(), b);
-
-          } else if (jobType === 'SRTN') {
-            if (b.id === 'merge_batch-btn' && status === 'READY') {
-              b.hidden = false;
-            } else if (b.id === 'merge_batch-btn' && status === 'WAIT') {
-              b.hidden = true;
-            }
-
-            return Object.assign(new Object(), b);
-          }
-        });
-
-        this.set('buttons', btns);*/
+        this.set('buttons', btns);
       },
 
       /**
@@ -576,17 +535,16 @@ Copyright © HatioLab Inc. All rights reserved.
               title: Things.DataGlobal.t('text.emptyDataMessage'),
               closeOnConfirm: true
             });
-          }.bind(this), 500);
+          }.bind(this), 1000);
 
           // 2. 주문 수신 팝업을 띄움 ...
         } else {
-          var props = {
+          var receiveWavePopup = this.create('wcs-receive-wave-popup', {
             title: Things.DataGlobal.t('button.receive_order'),
-            resourceName: 'ReceiveOrderPopup',
+            resourceName: 'ReceiveWavePopup',
             receiptSummaryId: receiptSummary.id, // 수신 서머리 ID
-            receiptSummary: event && event.detail // 수신 서머리 정보
-          };
-          var receiveWavePopup = this.create('wcs-receive-wave-popup', props);
+            receiptSummary: receiptSummary // 수신 서머리 정보
+          });
           var searchForm = this.$['search-form'];
 
           // 팝업 띄우기

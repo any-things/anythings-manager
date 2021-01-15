@@ -65,20 +65,12 @@ Copyright © HatioLab Inc. All rights reserved.
       last-response="{{metaData}}">
     </things-ajax>
 
-    <!-- 주문 수신 시작 ajax -->
+    <!-- Wave 수신 시작 ajax -->
     <things-ajax 
       id="start-receiving-ajax" 
-      resource-id="[[receiptSummaryId]]"
-      resource-url="job_batches/receive_batches/start" 
-      resource-action="update_multiple">
-    </things-ajax>
-
-    <!-- 진행 상황 ajax -->
-    <things-ajax 
-      id="progress-status-ajax" 
-      resource-id="[[receiptSummaryId]]"
-      resource-url="job_batches/receive_batches/rate/:id" 
-      resource-action="get">
+      resource-url="wcs_process/receive_waves/start" 
+      content-type="application/json"
+      method="POST">
     </things-ajax>
 
     <div id="contents">
@@ -123,28 +115,6 @@ Copyright © HatioLab Inc. All rights reserved.
 
       properties: {
         /**
-         * @description 프로그레스 바 숨기기
-         **************
-         * @type {Number}
-         */
-        hideProgressBar: {
-          type: Boolean,
-          value: false
-        },
-
-        /**
-         * @description 진행 상황 업데이트 주기
-         **************
-         * @type {Number}
-         */
-        updateInterval: {
-          type: Number,
-          value: function() {
-            return 3000;
-          }
-        },
-
-        /**
          * @description 그리드 구성
          ***************
          * @type {Object}
@@ -164,15 +134,6 @@ Copyright © HatioLab Inc. All rights reserved.
               }
             };
           }
-        },
-
-        /**
-         * @description 에디터의 값. 그리드의 config 컬럼 값과 동기화할 용도
-         ***************
-         * @type {String}
-         */
-        configValue: {
-          type: String
         },
 
         /**
@@ -204,24 +165,6 @@ Copyright © HatioLab Inc. All rights reserved.
         },
 
         /**
-         * @description 주문 수신 ajax 호출 후 응답 데이터
-         ***************
-         * @type {Object}
-         */
-        receiveOrderResponse: {
-          type: Object
-        },
-
-        /**
-         * @description 진행 상황 ajax 호출 후 응답 데이터
-         ***************
-         * @type {Object}
-         */
-        currentProgressResponse: {
-          type: Object
-        },
-
-        /**
          * @description 수신 주문 완료 여부
          ***************
          * @type {Boolean}
@@ -235,11 +178,10 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       listeners: {
-        "grid.things-grid-configured": "_onGridConfigured",
-        "start-receiving-ajax.things-ajax-response": "onReceivingStarted",
-        "progress-status-ajax.things-ajax-response": "updateProgressRate",
-        "button-group.receive_order-btn-tap": "startReceiving",
-        "button-group.close-btn-tap": "closePopup"
+        'grid.things-grid-configured': '_onGridConfigured',
+        'start-receiving-ajax.things-ajax-response': 'onReceivingSuccess',
+        'button-group.receive_wave-btn-tap': 'startReceiving',
+        'button-group.close-btn-tap': 'closePopup'
       },
 
       /**
@@ -281,18 +223,19 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Object} receiptSummary
        */
       receiptSummaryChanged: function(receiptSummary) {
-        this.items = receiptSummary && receiptSummary.items;
+        this.items = receiptSummary.items;
       },
 
       /**
-       * Wave 수신 시작 호출 성공시
+       * Wave 수신 완료시
        **********************
        * @param {Object} event
        */
-      onReceivingStarted: function(event) {
-        // 진행율 체크 호출
-        var progressAjax = this.$['progress-status-ajax'];
-        progressAjax.generateRequest();
+      onReceivingSuccess: function(event) {
+        console.log(event);
+        this.items = event.detail.items;
+        this.isFinished = true;
+        //this.closePopup();
       },
 
       /**
@@ -346,69 +289,6 @@ Copyright © HatioLab Inc. All rights reserved.
             type: 'info',
             title: Things.DataGlobal.t('text.select_item')
           });
-        }
-      },
-
-      /**
-       * @description 상태 업데이트
-       **********************
-       * @param {Object} event
-       */
-      updateProgressRate: function(event) {
-        // 서버에서 내려주는 그리드 목록, 수신 진행율을 적용
-        this.items = event.detail.items;
-        var receiptStatus = event.detail.status;
-
-        // progressRate가 100이면 완료
-        if (receiptStatus === 'F') {
-          this.isFinished = true;
-          // 수신이 완료되었습니다
-          this.openInfoMsg({
-            type: 'info',
-            title: Things.DataGlobal.t('text.Success to Process')
-          });
-        }
-
-        // 수신 서머리 상태가 취소이면 중지
-        if (!this.isFinished) {
-          if (receiptStatus === 'C') {
-            this.isFinished = true;
-            this.openInfoMsg({
-              type: 'info',
-              title: 'Receiving orders canceled.'
-            });
-
-          } else if (receiptStatus === 'E') {
-            this.isFinished = true;
-            var errTitle = 'Receiving was stopped because error occurred when receiving orders';
-            this.items.forEach(function(item) {
-              if (item.err_msg && item.err_msg.length > 2) {
-                errTitle = item.err_msg;
-                return;
-              }
-            });
-            this.openInfoMsg({
-              type: 'error',
-              title: errTitle
-            });
-          }
-        }
-
-        // 수신이 완료되었는지 확인 후 안 되어있으면
-        if (!this.isFinished) {
-          var runningItem = this.items.find(function(item) {
-            return item.status === 'R';
-          });
-
-          if (runningItem != null) {
-            var received_cnt = runningItem.received_cnt + runningItem.err_cnt;
-          }
-
-          // 완료되지 않았다면 updateInterval 후 다시 진행율 조회
-          var ajax = this.$['progress-status-ajax'];
-          setTimeout(function() {
-            ajax.generateRequest();
-          }.bind(this), this.updateInterval);
         }
       }
     });
