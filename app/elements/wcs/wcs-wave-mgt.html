@@ -635,7 +635,6 @@ Copyright © HatioLab Inc. All rights reserved.
       /**
        * @description 그리드에서 체크된 Row의 데이터를 리턴
        *****************
-       * @return {Object} 그리드에 체크된 행 데이터
        */
       _checkedGridRow: function() {
         var resourceGrid = this.$.grid;
@@ -674,6 +673,7 @@ Copyright © HatioLab Inc. All rights reserved.
         var classifyWavePopup = document.createElement('wcs-classify-wave-popup');
         classifyWavePopup.title = title + ' (' + wave.id + ')';
         classifyWavePopup.wave = wave;
+        classifyWavePopup.formFields = this.resourceFormFields;
         return classifyWavePopup;
       },
 

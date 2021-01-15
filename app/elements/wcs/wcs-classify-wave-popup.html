@@ -5,78 +5,121 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
-<link rel="import" href="../../bower_components/things-form/things-search-form.html">
 <link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
 <link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
 
 <!--
-  WCS > Wave 수신 및 분배 > 대상 분류
- -->
+  WCS > Wave 수신 및 분배 > 대상 분류 팝업
+-->
 <dom-module id="wcs-classify-wave-popup">
   <template>
-      <style>
-        :host {
-          @apply --layout-flex;
-          @apply --layout-vertical;
-        }
+    <style>
+      :host {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+        @apply(--things-default-padding);
+      }
 
-        things-resource-grid {
-          @apply --layout-vertical;
-          @apply --layout-flex;
-        }
-      </style>
+      things-resource-grid {
+        @apply(--layout-vertical);
+        @apply(--layout-flex);
+      }
 
-      <!-- Get Menu Meta Ajax -->
-      <things-ajax 
-        id="resource-meta" 
-        resource-url="[[menuMetaUrl]]" 
-        resource-action="index"
-        last-response="{{metaData}}">
-      </things-ajax>
+      .subtitle:before {
+        content: '';
+        @apply(--things-subtitle-icon);
+      }
+    </style>
 
-      <!-- 할당 가능한 랙 조회 Ajax -->
-      <things-ajax 
-        query-support 
-        id="assignable-dps-rack-ajax" 
-        method="GET"
-        resource-url="/racks" 
-        last-response="{{lastResponse}}">
-      </things-ajax>
+    <!-- 데이터 조회 Ajax -->
+    <things-ajax 
+      auto 
+      id="code-ajax" 
+      resource-url="common_codes/show_by_name?name=CLASSIFY_TYPES" 
+      method="GET" 
+      last-response="{{codeData}}">
+    </things-ajax>
 
-      <!-- 작업 지시 Ajax -->
-      <things-ajax 
-        id="instruct-job-ajax" 
-        method="POST" 
-        content-type="application/json"
-        resource-url="job_batches/:id/instruct/batch">
-      </things-ajax>
+    <!-- 대상 분류 Ajax -->
+    <things-ajax 
+      id="classify-ajax" 
+      resource-url="wcs_process/classify_wave/:id"
+      content-type="application/json"
+      method="POST">
+    </things-ajax>
 
-      <!-- 그리드 -->
-      <things-resource-grid 
-        id="grid" 
-        config="[[gridConfig]]" 
-        model="[[gridModel]]" 
-        columns="[[gridColumns]]"
-        buttons="[[buttons]]"
-        data="[[lastResponse.items]]" 
-        total-count="[[lastResponse.total]]"
-        fixed-column-count="[[menuInfo.fixed_columns]]" 
-        grid-save-action="[[menuInfo.grid_save_url]]">
-      </things-resource-grid>
-   </template>
+    <!-- Wave 정보 -->
+    <span class="subtitle">[[subtitles.waveInfo]]</span>
+
+    <things-resource-form 
+      id="detail-form" 
+      class="contents" 
+      form-fields="[[formFields]]" 
+      title="[[subtitles.msgDetail]]" 
+      buttons="[]"
+      column-count="2">
+    </things-resource-form>
+
+    <!-- 대상 분류 정보 -->
+    <span class="subtitle">[[subtitles.classifyType]]</span>
+    
+    <things-resource-grid 
+      id="list-grid" 
+      class="contents" 
+      config="[[gridConfig]]" 
+      model="[[gridModel]]" 
+      columns="[[gridColumns]]"
+      buttons="[[buttons]]" 
+      fixed-column-count="0" 
+      paginatable=[[paginatable]] 
+      show-paginator=[[paginatable]] 
+      data="[[codeItems]]">
+    </things-resource-grid>
+  </template>
 
   <script>
     Polymer({
       is: 'wcs-classify-wave-popup',
 
-      behaviors: [
-        Things.MsgBoxBehavior,
-        Things.NamedMetaBehavior
-      ],
-
       properties: {
         /**
-         * @description 그리드 Configuration
+         * @description 서브 타이틀
+         *************************
+         * @type {Object}
+         */
+        subtitles: {
+          type: Object,
+          value: function() {
+            return {
+              waveInfo: 'Wave',
+              classifyType: Things.DataGlobal.t('button.classify_wave')
+            }
+          }
+        },
+
+        /**
+         * @description 페이지네이션 여부
+         *************************
+         * @type {Boolean}
+         */
+        paginatable: {
+          type: Boolean,
+          value: function() {
+            return false;
+          }
+        },
+
+        /**
+         * @description 폼 필드 
+         *************************
+         * @type {Array}
+         */
+        formFields: {
+          type: Array,
+        },
+
+        /**
+         * @description 그리드 설정
          *************************
          * @type {Object}
          */
@@ -84,179 +127,194 @@ Copyright © HatioLab Inc. All rights reserved.
           type: Object,
           value: function() {
             return {
-              options: {
-                displayOptions: {
-                  fitStyle: 'fill'
-                }
+              displayOptions: {
+                fitStyle: 'fill',
+                wheelDelta: 1
+              },
+              checkBar: {
+                visible: true
               }
             }
           }
         },
 
         /**
-         * @description 작업 배치 화면에서 선택된 배치
+         * @description 그리드 모델
+         *************************
+         * @type {Array}
+         */
+        gridModel: {
+          type: Array,
+          value: function() {
+            return [{
+              fieldName: 'name'
+            }, {
+              fieldName: 'description'
+            }];
+          }
+        },
+
+        /**
+         * @description 그리드 컬럼
+         *************************
+         * @type {Array}
+         */
+        gridColumns: {
+          type: Array,
+          value: function() {
+            return [{
+              name: 'name',
+              fieldName: 'name',
+              width: 100,
+              header: Things.DataGlobal.t('label.type'),
+              styles: {
+                textAlignment: 'center'
+              },
+              editable: false
+            }, {
+              name: 'description',
+              fieldName: 'description',
+              width: 200,
+              header: Things.DataGlobal.t('label.class_cd'),
+              styles: {
+                textAlignment: 'center'
+              },
+              editable: false
+            }];
+          }
+        },
+
+        /**
+         * @description Wave 정보
          *************************
          * @type {Object}
          */
-        batch: {
+        wave: {
+          type: Object
+        },
+
+        /**
+         * @description 코드 정보
+         ****************
+         * @type {Object}
+         */
+        codeData: {
           type: Object,
-          observer: '_batchChanged'
+          observer: '_codeDataChanged'
         },
 
         /**
-         * @description 조회 필드
-         *************************
-         * @type {String}
-         */
-        selectFields: {
-          type: String,
-          value: function() {
-            return 'id,rack_cd,rack_nm,batch_id';
-          }
-        },
-
-        /**
-         * @description 소팅을 위한 필드
-         *************************
+         * @description 분류 코드 정보
+         ****************
          * @type {Array}
          */
-        sortFields: {
-          type: Array,
-          value: function() {
-            return [{
-              field: 'rack_cd',
-              ascending: true
-            }];
-          }
+        codeItems: {
+          type: Array
         },
 
         /**
-         * @description 검색 조건 필드
-         *************************
+         * @description 버튼 정보   
+         *********************
          * @type {Array}
          */
-        queryFields: {
+        buttons: {
           type: Array,
-          value: function() {
-            return [{
-              name: 'active_flag',
-              operator: 'eq',
-              value: true
-            }, {
-              name: 'batch_id',
-              operator: 'is_blank'
-            }];
-          }
+          value: [{
+            id: 'classify_wave-btn',
+            text: 'classify_wave'
+          }, {
+            id: 'close-btn',
+            text: 'close'
+          }]
         }
       },
 
       listeners: {
-        "grid.job_instruct-btn-tap": "_onJobInstructBtnTap",
-        "instruct-job-ajax.things-ajax-response": "_onInstructResponse",
-        "instruct-job-ajax.things-ajax-error": "_onInstructResponse"
+        'detail-form.things-form-configured': '_formConfigured',
+        'classify_wave-btn-tap': '_onClassifyWaveTap',
+        'classify-ajax.things-ajax-response': 'closePopup'
       },
 
       /**
-       * @description 조회를 위한 각종 조건들 설정 
-       ****************************
-       * @param {String} batch
-       * @param {String} select
-       * @param {String} sort
-       * @param {String} query
-       * @return 
+       * @description 코드 데이터 변경 시 
+       **************
+       * @param {Object} codeData
        */
-      _paramMaker: function(batch, select, sort, query) {
-        if (batch.area_cd) {
-          query.push({
-            name: 'area_cd',
-            operator: 'eq',
-            value: batch.area_cd
-          });
-        }
-
-        if (batch.stage_cd) {
-          query.push({
-            name: 'stage_cd',
-            operator: 'eq',
-            value: batch.stage_cd
-          });
-        }
-
-        if (batch.job_type) {
-          query.push({
-            name: 'job_type',
-            operator: 'eq',
-            value: batch.job_type
-          });
-        }
-
-        return {
-          select: select,
-          sort: JSON.stringify(sort),
-          query: JSON.stringify(query)
-        };
+      _codeDataChanged: function(codeData) {
+        this.codeItems = codeData.items;
       },
 
       /**
-       * @description 작업 지시 버튼 처리 
-       ****************************
+       * @description 폼 구성 후 ...
+       **************
        * @param {Object} event
        */
-      _onJobInstructBtnTap: function(event) {
-        var ajax = this.$['instruct-job-ajax'];
-        var grid = this.$['grid'].grid;
+      _formConfigured: function(event) {
+        this.setFormData(this.$['detail-form'], this.wave);
+      },
 
-        ajax.body = grid.getCheckedRows().map(function(row) {
-          return row.getRowObject().id;
-        });
+      /**
+       * @description 폼에 값 설정 
+       **************
+       * @param {Object} formElement
+       * @param {Object} data
+       */
+      setFormData: function(formElement, data) {
+        formElement.setFormData(data);
+      },
 
-        if (!ajax.body || ajax.body.length == 0) {
-          this.openConfirmMsg({
-            type: 'error',
-            title: Things.DataGlobal.t('text.rack_is_not_selected'),
-            text: Things.DataGlobal.t('text.rack_is_not_selected')
+      /**
+       * @description 대상 분류 버튼 클릭 핸들러
+       **************
+       * @param {Object} event
+       */
+      _onClassifyWaveTap: function(event) {
+        var checkedItems = this._checkedGridRow();
+
+        if (checkedItems && checkedItems.length > 0) {
+          var ajax = this.$['classify-ajax'];
+          ajax.resourceId = this.wave.id;
+          ajax.body = checkedItems;
+          ajax.generateRequest();
+        }
+      },
+
+      /**
+       * @description 그리드에서 체크된 Row의 데이터를 리턴
+       *****************
+       */
+      _checkedGridRow: function() {
+        var resourceGrid = this.$['list-grid'];
+        var rows = resourceGrid.getGridObject().getCheckedRows();
+
+        if (rows && rows.length > 0) {
+          var ds = resourceGrid.getGridDataSet();
+          var list = rows.map(function(row) {
+            var data = ds.getRowObject(row.dataIndex());
+            return data.name;
           });
-          return;
+          return list;
+
+        } else {
+          this.openConfirmMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('title.info'),
+            text: Things.DataGlobal.t('text.select_item'),
+            closeOnConfirm: true,
+            showCancelButton: false
+          });
+          return null;
         }
-
-        ajax.resourceId = this.batch.id;
-        event.target.disabled = true;
-
-        grid.setOptions({
-          checkBar: {
-            checkableCallback: function() {
-              return false;
-            },
-            draggable: false
-          }
-        });
-
-        ajax.generateRequest();
       },
 
       /**
-       * @description 작업 지시 응답 후 ... 
-       ****************************
+       * @description Wave 수신 팝업 닫기 
+       **********************
+       * @param {Object} event
        */
-      _onInstructResponse: function() {
-        this.fire('things-dialog-close');
-      },
-
-      /**
-       * @description 배치가 변경 되면 배치에 해당하는 Rack 리스트 조회 
-       ****************************
-       * @param {Object} batch
-       */
-      _batchChanged: function(batch) {
-        if (batch) {
-          var rackListAjax = this.$['assignable-dps-rack-ajax'];
-          rackListAjax.params = this._paramMaker(batch, this.selectFields, this.sortFields, this.queryFields);
-          rackListAjax.generateRequest();
-
-          var resourceMetaAjax = this.$['resource-meta'];
-          resourceMetaAjax.generateRequest();
-        }
-      },
+      closePopup: function(event) {
+        document.dispatchEvent(new CustomEvent('things-dialog-close'));
+      }
     });
   </script>
 </dom-module>

@@ -8,282 +8,373 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
 <link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
 
+<!--
+  미들웨어 > 메시지 로그 조회 > 메시지 상세 팝업
+-->
 <dom-module id="trace-viewer-detail">
-    <template>
-        <style>
-            :host {
-                @apply(--layout-flex);
-                @apply(--layout-vertical);
-                @apply(--things-default-padding);
+  <template>
+    <style>
+      :host {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+        @apply(--things-default-padding);
+      }
+
+      .subtitle:before {
+        content: '';
+        @apply(--things-subtitle-icon);
+      }
+
+      .css-grid-layout {
+        @apply(--layout-flex);
+        display: grid;
+        grid-template: 
+            "a b" 2fr 
+            "c c" 1fr / 5fr 6fr;
+        grid-gap: 10px;
+      }
+
+      .css-grid-layout>#msg-detail {
+        grid-area: a;
+      }
+
+      .css-grid-layout>#msg-body {
+        grid-area: b;
+      }
+
+      .css-grid-layout>#deliver-list {
+        grid-area: c;
+      }
+
+      /* 부제목이 있는 콘텐츠 공통 */
+      .contents-with-subtitle {
+        display: grid;
+        grid-template: 
+          "a" auto 
+          "b" 1fr / 1fr
+      }
+
+      .contents-with-subtitle>.subtitle {
+        grid-area: a;
+      }
+
+      .contents-with-subtitle>.contents {
+        grid-area: b;
+      }
+      /***********************/
+
+      things-resource-grid {
+        padding: 0px;
+      }
+    </style>
+
+    <!-- 데이터 조회 Ajax -->
+    <things-ajax 
+      auto 
+      id="ajax" 
+      resource-url="[[resourceUrl]]" 
+      method="GET" 
+      last-response="{{detailData}}">
+    </things-ajax>
+
+    <div class="css-grid-layout">
+      <!-- 메시지 상세 정보 -->
+      <div id="msg-detail" class="contents-with-subtitle">
+        <span class="subtitle">[[subtitles.msgDetail]]</span>
+
+        <things-resource-form 
+          id="detail-form" 
+          class="contents" 
+          form-fields="[[formFields]]" 
+          title="[[subtitles.msgDetail]]" 
+          buttons="[]" column-count="1">
+        </things-resource-form>
+      </div>
+
+      <!-- 메시지 내용 -->
+      <div id="msg-body" class="contents-with-subtitle">
+        <span class="subtitle">[[subtitles.msgBody]]</span>
+        
+        <things-editor-script 
+          theme="ace/theme/monokai" 
+          class="contents" 
+          mode="ace/mode/json" 
+          fontsize="12px" 
+          tabsize="2" 
+          value="[[msgBody]]" 
+          wrapmode=false
+          readonly=true>
+        </things-editor-script>
+      </div>
+
+      <!-- 메시지 수신 정보 -->
+      <div id="deliver-list" class="contents-with-subtitle">
+        <span class="subtitle">[[subtitles.msgDeliInfo]]</span>
+        
+        <things-resource-grid 
+          id="list-grid" 
+          class="contents" 
+          config="[[listGridConfig]]" 
+          model="[[listGridModel]]" 
+          columns="[[listGridColumns]]"
+          buttons="" 
+          fixed-column-count="0" 
+          paginatable=[[paginatable]] 
+          show-paginator=[[paginatable]] 
+          data="[[detailData.list]]">
+        </things-resource-grid>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'trace-viewer-detail',
+
+      properties: {
+        /**
+         * @description 서브 타이틀
+         *************************
+         * @type {Object}
+         */
+        subtitles: {
+          type: Object,
+          value: function() {
+            return {
+              msgDetail: Things.DataGlobal.t('title.message_detail'),
+              msgBody: Things.DataGlobal.t('title.message_body'),
+              msgDeliInfo: Things.DataGlobal.t('title.message_deliver_info')
             }
+          }
+        },
 
-            .subtitle:before {
-                content: '';
-                @apply(--things-subtitle-icon);
+        /**
+         * @description 페이지네이션 여부
+         *************************
+         * @type {Boolean}
+         */
+        paginatable: {
+          type: Boolean,
+          value: function() {
+            return false;
+          }
+        },
+
+        /**
+         * @description 폼 필드 
+         *************************
+         * @type {Array}
+         */
+        formFields: {
+          type: Array,
+          value: function() {
+            return [{
+              name: 'id',
+              label: Things.DataGlobal.t('label.id'),
+              userData: {
+                readonly: true
+              }
+            }, {
+              name: 'site',
+              label: Things.DataGlobal.t('label.site'),
+              type: 'resource-code',
+              userData: {
+                resourceName: 'Site',
+                resourceType: 'Entity'
+              }
+            }, {
+              name: 'source_id',
+              label: Things.DataGlobal.t('label.source_id'),
+              userData: {
+                readonly: true
+              }
+            }, {
+              name: 'dest_id',
+              label: Things.DataGlobal.t('label.dest_id'),
+              userData: {
+                readonly: true
+              }
+            }, {
+              name: 'is_reply',
+              label: Things.DataGlobal.t('label.is_reply'),
+              userData: {
+                readonly: true
+              }
+            }, {
+              name: 'pub_time',
+              label: Things.DataGlobal.t('label.pub_time'),
+              userData: {
+                readonly: true
+              }
+            }, {
+              name: 'log_time',
+              label: Things.DataGlobal.t('label.log_time'),
+              userData: {
+                readonly: true
+              }
+            }, {
+              name: 'routed_count',
+              label: Things.DataGlobal.t('label.routed_count'),
+              userData: {
+                readonly: true
+              }
+            }, {
+              name: 'routed_queues',
+              label: Things.DataGlobal.t('label.routed_queues'),
+              type: 'textarea',
+              readonly: true
+            }];
+          }
+        },
+
+        /**
+         * @description 그리드 설정
+         *************************
+         * @type {Object}
+         */
+        listGridConfig: {
+          type: Object,
+          value: function() {
+            return {
+              displayOptions: {
+                fitStyle: 'fill',
+                wheelDelta: 1
+              },
+              checkBar: {
+                visible: false
+              }
             }
+          }
+        },
 
-            .css-grid-layout {
-                @apply(--layout-flex);
-                display: grid;
-                grid-template: 
-                    "a b" 2fr 
-                    "c c" 1fr / 5fr 6fr;
-                grid-gap: 10px;
-            }
+        /**
+         * @description 그리드 모델
+         *************************
+         * @type {Object}
+         */
+        listGridModel: {
+          type: Array,
+          value: function() {
+            return [{
+              fieldName: 'dest_id'
+            }, {
+              fieldName: 'log_time'
+            }, {
+              fieldName: 'is_failed'
+            }];
+          }
+        },
 
-            .css-grid-layout>#msg-detail {
-                grid-area: a;
-            }
+        /**
+         * @description 그리드 컬럼
+         *************************
+         * @type {Object}
+         */
+        listGridColumns: {
+          type: Array,
+          value: function() {
+            return [{
+              name: 'dest_id',
+              fieldName: 'dest_id',
+              width: 100,
+              header: Things.DataGlobal.t('label.dest_id'),
+              styles: {
+                textAlignment: 'center'
+              },
+              editable: false
+            }, {
+              name: 'log_time',
+              fieldName: 'log_time',
+              width: 200,
+              header: Things.DataGlobal.t('label.log_time'),
+              styles: {
+                textAlignment: 'center'
+              },
+              editable: false
+            }, {
+              name: 'is_failed',
+              fieldName: 'is_failed',
+              width: 100,
+              header: Things.DataGlobal.t('label.is_failed'),
+              styles: {
+                textAlignment: 'center'
+              },
+              renderer: {
+                type: 'check',
+                trueValues: 'true,True',
+                falseValues: 'false,False',
+                editable: false
+              },
+              editable: false
+            }];
+          }
+        },
 
-            .css-grid-layout>#msg-body {
-                grid-area: b;
-            }
+        /**
+         * @description 메시지 바디 값 
+         *************************
+         * @type {Object}
+         */
+        msgBody: {
+          type: String,
+          value: function() {
+            return '';
+          }
+        }
+      },
 
-            .css-grid-layout>#deliver-list {
-                grid-area: c;
-            }
+      listeners: {
+        'ajax.things-ajax-response': '_gotMeta',
+        'detail-form.things-form-configured': '_formConfigured'
+      },
 
-            /* 부제목이 있는 콘텐츠 공통 */
-            .contents-with-subtitle {
-                display: grid;
-                grid-template: 
-                    "a" auto 
-                    "b" 1fr / 1fr
-            }
+      /**
+       * @description 메타 데이터 받은 후 ...
+       **************
+       * @param {Object} event
+       */
+      _gotMeta: function(event) {
+        this.msgBody = this.jsonPrettyPrint(event.detail.detail.body);
+        this.setFormData(this.$['detail-form'], event.detail.detail);
+      },
 
-            .contents-with-subtitle>.subtitle {
-                grid-area: a;
-            }
+      /**
+       * @description 폼 구성 후 ...
+       **************
+       * @param {Object} event
+       */
+      _formConfigured: function(event) {
+        try {
+          this.$['detail-form'].querySelector('[name=site]').$['combo'].readonly = true; // combobox 수정불가 옵션
+          this.$['detail-form'].querySelector('[name=routed_queues]').maxRows = 4;
+        } catch (error) {
+          return;
+        }
+      },
 
-            .contents-with-subtitle>.contents {
-                grid-area: b;
-            }
-            /***********************/
+      /**
+       * @description 메시지 값을 JSON 문자열로 ...
+       **************
+       * @param {String} jsonString
+       */
+      jsonPrettyPrint: function(jsonString) {
+        try {
+          var body = JSON.parse(jsonString);
+          return JSON.stringify(body, null, 2);
+        } catch (error) {
+          return jsonString;
+        }
+      },
 
-            things-resource-grid {
-                padding: 0px;
-            }
-        </style>
-
-        <things-ajax auto id="ajax" resource-url="[[resourceUrl]]" method="GET" last-response="{{detailData}}">
-        </things-ajax>
-
-        <div class="css-grid-layout">
-            <div id="msg-detail" class="contents-with-subtitle">
-                <span class="subtitle">[[subtitles.msgDetail]]</span>
-                <things-resource-form id="detail-form" class="contents" form-fields="[[formFields]]" title="[[subtitles.msgDetail]]" buttons="[]" column-count="1">
-                </things-resource-form>
-            </div>
-            <div id="msg-body" class="contents-with-subtitle">
-                <span class="subtitle">[[subtitles.msgBody]]</span>
-                <things-editor-script theme="ace/theme/monokai" class="contents" mode="ace/mode/json" fontsize="12px" tabsize="2" value="[[msgBody]]" wrapmode=false
-                    readonly=true>
-                </things-editor-script>
-            </div>
-            <div id="deliver-list" class="contents-with-subtitle">
-                <span class="subtitle">[[subtitles.msgDeliInfo]]</span>
-                <things-resource-grid id="list-grid" class="contents" config="[[listGridConfig]]" model="[[listGridModel]]" columns="[[listGridColumns]]"
-                    buttons="" fixed-column-count="0" paginatable=[[paginatable]] show-paginator=[[paginatable]] data="[[detailData.list]]">
-                </things-resource-grid>
-            </div>
-        </div>
-    </template>
-
-    <script>
-        Polymer({
-            is: 'trace-viewer-detail',
-
-            behaviors: [
-            ],
-
-            properties: {
-                subtitles: {
-                    type: Object,
-                    value: function () {
-                        return {
-                            msgDetail: Things.DataGlobal.t("title.message_detail"),
-                            msgBody: Things.DataGlobal.t("title.message_body"),
-                            msgDeliInfo: Things.DataGlobal.t("title.message_deliver_info")
-                        }
-                    }
-                },
-
-                paginatable: {
-                    type: Boolean,
-                    value: function () {
-                        return false;
-                    }
-                },
-
-                formFields: {
-                    type: Array,
-                    value: function () {
-                        return [{
-                            name: "id",
-                            label: Things.DataGlobal.t("label.id"),
-                            userData: {
-                                readonly: true
-                            }
-                        }, {
-                            name: "site",
-                            label: Things.DataGlobal.t("label.site"),
-                            type: "resource-code",
-                            userData: {
-                                resourceName: "Site",
-                                resourceType: "Entity"
-                            }
-                        }, {
-                            name: "source_id",
-                            label: Things.DataGlobal.t("label.source_id"),
-                            userData: {
-                                readonly: true
-                            }
-                        }, {
-                            name: "dest_id",
-                            label: Things.DataGlobal.t("label.dest_id"),
-                            userData: {
-                                readonly: true
-                            }
-                        }, {
-                            name: "is_reply",
-                            label: Things.DataGlobal.t("label.is_reply"),
-                            userData: {
-                                readonly: true
-                            }
-                        }, {
-                            name: "pub_time",
-                            label: Things.DataGlobal.t("label.pub_time"),
-                            userData: {
-                                readonly: true
-                            }
-                        }, {
-                            name: "log_time",
-                            label: Things.DataGlobal.t("label.log_time"),
-                            userData: {
-                                readonly: true
-                            }
-                        }, {
-                            name: "routed_count",
-                            label: Things.DataGlobal.t("label.routed_count"),
-                            userData: {
-                                readonly: true
-                            }
-                        }, {
-                            name: "routed_queues",
-                            label: Things.DataGlobal.t("label.routed_queues"),
-                            type: "textarea",
-                            readonly: true
-                        }];
-                    }
-                },
-
-                listGridConfig: {
-                    type: Object,
-                    value: function () {
-                        return {
-                            displayOptions: {
-                                fitStyle: 'fill',
-                                wheelDelta: 1
-                            },
-                            checkBar: {
-                                visible: false
-                            }
-                        }
-                    }
-                },
-
-                listGridModel: {
-                    type: Array,
-                    value: function () {
-                        return [{
-                            fieldName: "dest_id"
-                        }, {
-                            fieldName: "log_time"
-                        }, {
-                            fieldName: "is_failed"
-                        }];
-                    }
-                },
-
-                listGridColumns: {
-                    type: Array,
-                    value: function () {
-                        return [{
-                            name: "dest_id",
-                            fieldName: "dest_id",
-                            width: 100,
-                            header: Things.DataGlobal.t("label.dest_id"),
-                            styles: {
-                                textAlignment: "center"
-                            },
-                            editable: false
-                        }, {
-                            name: "log_time",
-                            fieldName: "log_time",
-                            width: 200,
-                            header: Things.DataGlobal.t("label.log_time"),
-                            styles: {
-                                textAlignment: "center"
-                            },
-                            editable: false
-                        }, {
-                            name: "is_failed",
-                            fieldName: "is_failed",
-                            width: 100,
-                            header: Things.DataGlobal.t("label.is_failed"),
-                            styles: {
-                                textAlignment: "center"
-                            },
-                            renderer: {
-                                type: "check",
-                                trueValues: "true,True",
-                                falseValues: "false,False",
-                                editable: false
-                            },
-                            editable: false
-                        }];
-                    }
-                },
-
-                msgBody: {
-                    type: String,
-                    value: function () {
-                        return "";
-                    }
-                }
-            },
-
-            listeners: {
-                "ajax.things-ajax-response": "_gotMeta",
-                "detail-form.things-form-configured": "_formConfigured"
-            },
-
-            _gotMeta: function (event) {
-                this.msgBody = this.jsonPrettyPrint(event.detail.detail.body);
-                this.setFormData(this.$["detail-form"], event.detail.detail);
-            },
-
-            _formConfigured: function (event) {
-                try {
-                    this.$["detail-form"].querySelector("[name=site]").$["combo"].readonly = true; // combobox 수정불가 옵션
-                    this.$["detail-form"].querySelector("[name=routed_queues]").maxRows = 4;
-                } catch (error) {
-                    return;
-                }
-            },
-
-            jsonPrettyPrint: function (jsonString) {
-                try {
-                    var body = JSON.parse(jsonString);
-                    return JSON.stringify(body, null, 2);
-                } catch (error) {
-                    return jsonString;
-                }
-            },
-
-            setFormData: function (formElement, data) {
-                formElement.setFormData(data);
-            }
-        });
-    </script>
+      /**
+       * @description 폼에 값 설정 
+       **************
+       * @param {Object} formElement
+       * @param {Object} data
+       */
+      setFormData: function(formElement, data) {
+        formElement.setFormData(data);
+      }
+    });
+  </script>
 </dom-module>
