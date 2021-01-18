@@ -41,22 +41,23 @@ Copyright © HatioLab Inc. All rights reserved.
       }
     </style>
 
-    <!-- 작업 배치 리스트 Ajax -->
+    <!-- Wave 리스트 Ajax -->
     <things-ajax 
-      id="search-batch-ajax" 
-      resource-url="job_batches" 
+      id="search-wave-ajax" 
+      resource-url="waves" 
       resource-action="index"
-      last-response="{{batchResult}}">
+      last-response="{{waveResult}}">
     </things-ajax>
 
-    <!-- 작업 병합 Ajax -->
+    <!-- Wave 병합 Ajax -->
     <things-ajax 
-      id="merge-batch-ajax" 
-      resource-url="job_batches/:source_batch_id/instruct/merge_batch/:main_batch_id"
-      resource-action="update">
+      id="merge-wave-ajax" 
+      resource-url="wcs_process/merge_wave/:main_wave_id/:target_wave_id"
+      method="POST"
+      content-type="application/json">
     </things-ajax>
 
-    <!-- 작업 병합 버튼 -->
+    <!-- Wave 병합 버튼 -->
     <div id="top-section">
       <div class="horizontal">
         <div class="button-group">
@@ -86,7 +87,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
       properties: {
         /**
-         * @description 배치 그리드 설정
+         * @description Wave 그리드 설정
          ************************
          * @type {Object}
          */
@@ -104,46 +105,22 @@ Copyright © HatioLab Inc. All rights reserved.
         },
 
         /**
-         * @description resource combo에서 조회시 사용하는 select fields
-         ************************
-         * @type {Array}
-         */
-        comboSelectFields: {
-          type: Array,
-          value: function() {
-            return ['id', 'region_cd', 'region_nm'];
-          }
-        },
-
-        /**
-         * @description resource combo label
-         ************************
-         * @type {String}
-         */
-        regionComboLabel: {
-          type: String,
-          value: function() {
-            return Things.DataGlobal.t('label.region');
-          }
-        },
-
-        /**
-         * @description 메인 작업 배치
+         * @description 타겟 Wave
          ************************
          * @type {Object}
          */
-        sourceBatch: {
+        targetWave: {
           type: Object
         },
 
         /**
-         * @description 배치 결과
+         * @description Wave 결과
          ************************
          * @type {Object}
          */
-        batchResult: {
+        waveResult: {
           type: Object,
-          observer: '_batchResultChanged'
+          observer: '_waveResultChanged'
         },
 
         /**
@@ -170,8 +147,8 @@ Copyright © HatioLab Inc. All rights reserved.
           type: Array,
           value: function() {
             return [{
-              id: 'merge_batch-btn',
-              text: 'merge_batch'
+              id: 'merge_wave-btn',
+              text: 'merge_wave'
             }]
           }
         }
@@ -179,13 +156,9 @@ Copyright © HatioLab Inc. All rights reserved.
 
       listeners: {
         'grid.things-grid-configured': '_onGridConfigured',
-        'job-btn-group.merge_batch-btn-tap': '_mergeBtnTapped',
-        'merge-batch-ajax.things-ajax-request': '_mergeRequest',
-        'merge-batch-ajax.things-ajax-response': '_mergeResponse'
-          //'search-btn-group.search-btn-tap': '_searchBtnTapped',
-          //'job-btn-group.assign-region-btn-tap': '_assignRegionBtnTapped',
-          //'job-btn-group.job-instruct-btn-tap': '_jobInstructBtnTapped',
-          //'job-btn-group.job-complete-btn-tap': '_jobCompleteBtnTapped'
+        'job-btn-group.merge_wave-btn-tap': '_onMergeBtnTap',
+        'merge-wave-ajax.things-ajax-request': '_mergeRequest',
+        'merge-wave-ajax.things-ajax-response': '_mergeResponse'
       },
 
       /**
@@ -196,7 +169,7 @@ Copyright © HatioLab Inc. All rights reserved.
       _mergeRequest: function(event) {
         this.openConfirmMsg({
           type: 'info',
-          title: Things.DataGlobal.t('button.merge_batch'),
+          title: Things.DataGlobal.t('button.merge_wave'),
           text: Things.DataGlobal.t('text.Server Processing'),
           showConfirmButton: false
         });
@@ -209,41 +182,34 @@ Copyright © HatioLab Inc. All rights reserved.
        */
       _mergeResponse: function(event) {
         var title = Things.DataGlobal.t('text.Success to Process');
-        var text = Things.DataGlobal.t('button.merge_batch') + ' ' + Things.DataGlobal.t('text.processed');
-        var view = this;
-
-        var closeView = function() {
-          view.fire('things-dialog-close');
-        };
+        var text = Things.DataGlobal.t('button.merge_wave') + ' ' + Things.DataGlobal.t('text.processed');
 
         this.openConfirmMsg({
           type: 'info',
           title: title,
           text: text,
           showCancelButton: false
-        }, closeView);
+
+        }, function() {
+          this.closePopup();
+        }.bind(this));
       },
 
       /**
-       * @description 작업 배치 그리드 구성 완료시
+       * @description Wave 그리드 구성 완료시
        **************
        * @param {Object} event
        */
       _onGridConfigured: function(event) {
-        var ajax = this.$['search-batch-ajax'];
-        ajax.resourceId = this.sourceBatch.id;
-        var jobType = this.sourceBatch.job_type;
-
-        if (jobType == 'DAS' || jobType == 'RTN' || jobType == 'DPS' || jobType == 'PDAS' || jobType == 'SRTN' || jobType == 'SDAS' || jobType == 'SDPS') {
-          ajax.queryFields = [{
-            name: 'status',
-            value: 'RUN'
-          }, {
-            name: 'job_type',
-            operator: 'eq',
-            value: this.sourceBatch.job_type
-          }];
-        }
+        var ajax = this.$['search-wave-ajax'];
+        ajax.queryFields = [{
+          name: 'status',
+          value: 'WAIT'
+        }, {
+          name: 'id',
+          operator: 'noteq',
+          value: this.targetWave.id
+        }];
 
         ajax.generateRequest();
       },
@@ -251,10 +217,22 @@ Copyright © HatioLab Inc. All rights reserved.
       /**
        * @description 배치 조회 결과 변경시
        **************
-       * @param {Object} batchResult
+       * @param {Object} waveResult
        */
-      _batchResultChanged: function(batchResult) {
-        this.items = (batchResult && batchResult.items) ? batchResult.items : [];
+      _waveResultChanged: function(waveResult) {
+        this.items = (waveResult && waveResult.items) ? waveResult.items : [];
+
+        if (!this.items || this.items.length == 0) {
+          this.openConfirmMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('button.merge_wave'),
+            text: '병합 대상이 존재하지 않습니다.',
+            showCancelButton: false
+
+          }, function() {
+            this.closePopup();
+          }.bind(this));
+        }
       },
 
       /**
@@ -264,16 +242,16 @@ Copyright © HatioLab Inc. All rights reserved.
        *******************
        * @param {Object} event
        */
-      _mergeBtnTapped: function(event) {
+      _onMergeBtnTap: function(event) {
         try {
           var row = this._checkedGridRows();
           if (row) {
-            var title = Things.DataGlobal.t('button.merge_batch');
+            var title = Things.DataGlobal.t('button.merge_wave');
             var text = Things.DataGlobal.t('text.Sure to X', {
               x: title
             });
-            var ajax = this.$['merge-batch-ajax'];
-            ajax.resourceUrl = `job_batches/${this.sourceBatch.id}/instruct/merge_batch/${row.id}`;
+            var ajax = this.$['merge-wave-ajax'];
+            ajax.resourceUrl = `wcs_process/merge_wave/${row.id}/${this.targetWave.id}`;
 
             this.openConfirmMsg({
               type: 'info',
@@ -324,74 +302,6 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
-       * @description search-btn-tap event handler
-       * 조회 버튼 클릭시 실행되며 validateBeforeSeach를 통과하면
-       * 조회를 수행 실패하면 showInvalidMessage를 통해 메시지 출력
-       ************************
-       */
-      _searchBtnTapped: function() {
-        try {
-          this.validateBeforeSeach();
-          console.log('Do search');
-        } catch (error) {
-          this.showInvalidMessage(error);
-        }
-      },
-
-      /**
-       * @description assign-region-btn-tap event handler
-       * 호기지정 버튼 클릭시 실행되며 validateBeforeAssign 통과하면
-       * 호기지정을 수행 실패하면 showInvalidMessage를 통해 메시지 출력
-       ************************
-       */
-      _assignRegionBtnTapped: function() {
-        try {
-          this.validateBeforeAssign();
-        } catch (error) {
-          this.showInvalidMessage(error);
-        }
-      },
-
-      /**
-       * @description job-instruct-btn-tap event handler
-       * 작업지시 버튼 클릭시 실행되며 validateBeforeJobInstruct 통과하면
-       * 작업지시를 수행 실패하면 showInvalidMessage를 통해 메시지 출력
-       ************************
-       */
-      _jobInstructBtnTapped: function() {
-        try {
-          this.validateBeforeJobInstruct();
-        } catch (error) {
-          this.showInvalidMessage(error);
-        }
-      },
-
-      /**
-       * @description job-complete-btn-tap event handler
-       * 작업완료 버튼 클릭시 실행되며 validateBeforeJobInstruct 통과하면
-       * 작업완료를 수행 실패하면 showInvalidMessage를 통해 메시지 출력
-       ************************
-       */
-      _jobCompleteBtnTapped: function() {
-        try {
-          this.validateBeforeJobComplte();
-        } catch (error) {
-          this.showInvalidMessage(error);
-        }
-      },
-
-      /**
-       * @description 조회 전 실행하는 validation
-       * validation 실패시 화면에 출력할 title, text를 throw
-       */
-      validateBeforeSeach: function() {
-        throw {
-          title: Things.DataGlobal.t('title.failure'),
-          text: Things.DataGlobal.t('text.region_is_not_selected')
-        }
-      },
-
-      /**
        * @description 병합 전 실행하는 validation
        * validation 실패시 화면에 출력할 title, text를 throw
        ************************
@@ -406,46 +316,6 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
-       * @description 호기 지정 전 실행하는 validation
-       * validation 실패시 화면에 출력할 title, text를 throw
-       ************************
-       */
-      validateBeforeAssign: function() {
-        throw {
-          title: Things.DataGlobal.t('title.failure'),
-          text: Things.DataGlobal.t('text.failed_to_x', {
-            x: Things.DataGlobal.t('text.assign')
-          })
-        }
-      },
-
-      /**
-       * @description 작업지시 전 실행하는 validation
-       * validation 실패시 화면에 출력할 title, text를 throw
-       ************************
-       */
-      validateBeforeJobInstruct: function() {
-        throw {
-          title: Things.DataGlobal.t('title.failure'),
-          text: Things.DataGlobal.t('text.failed_to_x', {
-            x: Things.DataGlobal.t('text.instruct_job')
-          })
-        }
-      },
-
-      /**
-       * @description 작업완료 전 실행하는 validation
-       * validation 실패시 화면에 출력할 title, text를 throw
-       ************************
-       */
-      validateBeforeJobComplte: function() {
-        throw {
-          title: Things.DataGlobal.t('title.failure'),
-          text: Things.DataGlobal.t('text.process_did_not_complete')
-        }
-      },
-
-      /**
        * @description validation에서 발생한 error를 통해 메시지를 출력
        ************************
        */
@@ -455,6 +325,15 @@ Copyright © HatioLab Inc. All rights reserved.
           title: config.title,
           text: config.text
         });
+      },
+
+      /**
+       * @description 팝업 닫기 
+       **********************
+       * @param {Object} event
+       */
+      closePopup: function(event) {
+        document.dispatchEvent(new CustomEvent('things-dialog-close'));
       }
     })
   </script>

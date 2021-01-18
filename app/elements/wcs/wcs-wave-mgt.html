@@ -67,29 +67,6 @@ Copyright © HatioLab Inc. All rights reserved.
       method="DELETE">
     </things-ajax>
 
-    <!-- 대상 분류 Ajax -->
-    <things-ajax 
-      id="classify-wave-ajax" 
-      resource-url="wcs_process/classify_wave/:id"
-      content-type="application/json"
-      method="POST">
-    </things-ajax>
-
-    <!-- 작업 분할 Ajax -->
-    <things-ajax 
-      id="split-wave-ajax" 
-      resource-url="wcs_process/split_wave/:id"
-      method="POST">
-    </things-ajax>
-
-    <!-- 작업 병합 Ajax -->
-    <things-ajax 
-      id="merge-wave-ajax" 
-      resource-url="wcs_process/merge_wave/:main_batch_id/:id"
-      content-type="application/json"
-      method="POST">
-    </things-ajax>
-
     <!-- 설비 확정 Ajax -->
     <things-ajax 
       id="select-equipment-ajax" 
@@ -119,7 +96,7 @@ Copyright © HatioLab Inc. All rights reserved.
       last-response="{{lastResponse}}">
     </things-search-form>
 
-    <!-- Job Batch Grid -->
+    <!-- Wave Grid -->
     <things-resource-grid 
       id="grid" 
       config="[[gridConfig]]" 
@@ -202,9 +179,6 @@ Copyright © HatioLab Inc. All rights reserved.
 
         'ready-to-receive-wave-ajax.things-ajax-response': '_openReceiveWavePopup', // 'Wave 수신 준비' 처리 완료시
         'start-to-receive-wave-ajax.things-ajax-response': '_transactionCompleted', // 'Wave 수신' 처리 완료시
-        'classify-wave-ajax.things-ajax-response': '_transactionCompleted', // '대상 분류' 처리 완료시
-        'split-wave-ajax.things-ajax-response': '_transactionCompleted', // 'Wave 분할' 처리 완료시
-        'merge-wave-ajax.things-ajax-response': '_transactionCompleted', // 'Wave 병합' 처리 완료시
         'select-equipment-ajax.things-ajax-response': '_transactionCompleted', // '설비 확정' 처리 완료시
         'confirm-wave-ajax.things-ajax-response': '_transactionCompleted' // 'Wave 확정' 처리 완료시
       },
@@ -285,7 +259,7 @@ Copyright © HatioLab Inc. All rights reserved.
           var grid = event.detail.grid;
           var row = grid.focusedRow();
           var data = row.getRowObject();
-          var routing = '/job_order';
+          var routing = '/order';
           data.batch_id = data.id;
           delete data.id;
           delete data.status;
@@ -652,12 +626,7 @@ Copyright © HatioLab Inc. All rights reserved.
             text: Things.DataGlobal.t('text.select_item'),
             closeOnConfirm: true,
             showCancelButton: false
-
-          }, function() {
-            //this._showButton('job_complete-btn', true);
-            //this._showButton('group_complete-btn', true);
-
-          }.bind(this));
+          });
 
           return null;
         }
@@ -695,17 +664,17 @@ Copyright © HatioLab Inc. All rights reserved.
       /**
        * @description 작업 병합 팝업을 출력하기 위한 필요한 값들을 초기화하여 다이얼로그를 생성하여 리턴
        * ***********************
-       * @param {String} batch
+       * @param {Object} wave
        * @param {String} title
        * @return {Object} 작업 병합 팝업
        */
-      newMergeWavePopup: function(batch, title) {
-        var mergeBatchPopup = document.createElement('wcs-merge-wave-list-popup');
-        mergeBatchPopup.title = title + ' (' + batch.id + ')';
-        mergeBatchPopup.sourceBatch = batch;
-        mergeBatchPopup.gridModel = JSON.parse(JSON.stringify(this.gridModel));
-        mergeBatchPopup.gridColumns = JSON.parse(JSON.stringify(this.gridColumns));
-        return mergeBatchPopup;
+      newMergeWavePopup: function(wave, title) {
+        var mergeWavePopup = document.createElement('wcs-merge-wave-list-popup');
+        mergeWavePopup.title = title + ' (' + wave.id + ')';
+        mergeWavePopup.targetWave = wave;
+        mergeWavePopup.gridModel = JSON.parse(JSON.stringify(this.gridModel));
+        mergeWavePopup.gridColumns = JSON.parse(JSON.stringify(this.gridColumns));
+        return mergeWavePopup;
       },
 
       /**
@@ -716,83 +685,7 @@ Copyright © HatioLab Inc. All rights reserved.
        * @return {Boolean} 작업 처리 가능 여부
        */
       _checkTransactionEnabled: function(buttonId, status) {
-        // '주문 수신', '주문 가공', '작업 지시' 시 작업 배치 상태 체크
-        if (buttonId == 'receive_order-btn' || buttonId == 'order_preprocess-btn' || buttonId == 'job_instruct-btn') {
-          // 이미 완료되었습니다.
-          if (status == 'END') {
-            this.openInfoMsg({
-              type: 'info',
-              title: Things.DataGlobal.t('title.info'),
-              text: Things.DataGlobal.t('text.already_completed')
-            });
-            return false;
-          }
-
-          // 작업이 이미 진행 중입니다.
-          if (status == 'RUN') {
-            this.openInfoMsg({
-              type: 'info',
-              title: Things.DataGlobal.t('title.info'),
-              text: Things.DataGlobal.t('text.already_running')
-            });
-            return false;
-          }
-        }
-
-        // '주문 취소' 상태 체크
-        if (buttonId == 'cancel-order-btn') {
-          // 작업 배치가 '주문 가공 대기' 상태가 아닙니다.
-          if (status != 'RECEIVING' && status != 'WAIT') {
-            this.openInfoMsg({
-              type: 'info',
-              title: Things.DataGlobal.t('title.info'),
-              text: Things.DataGlobal.t('text.is_not_wait_state')
-            });
-            return false;
-          }
-        }
-
-        // '작업 지시' 상태 체크
-        if (buttonId == 'job_instruct-btn') {
-          // 작업 배치가 '작업 지시 대기' 상태가 아닙니다. TODO 메시지 수정
-          if (status != 'READY') {
-            this.openInfoMsg({
-              type: 'info',
-              title: Things.DataGlobal.t('title.info'),
-              text: Things.DataGlobal.t('text.already_running')
-            });
-            return false;
-          }
-        }
-
-        // '작업 지시 취소' 상태 체크
-        if (buttonId == 'cancel_job_instruct-btn') {
-          // 작업 배치가 '진행' 상태가 아닙니다
-          if (status != 'RUN') {
-            this.openInfoMsg({
-              title: Things.DataGlobal.t('title.info'),
-              text: Things.DataGlobal.t('text.process_is_not_running')
-            });
-            return false;
-          }
-        }
-
-        // '작업 완료' 상태 체크
-        if (buttonId == 'job_complete-btn' || buttonId == 'group_complete-btn') {
-          // 작업 배치가 '진행' 상태가 아닙니다
-          if (status != 'RUN') {
-            this.openInfoMsg({
-              title: Things.DataGlobal.t('title.info'),
-              text: Things.DataGlobal.t('text.process_is_not_running')
-            }, function() {
-              this._showButton('job_complete-btn', true);
-              this._showButton('group_complete-btn', true);
-            }.bind(this));
-
-            return false;
-          }
-        }
-
+        // TODO 버튼별로 상태에 따라 체크
         return true;
       },
 
