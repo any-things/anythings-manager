@@ -26,21 +26,22 @@ Copyright © HatioLab Inc. All rights reserved.
       }
     </style>
 
+    <!-- 분할 처리 Ajax -->
     <things-ajax
-      id="confirm-ajax"
+      id="split-ajax"
       method="POST"
       content-type="application/json"
-      resource-url="[[menuInfo.resource_url]][[resourceUrl]]"
-      last-response="{{confirmResponse}}">
+      resource-url="wcs_process/split_wave/:id">
     </things-ajax>
 
+    <!-- 분할 옵션 설정 폼 -->
     <things-resource-form
-      id="bandwidth-form"
+      id="split-form"
       form-fields="[[formFields]]"
       column-count=1
-      buttons="[[newButtons]]">
+      buttons="[[buttons]]">
     </things-resource-form>
-   </template>
+  </template>
 
   <script>
     Polymer({
@@ -51,86 +52,130 @@ Copyright © HatioLab Inc. All rights reserved.
       ],
 
       properties: {
-        // 폼 필드
+        /**
+         * @description 웨이브 데이터
+         ****************
+         * @type {Object}
+         */
+        wave: {
+          type: Object,
+          observer: '_onWaveChanged'
+        },
+
+        /**
+         * @description 폼 필드 리스트
+         ****************
+         * @type {Array}
+         */
         formFields: {
           type: Array,
           value: function() {
             return [{
-              name: "com_cd",
+              name: 'id',
+              label: Things.DataGlobal.t('label.wms_batch_no'),
+              type: 'text'
+            }, {
+              name: 'com_cd',
               label: Things.DataGlobal.t('label.com_cd'),
-              type: "text"
+              type: 'text'
             }, {
-              name: "from",
-              label: Things.DataGlobal.t('label.from', {
-                t: ""
-              }),
-              type: "positive-number"
+              name: 'order_qty',
+              label: Things.DataGlobal.t('label.total_orders'),
+              type: 'positive-number'
             }, {
-              name: "to",
-              label: Things.DataGlobal.t('label.to'),
-              type: "positive-number"
+              name: 'total_pcs',
+              label: Things.DataGlobal.t('label.total_pcs'),
+              type: 'positive-number'
+            }, {
+              name: 'split_method',
+              label: '분할 옵션',
+              type: 'code-combo',
+              codeName: 'WAVE_SPLIT_OPTIONS',
+              default: 'SPLIT_ORDERS'
+            }, {
+              name: 'split_count',
+              label: '분할 수',
+              type: 'positive-number'
             }];
           }
         },
 
-        // 버튼
-        newButtons: {
+        /**
+         * @description 버튼 리스트
+         ****************
+         * @type {Array}
+         */
+        buttons: {
           type: Array,
           value: function() {
             return [{
-              id: "cancel-btn",
-              text: 'cancel'
-            }, {
-              id: "confirm-btn",
+              id: 'confirm-btn',
               text: 'confirm'
+            }, {
+              id: 'cancel-btn',
+              text: 'cancel'
             }];
-          }
-        },
-
-        // POST할 url
-        resourceUrl: {
-          type: String,
-          value: function() {
-            return "/create_by_range";
           }
         }
       },
 
       listeners: {
-        "bandwidth-form.confirm-btn-tap": "requestAddInvoices", // 확인 버튼
-        "bandwidth-form.cancel-btn-tap": "close", // 취소 버튼
-        "confirm-ajax.things-ajax-response": "confirmSuccess" // 요청 성공
+        'split-form.confirm-btn-tap': 'requestSplitWaves', // 확인 버튼
+        'split-form.cancel-btn-tap': 'closePopup', // 취소 버튼
+        'split-ajax.things-ajax-response': 'closePopup' // 요청 성공
       },
 
-      // POST 요청
-      requestAddInvoices: function() {
-        var form = this.$['bandwidth-form'];
-        var ajax = this.$['confirm-ajax'];
+      /**
+       * @description Wave 변경 후 ...
+       **************
+       * @param {Object} wave
+       */
+      _onWaveChanged: function(wave) {
+        var formElement = this.$['split-form'];
+        formElement.setFormData(wave);
+      },
 
-        var body = form.serializeMyForm();
-        body.com_cd = body.com_cd;
-        body.from = parseInt(body.from);
-        body.to = parseInt(body.to);
+      /**
+       * @description Wave 분할
+       **************
+       * @param {Object} event
+       */
+      requestSplitWaves: function(event) {
+        var form = this.$['split-form'];
+        var formData = form.serializeMyForm();
+        var splitMethod = formData.split_method;
+        var splitCount = formData.split_count;
 
-        ajax.body = body;
+        if (!splitMethod || splitMethod.length == 0) {
+          this.openInfoMsg({
+            type: 'error',
+            title: Things.DataGlobal.t('title.error'),
+            text: '분할 옵션을 선택하세요.'
+          });
+          return;
+        }
+
+        if (!splitCount || splitCount < 1) {
+          this.openInfoMsg({
+            type: 'error',
+            title: Things.DataGlobal.t('title.error'),
+            text: '분할 수를 입력하세요.'
+          });
+          return;
+        }
+
+        var ajax = this.$['split-ajax'];
+        ajax.resourceUrl = `wcs_process/split_wave/${this.wave.id}/${splitMethod}/${splitCount}`;
         ajax.generateRequest();
-        this.close();
       },
 
-      // 요청 성공
-      // TODO 건 수 메시지 표시
-      confirmSuccess: function(e) {
-        var resultCnt = e.detail && e.detail.count;
-
-        this.openConfirmMsg({
-          type: 'success',
-          title: Things.DataGlobal.t('title.success'),
-          text: Things.DataGlobal.t('text.count_x_processed', {
-            x: resultCnt
-          })
-        }, function() {
-          searchForm.submitMyForm();
-        });
+      /**
+       * @description 팝업 닫기 
+       **********************
+       * @param {Object} event
+       */
+      closePopup: function(event) {
+        document.dispatchEvent(new CustomEvent('things-dialog-close'));
       }
     });
   </script>

@@ -9,122 +9,158 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/things-grid/things-resource-grid.html">
 <link rel="import" href="../../bower_components/things-content/things-resource-menu-content-behavior.html">
 
+<!--
+  기준 정보 > 송장 번호 관리 > 송장 번호 생성 팝업
+-->
 <dom-module id="invoice-no-create-popup">
-   <template>
-      <style>
-         :host {
-            @apply --layout-flex;
-            @apply --layout-vertical;
-         }
+  <template>
+    <style>
+      :host {
+        @apply --layout-flex;
+        @apply --layout-vertical;
+      }
 
-         things-resource-grid {
-            @apply --layout-vertical;
-            @apply --layout-flex;
-         }
-      </style>
+      things-resource-grid {
+        @apply --layout-vertical;
+        @apply --layout-flex;
+      }
+    </style>
 
-      <things-ajax
-         id="confirm-ajax"
-         method="POST"
-         content-type="application/json"
-         resource-url="[[menuInfo.resource_url]][[resourceUrl]]"
-         last-response="{{confirmResponse}}">
-      </things-ajax>
+    <!-- 송장 번호 생성 Ajax -->
+    <things-ajax
+      id="create-invoices-ajax"
+      method="POST"
+      content-type="application/json"
+      resource-url="[[menuInfo.resource_url]][[resourceUrl]]"
+      last-response="{{confirmResponse}}">
+    </things-ajax>
 
-      <things-resource-form
-         id="bandwidth-form"
-         form-fields="[[formFields]]"
-         column-count=1
-         buttons="[[newButtons]]">
-      </things-resource-form>
-   </template>
+    <!-- 송장 번호 대역 설정 폼 -->
+    <things-resource-form
+      id="bandwidth-form"
+      form-fields="[[formFields]]"
+      column-count=1
+      buttons="[[newButtons]]">
+    </things-resource-form>
+  </template>
 
-   <script>
-      Polymer({
-         is: 'invoice-no-create-popup',
+  <script>
+    Polymer({
+      is: 'invoice-no-create-popup',
 
-         behaviors: [
-            Things.ResourceMenuContentBehavior
-         ],
+      behaviors: [
+        Things.ResourceMenuContentBehavior
+      ],
 
-         properties: {
-            // 폼 필드
-            formFields: {
-               type: Array,
-               value: function () {
-                  return [{
-                     name: "com_cd",
-                     label: Things.DataGlobal.t('label.com_cd'),
-                     type: "text"
-                  }, {
-                     name: "from",
-                     label: Things.DataGlobal.t('label.from', {t: ""}),
-                     type: "positive-number"
-                  }, {
-                     name: "to",
-                     label: Things.DataGlobal.t('label.to'),
-                     type: "positive-number"
-                  }];
-               }
-            },
+      properties: {
+        /**
+         * @description 폼 필드 리스트
+         ****************
+         * @type {Array}
+         */
+        formFields: {
+          type: Array,
+          value: function() {
+            return [{
+              name: 'com_cd',
+              label: Things.DataGlobal.t('label.com_cd'),
+              type: 'text'
+            }, {
+              name: 'from',
+              label: Things.DataGlobal.t('label.from', {
+                t: ''
+              }),
+              type: 'positive-number'
+            }, {
+              name: 'to',
+              label: Things.DataGlobal.t('label.to'),
+              type: 'positive-number'
+            }];
+          }
+        },
 
-            // 버튼
-            newButtons: {
-               type: Array,
-               value: function () {
-                  return [{
-                     id: "cancel-btn",
-                     text: 'cancel'
-                  }, {
-                     id: "confirm-btn",
-                     text: 'confirm'
-                  }];
-               }
-            },
+        /**
+         * @description 버튼 리스트
+         ****************
+         * @type {Array}
+         */
+        newButtons: {
+          type: Array,
+          value: function() {
+            return [{
+              id: 'cancel-btn',
+              text: 'cancel'
+            }, {
+              id: 'confirm-btn',
+              text: 'confirm'
+            }];
+          }
+        },
 
-            // POST할 url
-            resourceUrl: {
-               type: String,
-               value: function () {
-                  return "/create_by_range";
-               }
-            }
-         },
+        /**
+         * @description 송장 번호 생성 URL
+         ****************
+         * @type {Array}
+         */
+        resourceUrl: {
+          type: String,
+          value: function() {
+            return '/create_by_range';
+          }
+        }
+      },
 
-         listeners: {
-            "bandwidth-form.confirm-btn-tap": "requestAddInvoices", // 확인 버튼
-            "bandwidth-form.cancel-btn-tap": "close", // 취소 버튼
-            "confirm-ajax.things-ajax-response": "confirmSuccess" // 요청 성공
-         },
+      listeners: {
+        'bandwidth-form.confirm-btn-tap': 'requestCreateInvoices', // 확인 버튼
+        'bandwidth-form.cancel-btn-tap': 'closePopup', // 취소 버튼
+        'create-invoices-ajax.things-ajax-response': 'invoiceCreationSuccess' // 요청 성공
+      },
 
-         // POST 요청
-         requestAddInvoices: function () {
-            var form = this.$['bandwidth-form'];
-            var ajax = this.$['confirm-ajax'];
+      /**
+       * @description 송장 번호 생성 요청 
+       **************
+       * @param {Object} event
+       */
+      requestCreateInvoices: function(event) {
+        var form = this.$['bandwidth-form'];
+        var ajax = this.$['create-invoices-ajax'];
 
-            var body = form.serializeMyForm();
-            body.com_cd = body.com_cd;
-            body.from = parseInt(body.from);
-            body.to = parseInt(body.to);
+        var body = form.serializeMyForm();
+        body.com_cd = body.com_cd;
+        body.from = parseInt(body.from);
+        body.to = parseInt(body.to);
 
-            ajax.body = body;
-            ajax.generateRequest();
-            this.close();
-         },
+        ajax.body = body;
+        ajax.generateRequest();
+      },
 
-         // 요청 성공
-         // TODO 건 수 메시지 표시
-         confirmSuccess: function (e) {
-            var resultCnt = e.detail && e.detail.count;
+      /**
+       * @description 송장 번호 생성 성공 시 
+       **************
+       * @param {Object} e
+       */
+      invoiceCreationSuccess: function(e) {
+        var resultCnt = e.detail && e.detail.count;
 
-            this.openConfirmMsg({
-               type: 'success',
-               title: Things.DataGlobal.t('title.success'),
-               text: Things.DataGlobal.t('text.count_x_processed', {x: resultCnt})
-            }, function () {
-               searchForm.submitMyForm();
-            });
-         }
-      });
-   </script>
+        this.openConfirmMsg({
+          type: 'success',
+          title: Things.DataGlobal.t('title.success'),
+          text: Things.DataGlobal.t('text.count_x_processed', {
+            x: resultCnt
+          })
+        }, function() {
+          searchForm.submitMyForm();
+        });
+      },
+
+      /**
+       * @description 팝업 닫기 
+       **********************
+       * @param {Object} event
+       */
+      closePopup: function(event) {
+        document.dispatchEvent(new CustomEvent('things-dialog-close'));
+      }
+    });
+  </script>
 </dom-module>

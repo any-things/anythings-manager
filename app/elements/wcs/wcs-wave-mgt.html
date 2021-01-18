@@ -410,9 +410,10 @@ Copyright © HatioLab Inc. All rights reserved.
           var title = Things.DataGlobal.t(event.detail.text);
           var classifyPopup = this.newSplitWavePopup(checkedRow, title);
 
-          // 대상 분류 팝업 표시
-          this.fire('things-open-popup-view', {
+          // 분할 팝업 표시
+          this.fire('things-open-custom-size-dialog', {
             view: classifyPopup,
+            dialogSize: 'middle',
             modal: true,
             closeCallback: function() {
               this.$['search-form'].submitMyForm();
@@ -686,7 +687,7 @@ Copyright © HatioLab Inc. All rights reserved.
        */
       newSplitWavePopup: function(wave, title) {
         var splitWavePopup = document.createElement('wcs-split-wave-popup');
-        splitWavePopup.title = title + ' (' + wave.id + ')';
+        splitWavePopup.title = title;
         splitWavePopup.wave = wave;
         return splitWavePopup;
       },
