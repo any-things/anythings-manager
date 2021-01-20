@@ -1,0 +1,162 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="./indicator-change-popup.html">
+
+<!--
+	기준 정보 > 셀
+-->
+<dom-module id="logis-cell">
+  <template>
+    <style>
+      :host {
+        @apply --layout-vertical;
+      }
+
+      things-resource-grid {
+        @apply --layout-flex;
+      }
+    </style>
+
+    <!-- 메뉴 조회 AJAX -->
+    <things-ajax 
+      auto 
+      id="resource-meta" 
+      method="GET" 
+      resource-url="[[menuMetaUrl]]" 
+      last-response="{{metaData}}">
+    </things-ajax>
+
+    <!-- WMS 송신 -->
+    <things-ajax 
+      id="send-to-wms-ajax" 
+      resource-url="cells/send_to_wms" 
+      method="POST"
+      content-type="application/json">
+    </things-ajax>
+
+    <!-- 검색 폼 -->
+    <things-search-form 
+      id="search-form" 
+      form-fields="[[searchFormFields]]" 
+      select-fields="[[selectFields]]"
+      sort-fields="[[sortFields]]" 
+      action-url="[[menuInfo.resource_url]]" 
+      page="{{page}}" 
+      limit="[[limit]]"
+      last-response="{{lastResponse}}">
+    </things-search-form>
+
+    <!-- 그리드 -->
+    <things-resource-grid 
+      id="grid" 
+      grid-height="[[gridHeight]]" 
+      auto-filter="[[autoFilter]]" 
+      model="[[gridModel]]"
+      columns="[[gridColumns]]" 
+      config="[[gridConfig]]" 
+      buttons="[[buttons]]" 
+      current-page="{{page}}" 
+      limit="{{limit}}"
+      data="[[items]]" 
+      total-count="[[itemCount]]" 
+      grid-save-action="[[menuInfo.grid_save_url]]"
+      fixed-column-count="[[menuInfo.fixed_columns]]" 
+      export-file-name="[[menuInfo.title]]"
+      export-sheet-name="[[menuInfo.title]]" 
+      diy-template-id="[[menuInfo.diy_template_id]]">
+    </things-resource-grid>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'logis-cell',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior,
+        Things.MenuGridContentBehavior,
+        Things.DetailPopupBehavior
+      ],
+
+      listeners: {
+        'grid.send-btn-tap': '_onWmsSendButtonTap',
+        'change_ind-btn-tap': '_onChangeIndicatorButtonTap',
+        'send-to-wms-ajax.things-ajax-response': '_sendToWmsSuccess'
+      },
+
+      /**
+       * @description WMS 송신 버튼 클릭시 ...
+       *******************
+       * @param {Object} event
+       */
+      _onWmsSendButtonTap: function(event) {
+        var ajax = this.$['send-to-wms-ajax']
+        ajax.generateRequest();
+      },
+
+      /**
+       * @description 표시기 교체 버튼 클릭시 ...
+       *******************
+       * @param {Object} event
+       */
+      _onChangeIndicatorButtonTap: function(event) {
+        var title = Things.DataGlobal.t(event.detail.text);
+        var resourceGrid = this.$.grid;
+        var rows = resourceGrid.getGridObject().getCheckedRows();
+
+        if (rows.length === 1) {
+          var rowObject = rows[0].getRowObject();
+          let view = this.create('indicator-change-popup', {
+            title: Things.DataGlobal.t('menu.indicator_change_popup'),
+            fromIndCode: rowObject.ind_cd,
+            cellCode: rowObject.cell_cd
+          });
+
+          this.fire('things-open-custom-size-dialog', {
+            view: view,
+            modal: true,
+            dialogSize: 'small',
+            closeCallback: function() {
+              this.$['search-form'].submitMyForm();
+            }.bind(this)
+          });
+
+        } else if (rows.length === 0) {
+          this.openConfirmMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('title.info'),
+            text: Things.DataGlobal.t('text.select_ind'),
+            showCancelButton: false
+          });
+
+        } else {
+          this.openConfirmMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('title.info'),
+            text: Things.DataGlobal.t('text.select_one'),
+            showCancelButton: false
+          });
+        }
+      },
+
+      /**
+       * @description WMS 전송 성공시 ...
+       *******************
+       * @param {Object} e
+       */
+      _sendToWmsSuccess(e) {
+        var searchForm = this.$['search-form'];
+        this.openConfirmMsg({
+          type: 'success',
+          title: Things.DataGlobal.t('label.success'),
+          text: Things.DataGlobal.t('label.success'),
+          showCancelButton: false
+        }, searchForm.submitMyForm());
+      }
+    })
+  </script>
+</dom-module>

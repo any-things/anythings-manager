@@ -10,141 +10,141 @@
 -->
 <dom-module id="gateway-ind">
   <template>
-        <style>
-            :host {
-                @apply(--layout-flex);
-                @apply(--layout-vertical);
-            }
+    <style>
+      :host {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
 
-            .container {
-                @apply(--layout-flex);
-                display: grid;
-                grid-template-rows: 30px 350px 30px auto;
-                grid-template-columns: auto auto;
-            }
+      .container {
+        @apply(--layout-flex);
+        display: grid;
+        grid-template-rows: 30px 350px 30px auto;
+        grid-template-columns: auto auto;
+      }
 
-            #rack-subtitle {
-                @apply(--things-default-padding);
-                @apply(--things-subtitle);
-                padding-bottom: 1px;
-                padding-left: 25px;
-                font-size: 20px;
-                grid-row-start: 1;
-                grid-row-end: 2;
-                grid-column-start: 1;
-                grid-column-end: 2;
-            }
+      #rack-subtitle {
+        @apply(--things-default-padding);
+        @apply(--things-subtitle);
+        padding-bottom: 1px;
+        padding-left: 25px;
+        font-size: 20px;
+        grid-row-start: 1;
+        grid-row-end: 2;
+        grid-column-start: 1;
+        grid-column-end: 2;
+      }
 
-            #rack-grid {
-                grid-row-start: 2;
-                grid-row-end: 3;
-                grid-column-start: 1;
-                grid-column-end: 2;
-            }
+      #rack-grid {
+        grid-row-start: 2;
+        grid-row-end: 3;
+        grid-column-start: 1;
+        grid-column-end: 2;
+      }
 
-            #gateway-subtitle {
-                @apply(--things-default-padding);
-                @apply(--things-subtitle);
-                padding-bottom: 1px;
-                padding-left: 25px;
-                font-size: 20px;
-                grid-row-start: 3;
-                grid-row-end: 4;
-                grid-column-start: 1;
-                grid-column-end: 2;
-            }
+      #gateway-subtitle {
+        @apply(--things-default-padding);
+        @apply(--things-subtitle);
+        padding-bottom: 1px;
+        padding-left: 25px;
+        font-size: 20px;
+        grid-row-start: 3;
+        grid-row-end: 4;
+        grid-column-start: 1;
+        grid-column-end: 2;
+      }
 
-            #gateway-grid {
-                grid-row-start: 4;
-                grid-row-end: 5;
-                grid-column-start: 1;
-                grid-column-end: 2;
-            }
+      #gateway-grid {
+        grid-row-start: 4;
+        grid-row-end: 5;
+        grid-column-start: 1;
+        grid-column-end: 2;
+      }
 
-            #ind-subtitle {
-                @apply(--things-default-padding);
-                @apply(--things-subtitle);
-                padding-bottom: 1px;
-                padding-left: 25px;
-                font-size: 20px;
-                grid-row-start: 1;
-                grid-row-end: 2;
-                grid-column-start: 2;
-                grid-column-end: 3;
-            }
+      #ind-subtitle {
+        @apply(--things-default-padding);
+        @apply(--things-subtitle);
+        padding-bottom: 1px;
+        padding-left: 25px;
+        font-size: 20px;
+        grid-row-start: 1;
+        grid-row-end: 2;
+        grid-column-start: 2;
+        grid-column-end: 3;
+      }
 
-            #ind-grid {
-                grid-row-start: 2;
-                grid-row-end: 5;
-                grid-column-start: 2;
-                grid-column-end: 3;
-            }
-        </style>
+      #ind-grid {
+        grid-row-start: 2;
+        grid-row-end: 5;
+        grid-column-start: 2;
+        grid-column-end: 3;
+      }
+    </style>
 
-        <!-- 메뉴 메타데이터 조회 Ajax -->
-        <things-ajax auto id="resource-meta" method="GET" resource-url="[[menuMetaUrl]]" last-response="{{metaData}}">
-        </things-ajax>
+    <!-- 메뉴 메타데이터 조회 Ajax -->
+    <things-ajax auto id="resource-meta" method="GET" resource-url="[[menuMetaUrl]]" last-response="{{metaData}}">
+    </things-ajax>
 
-        <!-- 게이트웨이 데이터 조회 Ajax -->
-        <things-ajax id="search-gateway" resource-url="gateways/search_by_equip/Rack/:id"
-            sort-fields='[{"field" : "gw_cd", "ascending" : true}]' resource-action="index" limit="100000"
-            last-response="{{gatewayItems}}">
-        </things-ajax>
+    <!-- 게이트웨이 데이터 조회 Ajax -->
+    <things-ajax id="search-gateway" resource-url="gateways/search_by_equip/Rack/:id"
+      sort-fields='[{"field" : "gw_cd", "ascending" : true}]' resource-action="index" limit="100000"
+      last-response="{{gatewayItems}}">
+    </things-ajax>
 
-        <!-- IND 데이터 조회 Ajax -->
-        <things-ajax auto id="search-ind" resource-url="menus" sort-fields='[{"field" : "id", "ascending" : true}]'
-            query-fields="[[menuQueryFields]]" resource-action="index" response-root="items" limit="100000"
-            last-response="{{menuItems}}">
-        </things-ajax>
+    <!-- IND 데이터 조회 Ajax -->
+    <things-ajax auto id="search-ind" resource-url="menus" sort-fields='[{"field" : "id", "ascending" : true}]'
+      query-fields="[[menuQueryFields]]" resource-action="index" response-root="items" limit="100000"
+      last-response="{{menuItems}}">
+    </things-ajax>
 
-        <!-- IND 메뉴 메타 데이터 조회 Ajax -->
-        <things-ajax auto id="ind-resource-meta" method="GET" resource-url="[[indMenuMetaUrl]]"
-            last-response="{{indMetaData}}">
-        </things-ajax>
+    <!-- IND 메뉴 메타 데이터 조회 Ajax -->
+    <things-ajax auto id="ind-resource-meta" method="GET" resource-url="[[indMenuMetaUrl]]"
+      last-response="{{indMetaData}}">
+    </things-ajax>
 
-        <!-- IND 데이터 조회 Ajax -->
-        <things-ajax id="search-ind-list" resource-url="indicators" sort-fields='[{"field" : "ind_nm", "ascending" : true}]'
-            query-fields="[[indQueryFields]]" resource-action="index" limit="100000" last-response="{{indItems}}">
-        </things-ajax>
+    <!-- IND 데이터 조회 Ajax -->
+    <things-ajax id="search-ind-list" resource-url="indicators" sort-fields='[{"field" : "ind_nm", "ascending" : true}]'
+      query-fields="[[indQueryFields]]" resource-action="index" limit="100000" last-response="{{indItems}}">
+    </things-ajax>
 
-        <!-- 검색 폼 -->
-        <things-search-form id="search-form" form-fields="[[searchFormFields]]" select-fields="[[selectFields]]"
-            sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]" page="{{page}}" limit="[[limit]]"
-            last-response="{{lastResponse}}">
-        </things-search-form>
+    <!-- 검색 폼 -->
+    <things-search-form id="search-form" form-fields="[[searchFormFields]]" select-fields="[[selectFields]]"
+      sort-fields="[[sortFields]]" action-url="[[menuInfo.resource_url]]" page="{{page}}" limit="[[limit]]"
+      last-response="{{lastResponse}}">
+    </things-search-form>
 
-        <div class="container">
-            <!-- 랙 서브 타이틀 -->
-            <div id="rack-subtitle">[[menuInfo.title]]: [[_formatTotal(itemCount)]]</div>
+    <div class="container">
+      <!-- 랙 서브 타이틀 -->
+      <div id="rack-subtitle">[[menuInfo.title]]: [[_formatTotal(itemCount)]]</div>
 
-            <!-- 랙 리스트 표현을 위한 그리드 -->
-            <things-resource-grid id="rack-grid" grid-height="[[gridHeight]]" model="[[gridModel]]"
-                columns="[[gridColumns]]" config="[[gridConfig]]" buttons="[[buttons]]" limit="100000" data="[[items]]"
-                total-count="[[itemCount]]" grid-save-action="[[menuInfo.grid_save_url]]"
-                fixed-column-count="[[menuInfo.fixed_columns]]">
-            </things-resource-grid>
+      <!-- 랙 리스트 표현을 위한 그리드 -->
+      <things-resource-grid id="rack-grid" grid-height="[[gridHeight]]" model="[[gridModel]]"
+        columns="[[gridColumns]]" config="[[gridConfig]]" buttons="[[buttons]]" limit="100000" data="[[items]]"
+        total-count="[[itemCount]]" grid-save-action="[[menuInfo.grid_save_url]]"
+        fixed-column-count="[[menuInfo.fixed_columns]]">
+      </things-resource-grid>
 
-            <!-- 게이트웨이 서브 타이틀 -->
-            <div id="gateway-subtitle">[[gatewayTitle]]: [[_formatTotal(gatewayItems.total)]] [[currentRackName]]
-            </div>
+      <!-- 게이트웨이 서브 타이틀 -->
+      <div id="gateway-subtitle">[[gatewayTitle]]: [[_formatTotal(gatewayItems.total)]] [[currentRackName]]
+      </div>
 
-            <!-- 게이트웨이 리스트 표현을 위한 그리드 -->
-            <things-resource-grid id="gateway-grid" model="[[detailGridModel]]" columns="[[detailGridColumns]]"
-                config="[[gridConfig]]" buttons="[[emptyButtons]]" limit="100000" data="[[gatewayItems]]"
-                total-count="[[gatewayItems.length]]">
-            </things-resource-grid>
+      <!-- 게이트웨이 리스트 표현을 위한 그리드 -->
+      <things-resource-grid id="gateway-grid" model="[[detailGridModel]]" columns="[[detailGridColumns]]"
+        config="[[gridConfig]]" buttons="[[emptyButtons]]" limit="100000" data="[[gatewayItems]]"
+        total-count="[[gatewayItems.length]]">
+      </things-resource-grid>
 
-            <!-- IND 서브 타이틀 -->
-            <div id="ind-subtitle">[[indMetaData.menu.name]]: [[_formatTotal(indItems.total)]] [[currentGatewayName]]
-            </div>
+      <!-- IND 서브 타이틀 -->
+      <div id="ind-subtitle">[[indMetaData.menu.name]]: [[_formatTotal(indItems.total)]] [[currentGatewayName]]
+      </div>
 
-            <!-- IND 리스트 표현을 위한 그리드 -->
-            <things-resource-grid id="ind-grid" model="[[indGridModel]]" columns="[[indGridColumns]]"
-                config="[[gridConfig]]" buttons="[[emptyButtons]]" limit="100000" data="[[indItems.items]]"
-                total-count="[[indItems.total]]" fixed-column-count="[[menuInfo.fixed_columns]]">
-            </things-resource-grid>
-        </div>
-    </template>
+      <!-- IND 리스트 표현을 위한 그리드 -->
+      <things-resource-grid id="ind-grid" model="[[indGridModel]]" columns="[[indGridColumns]]"
+        config="[[gridConfig]]" buttons="[[emptyButtons]]" limit="100000" data="[[indItems.items]]"
+        total-count="[[indItems.total]]" fixed-column-count="[[menuInfo.fixed_columns]]">
+      </things-resource-grid>
+    </div>
+  </template>
 
   <script>
     Polymer({

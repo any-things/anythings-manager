@@ -1,0 +1,255 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/things-ajax/things-ajax.html">
+<link rel="import" href="../../bower_components/things-meta/things-named-meta-behavior.html">
+
+<!--
+  기준 정보 > 셀 > 지시기 교체 팝업
+-->
+
+<dom-module id="indicator-change-popup">
+  <template>
+    <style>
+      :host {
+        @apply --layout-flex;
+        @apply --layout-vertical;
+        @apply --things-default-padding;
+        --grid-gap: 10px;
+      }
+
+      .container {
+        @apply(--layout-flex);
+        display: grid;
+        grid-template-rows: 50px 50px 50px auto;
+        grid-template-columns: auto auto;
+      }
+
+      #from-ind-code {
+        grid-row-start: 1;
+        grid-row-end: 2;
+        grid-column-start: 1;
+        grid-column-end: 3;
+      }
+
+      #cell-code {
+        grid-row-start: 2;
+        grid-row-end: 3;
+        grid-column-start: 1;
+        grid-column-end: 3;
+      }
+
+      #to-ind-code {
+        grid-row-start: 3;
+        grid-row-end: 4;
+        grid-column-start: 1;
+        grid-column-end: 3;
+      }
+
+      #button-group {
+        grid-row-start: 4;
+        grid-row-end: 5;
+        grid-column-start: 2;
+        grid-column-end: 3;
+        text-align:right;
+      }
+    </style>
+
+    <!-- 메타 호출 ajax -->
+    <things-ajax
+      auto
+      id="resource-meta"
+      method="GET"
+      resource-url="[[menuMetaUrl]]"
+      last-response="{{metaData}}">
+    </things-ajax>
+
+    <!-- 교체 호출 ajax -->
+    <things-ajax
+      id="change-indicator"
+      content-type="application/json"
+      resource-url="cells/change_indicator/:from/:to"
+      resource-action="update">
+    </things-ajax>
+
+    <!-- 그리드 컨테이너 -->
+    <div class="container">
+      <!-- 이전 표시기 코드 필드 -->
+      <things-input-field
+        id="from-ind-code"
+        class="from-field"
+        label="[[labels.fromIndCode]]"
+        value="[[fromIndCode]]"
+        disabled
+        readonly>
+      </things-input-field>
+
+      <!-- 이전 표시기 명 필드 -->
+      <things-input-field
+        id="cell-code"
+        class="input-field"
+        label="[[labels.cellCode]]"
+        value="[[cellCode]]"
+        disabled
+        readonly>
+      </things-input-field>
+
+      <!-- 변경할 표시기 코드 필드 -->
+      <things-input-field
+        id="to-ind-code"
+        class="input-field"
+        label="[[labels.toIndCode]]"
+        value="[[toIndCode]]"
+        onfocus>
+      </things-input-field>
+
+      <!-- 버튼 바 -->
+      <things-button-bar id="button-group" buttons="[[buttons]]"></things-button-bar>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'indicator-change-popup',
+
+      behaviors: [
+        Things.MsgBoxBehavior,
+        Things.NamedMetaBehavior
+      ],
+
+      properties: {
+        /**
+         * @description 라벨 텍스트 모음
+         ****************
+         * @type {Object}
+         */
+        labels: {
+          type: Object,
+          value: function() {
+            return {
+              cellCode: Things.DataGlobal.t('label.cell_cd'),
+              fromIndCode: Things.DataGlobal.t('label.from_ind_code'),
+              toIndCode: Things.DataGlobal.t('label.to_ind_code')
+            };
+          }
+        },
+
+        /**
+         * @description 버튼 리스트
+         ****************
+         * @type {Object}
+         */
+        buttons: {
+          type: Array,
+          value: function() {
+            return [{
+              id: 'change_ind-btn',
+              text: 'change_ind'
+            }, {
+              id: 'cancel-btn',
+              text: 'cancel'
+            }];
+          }
+        }
+      },
+
+      listeners: {
+        'button-group.cancel-btn-tap': '_closePopup',
+        'button-group.change_ind-btn-tap': '_changeIndicator',
+        'change-indicator.things-ajax-response': '_onChangeIndicatorSuccess'
+      },
+
+      /**
+       * @description ready
+       *************
+       */
+      ready: function() {
+        this.$$('#from-ind-code').$.input.style.textAlign = 'right';
+        this.$$('#cell-code').$.input.style.textAlign = 'right';
+        this.$$('#to-ind-code').$.input.style.textAlign = 'right';
+        this.$$('#to-ind-code').$.input.style.textTransform = 'uppercase';
+        this.$$('#to-ind-code').setTabindex(1);
+      },
+
+      /**
+       * @description attached
+       *************
+       */
+      attached: function() {
+        var self = this;
+        setTimeout(function() {
+          self.$$('#to-ind-code').focus();
+        }, 1000);
+      },
+
+      /**
+       * @description 표시기 교체
+       *************
+       * @param {Object} e
+       */
+      _changeIndicator: function(e) {
+        var toIndCode = this.$$('#to-ind-code').value;
+
+        if (toIndCode.length >= 0 && this.checkStr(toIndCode)) {
+          var ajax = this.$['change-indicator'];
+          ajax.resourceUrl = 'cells/change_indicator/' + this.fromIndCode + '/' + toIndCode.toUpperCase();
+          ajax.generateRequest();
+
+        } else {
+          this.openConfirmMsg({
+            type: 'error',
+            title: Things.DataGlobal.t('title.error'),
+            text: Things.DataGlobal.t('text.invalid_x_data', {
+              x: Things.DataGlobal.t('label.value')
+            }),
+            showCancelButton: false
+          });
+        }
+      },
+
+      /**
+       * @description 팝업 닫기
+       *************
+       * @param {Object} e
+       */
+      _closePopup: function(e) {
+        this.fire('things-dialog-close', {});
+      },
+
+      /**
+       * @description 표시기 교체 성공 이후
+       *************
+       * @param {Object} e
+       */
+      _onChangeIndicatorSuccess: function(e) {
+        if (e.detail.success) {
+          this.openConfirmMsg({
+            type: 'success',
+            title: Things.DataGlobal.t('title.success'),
+            text: Things.DataGlobal.t('text.Success to Update'),
+            showCancelButton: false,
+          }, function() {
+            this.fire('things-dialog-close', {});
+          }.bind(this));
+
+        } else {
+          this.openConfirmMsg({
+            type: 'error',
+            title: Things.DataGlobal.t('title.error'),
+            text: e.detail.msg,
+            showCancelButton: false
+          });
+        }
+      },
+
+      /**
+       * @description 영문 대소문자, 숫자만 체크, 유효하면 true
+       *************
+       * @param {String} str
+       */
+      checkStr: function(str) {
+        var regx = /[^\w]/;
+        return !regx.test(str);
+      }
+    });
+  </script>
+</dom-module>
