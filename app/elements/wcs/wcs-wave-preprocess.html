@@ -1,0 +1,270 @@
+<!--
+@license
+Copyright © HatioLab Inc. All rights reserved.
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<!--
+	WCS > Wave 수신 및 분배 > 설비 선택
+-->
+<dom-module id="wcs-wave-preprocess">
+  <template>
+    <style>
+      :host {
+        @apply --layout-vertical;
+      }
+
+      things-resource-grid {
+        @apply --layout-flex;
+      }
+    </style>
+
+    <!-- 메뉴 조회 AJAX -->
+    <things-ajax 
+      auto 
+      id="resource-meta" 
+      method="GET" 
+      resource-url="[[menuMetaUrl]]" 
+      last-response="{{metaData}}">
+    </things-ajax>
+
+    <!-- 설비 선택 확정 AJAX -->
+    <things-ajax 
+      id="send-to-wms-ajax" 
+      resource-url="cells/send_to_wms" 
+      method="POST"
+      content-type="application/json">
+    </things-ajax>
+
+    <!-- 검색 폼 -->
+    <things-search-form 
+      id="search-form" 
+      form-fields="[[searchFormFields]]" 
+      select-fields="[[selectFields]]"
+      sort-fields="[[sortFields]]" 
+      action-url="[[menuInfo.resource_url]]" 
+      page="{{page}}" 
+      limit="[[limit]]">
+    </things-search-form>
+
+    <!-- 그리드 -->
+    <things-resource-grid 
+      id="grid" 
+      model="[[gridModel]]"
+      columns="[[chartGridColumns]]" 
+      config="[[gridConfig]]" 
+      buttons="[[buttons]]" 
+      current-page="{{page}}" 
+      limit="{{limit}}"
+      data="[[items]]" 
+      total-count="[[itemCount]]"
+      fixed-column-count="2"
+      grid-save-action="menuInfo.grid_save_url">
+    </things-resource-grid>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'wcs-wave-preprocess',
+
+      behaviors: [
+        Things.ResourceMenuContentBehavior,
+        Things.MenuGridContentBehavior
+      ],
+
+      properties: {
+        /**
+         * @description 그리드 설정
+         ****************
+         * @type {Object}
+         */
+        gridConfig: {
+          type: Object,
+          value: {
+            options: {
+              checkBar: {
+                exclusive: true
+              }
+            },
+            displayOptions: {
+              minRowHeight: 50
+            }
+          }
+        },
+
+        /**
+         * @description 그리드 컬럼
+         ****************
+         * @type {Object}
+         */
+        gridColumns: {
+          observer: '_gridColumnsChanged'
+        }
+      },
+
+      listeners: {
+        'search-form.things-form-submit-success': '_onSearchSuccess',
+        'grid.back-btn-tap': '_onBackTap',
+        //'change_ind-btn-tap': '_onChangeIndicatorButtonTap',
+        //'send-to-wms-ajax.things-ajax-response': '_sendToWmsSuccess'
+      },
+
+      /**
+       * @description 그리드 컬럼 변경 시...
+       **************
+       * @param {Object} gridColumns
+       */
+      _gridColumnsChanged: function(gridColumns) {
+        var centerIdxNo = 76;
+        var first = 160;
+        var second = 320;
+        var third = 480;
+        var gaugeColors = ['#1E82FF', '#FF8282', '#4AB34A'];
+        var i = 0;
+
+        // _end_time으로 끝나는 컬럼의 경우 컬럼에 바차트 표시
+        gridColumns.forEach(function(column) {
+          if (column.name.indexOf('end_time') > 0) {
+            column.renderer = {
+              type: 'linearGauge',
+              startValue: 0,
+              endValue: third,
+              thickness: 9,
+              valueThickness: 0.5,
+              valueLocation: 'top',
+              ranges: [{
+                label: 'good',
+                endValue: first,
+                background: '#30000000'
+              }, {
+                label: 'normal',
+                startValue: first,
+                endValue: second,
+                background: '#20000000'
+              }, {
+                label: 'bad',
+                startValue: second,
+                endValue: third,
+                background: '#10000000'
+              }],
+              scale: {
+                ticks: [0, first, second, third],
+                tickLength: 0,
+                lineStroke: null
+              }
+            };
+
+            column.animations = [{
+              property: 'value',
+              duration: centerIdxNo
+            }];
+
+            column.styles = {
+              textAlignment: 'far',
+              fontSize: 14,
+              color: gaugeColors[i],
+              shapeInactiveColor: '#10000000',
+              shapeColor: gaugeColors[i],
+              padding: 4,
+              numberFormat: '#,###'
+            };
+
+            i++;
+
+          } else if (column.name == 'confirm') {
+            column.renderer = {
+              type: 'button',
+              imageUrl: '../../images/grid/check.png'
+            };
+            column.editable = false;
+          }
+        });
+
+        this.chartGridColumns = gridColumns;
+      },
+
+      /**
+       * @description 조회 성공시 ...
+       *******************
+       * @param {Object} event
+       */
+      _onSearchSuccess: function(event) {
+        var data = event.detail;
+        if (data) {
+          this.total = data.length;
+          this.items = data;
+        }
+      },
+
+      /**
+       * @description WMS 송신 버튼 클릭시 ...
+       *******************
+       * @param {Object} event
+       */
+      _onBackTap: function(event) {
+        page('/waves', {});
+      },
+
+      /**
+       * @description 표시기 교체 버튼 클릭시 ...
+       *******************
+       * @param {Object} event
+       */
+      _onChangeIndicatorButtonTap: function(event) {
+        var title = Things.DataGlobal.t(event.detail.text);
+        var resourceGrid = this.$.grid;
+        var rows = resourceGrid.getGridObject().getCheckedRows();
+
+        if (rows.length === 1) {
+          var rowObject = rows[0].getRowObject();
+          let view = this.create('indicator-change-popup', {
+            title: Things.DataGlobal.t('menu.indicator_change_popup'),
+            fromIndCode: rowObject.ind_cd,
+            cellCode: rowObject.cell_cd
+          });
+
+          this.fire('things-open-custom-size-dialog', {
+            view: view,
+            modal: true,
+            dialogSize: 'small',
+            closeCallback: function() {
+              this.$['search-form'].submitMyForm();
+            }.bind(this)
+          });
+
+        } else if (rows.length === 0) {
+          this.openConfirmMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('title.info'),
+            text: Things.DataGlobal.t('text.select_ind'),
+            showCancelButton: false
+          });
+
+        } else {
+          this.openConfirmMsg({
+            type: 'info',
+            title: Things.DataGlobal.t('title.info'),
+            text: Things.DataGlobal.t('text.select_one'),
+            showCancelButton: false
+          });
+        }
+      },
+
+      /**
+       * @description WMS 전송 성공시 ...
+       *******************
+       * @param {Object} e
+       */
+      _sendToWmsSuccess(e) {
+        var searchForm = this.$['search-form'];
+        this.openConfirmMsg({
+          type: 'success',
+          title: Things.DataGlobal.t('label.success'),
+          text: Things.DataGlobal.t('label.success'),
+          showCancelButton: false
+        }, searchForm.submitMyForm());
+      }
+    })
+  </script>
+</dom-module>

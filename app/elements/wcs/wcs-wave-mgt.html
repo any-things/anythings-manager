@@ -174,7 +174,7 @@ Copyright © HatioLab Inc. All rights reserved.
         'classify_wave-btn-tap': '_onClassifyWaveTap', // '대상 분류' 버튼 클릭시
         'split_wave-btn-tap': '_onSplitWaveTap', // 'Wave 분할' 버튼 클릭시
         'merge_wave-btn-tap': '_onMergeWaveTap', // 'Wave 병합' 버튼 클릭시
-        'select_equipment-btn-tap': '_onSelectEquipmentTap', // '설비 확정' 버튼 클릭시
+        'select_equipment-btn-tap': '_onSelectEquipmentTap', // '설비 선택' 버튼 클릭시
         'confirm_wave-btn-tap': '_onConfirmWaveTap', // 'Wave 확정' 버튼 클릭시
 
         'ready-to-receive-wave-ajax.things-ajax-response': '_openReceiveWavePopup', // 'Wave 수신 준비' 처리 완료시
@@ -259,7 +259,7 @@ Copyright © HatioLab Inc. All rights reserved.
           var grid = event.detail.grid;
           var row = grid.focusedRow();
           var data = row.getRowObject();
-          var routing = '/order';
+          var routing = '/wcs_wave_preprocess';
           data.batch_id = data.id;
           delete data.id;
           delete data.status;
