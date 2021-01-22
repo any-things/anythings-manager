@@ -3,6 +3,9 @@
 Copyright © HatioLab Inc. All rights reserved.
 -->
 
+<!-- 
+  바코드 표시 팝업
+-->
 <dom-module id="barcode-popup">
   <template>
     <style>
@@ -21,7 +24,6 @@ Copyright © HatioLab Inc. All rights reserved.
     <svg id="barcode-container"></svg>
     
     <div id="input-container">
-      <things-input-field id="sku-nm-input" label="[[skuNmLabel]]" readonly></things-input-field>
       <things-input-field id="current-code-input" label="[[currentCodeLabel]]" on-change="_codeValueChanged"></things-input-field>
     </div>
   </template>
@@ -32,32 +34,27 @@ Copyright © HatioLab Inc. All rights reserved.
 
       properties: {
         /**
-         * @description 상품명 다국어 라벨
-         */
-        skuNmLabel: {
-          type: String,
-          value: function() {
-            return Things.DataGlobal.t('label.sku_nm')
-          }
-        },
-
-        /**
-         * 현재 코드 타입의 다국어 라벨
+         * @description 현재 코드 타입의 다국어 라벨
+         *******************
+         * @type {String}
          */
         currentCodeLabel: {
           type: String
         },
 
         /**
-         * @description 상품 정보 오브젝트
+         * @description 오브젝트
+         ********************
+         * @type {Object}
          */
         sku: {
           type: Object
         },
 
         /**
-         * @description 바코드로 보여줄 대상
-         * 상품 코드, 상품 바코드, 박스 바코드
+         * @description 바코드로 보여줄 오브젝트의 대상 필드명 
+         ********************
+         * @type {String}
          */
         target: {
           type: String
@@ -65,6 +62,8 @@ Copyright © HatioLab Inc. All rights reserved.
 
         /**
          * @description JsBarcode 스크립트 로드 완료 여부
+         *********************
+         * @type {Boolean}
          */
         isScriptLoaded: {
           type: Boolean,
@@ -76,12 +75,17 @@ Copyright © HatioLab Inc. All rights reserved.
         '_getBarcodeImg(sku, target, isScriptLoaded)'
       ],
 
+      /**
+       * @description JsBarcode 라이브러리 다이나믹 로드
+       *************************
+       */
       ready: function() {
         this._loadJsBarcode();
       },
 
       /**
        * @description JsBarcode 라이브러리 다이나믹 로드
+       **************************
        */
       _loadJsBarcode: function() {
         if (!('JsBarcode' in window)) {
@@ -99,26 +103,32 @@ Copyright © HatioLab Inc. All rights reserved.
 
       /**
        * @description JsBarcode를 통해 바코드 이미지를 화면에 출력
+       **************************
+       * @param {Object} obj
+       * @param {String} target
+       * @param {Boolean} isScriptLoaded
        */
-      _getBarcodeImg: function(sku, target, isScriptLoaded) {
-        if (sku && target && isScriptLoaded) {
+      _getBarcodeImg: function(obj, target, isScriptLoaded) {
+        if (obj && target && isScriptLoaded) {
           this.currentCodeLabel = Things.DataGlobal.t('label.' + target);
-          this._setInputValues(sku.sku_nm, sku[target]);
-          JsBarcode(this.$['barcode-container'], sku[target]);
+          this._setInputValues(obj[target]);
+          JsBarcode(this.$['barcode-container'], obj[target]);
         }
       },
 
       /**
        * @description 현재 화면에 나타난 바코드의 정보를 input에 초기화하여 출력함
+       ***************************
+       * @param {String} currentCode
        */
-      _setInputValues: function(skuNm, currentCode) {
-        this.$['sku-nm-input'].value = skuNm;
+      _setInputValues: function(currentCode) {
         this.$['current-code-input'].value = currentCode;
       },
 
       /**
-       * @description 바코드 input의 값이 변경되면
-       * 변경된 내용을 화면에 출력함
+       * @description 바코드 input의 값이 변경되면 변경된 내용을 화면에 출력
+       ***************************
+       * @param {Object} event
        */
       _codeValueChanged: function(event) {
         var code = event.currentTarget.value;

@@ -6,6 +6,7 @@ Copyright © HatioLab Inc. All rights reserved.
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="./indicator-change-popup.html">
+<link rel="import" href="../base/barcode-popup.html">
 
 <!--
 	기준 정보 > 셀
@@ -84,6 +85,7 @@ Copyright © HatioLab Inc. All rights reserved.
 
       listeners: {
         'grid.send-btn-tap': '_onWmsSendButtonTap',
+        'grid.show_barcd-btn-tap': '_showBarcode',
         'change_ind-btn-tap': '_onChangeIndicatorButtonTap',
         'send-to-wms-ajax.things-ajax-response': '_sendToWmsSuccess'
       },
@@ -99,48 +101,86 @@ Copyright © HatioLab Inc. All rights reserved.
       },
 
       /**
+       * @description 셀 번호 바코드 팝업 표시
+       ******************
+       * @param {Object} event
+       */
+      _showBarcode: function(event) {
+        var checkedRow = this._getCheckedRow();
+        if (!checkedRow) return;
+
+        var popupView = document.createElement('barcode-popup');
+        popupView.title = Things.DataGlobal.t('label.cell_cd');
+        popupView.sku = checkedRow.getRowObject();
+        popupView.target = 'cell_cd';
+
+        this.fire('things-open-custom-size-dialog', {
+          view: popupView,
+          dialogSize: 'small',
+          modal: true
+        });
+
+        var gridObj = this.$['grid'].getGridObject();
+        gridObj.setChecked(checkedRow, false);
+      },
+
+      /**
+       * @description 체크한 그리드의 로우 오브젝트를 리턴함
+       * 하나의 로우만 체크해야하며 복수 혹은 체크하지 않을 경우 팝업 출력
+       ********************
+       */
+      _getCheckedRow: function() {
+        var gridObj = this.$['grid'].getGridObject();
+        var checkedRows = gridObj.getCheckedRows();
+
+        if (checkedRows && checkedRows.length == 1) {
+          return checkedRows[0];
+
+        } else {
+          if (!checkedRows || checkedRows.length == 0) {
+            this.openConfirmMsg({
+              type: 'info',
+              title: Things.DataGlobal.t('tooltip.select'),
+              text: Things.DataGlobal.t('text.select_item')
+            });
+
+          } else {
+            this.openConfirmMsg({
+              type: 'info',
+              title: Things.DataGlobal.t('title.info'),
+              text: Things.DataGlobal.t('text.select_one'),
+              showCancelButton: false
+            });
+          }
+
+          return null;
+        }
+      },
+
+      /**
        * @description 표시기 교체 버튼 클릭시 ...
        *******************
        * @param {Object} event
        */
       _onChangeIndicatorButtonTap: function(event) {
-        var title = Things.DataGlobal.t(event.detail.text);
-        var resourceGrid = this.$.grid;
-        var rows = resourceGrid.getGridObject().getCheckedRows();
+        var checkedRow = this._getCheckedRow();
+        if (!checkedRow) return;
 
-        if (rows.length === 1) {
-          var rowObject = rows[0].getRowObject();
-          let view = this.create('indicator-change-popup', {
-            title: Things.DataGlobal.t('menu.indicator_change_popup'),
-            fromIndCode: rowObject.ind_cd,
-            cellCode: rowObject.cell_cd
-          });
+        var cell = checkedRow.getRowObject();
+        let view = this.create('indicator-change-popup', {
+          title: Things.DataGlobal.t('menu.indicator_change_popup'),
+          fromIndCode: cell.ind_cd,
+          cellCode: cell.cell_cd
+        });
 
-          this.fire('things-open-custom-size-dialog', {
-            view: view,
-            modal: true,
-            dialogSize: 'small',
-            closeCallback: function() {
-              this.$['search-form'].submitMyForm();
-            }.bind(this)
-          });
-
-        } else if (rows.length === 0) {
-          this.openConfirmMsg({
-            type: 'info',
-            title: Things.DataGlobal.t('title.info'),
-            text: Things.DataGlobal.t('text.select_ind'),
-            showCancelButton: false
-          });
-
-        } else {
-          this.openConfirmMsg({
-            type: 'info',
-            title: Things.DataGlobal.t('title.info'),
-            text: Things.DataGlobal.t('text.select_one'),
-            showCancelButton: false
-          });
-        }
+        this.fire('things-open-custom-size-dialog', {
+          view: view,
+          modal: true,
+          dialogSize: 'small',
+          closeCallback: function() {
+            this.$['search-form'].submitMyForm();
+          }.bind(this)
+        });
       },
 
       /**
