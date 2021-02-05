@@ -385,7 +385,7 @@ Copyright © HatioLab Inc. All rights reserved.
             }
             return Object.assign(new Object(), b);
 
-          } else if (jobType === 'DPS' || jobType === 'QPS' || jobType == 'PDAS') {
+          } else if (jobType === 'DPS' || jobType === 'QPS' || jobType == 'PDAS' || jobType == 'SPS') {
             if (b.id == 'order_preprocess-btn' || b.id == 'change_status-btn') {
               b.hidden = true;
             } else if (b.id === 'merge_batch-btn' && status === 'READY') {
@@ -579,6 +579,7 @@ Copyright © HatioLab Inc. All rights reserved.
               case 'PDAS':
               case 'DPS':
               case 'QPS':
+              case 'SPS':
                 {
                   this._instructB2CBatchProcess(checkedRow);
                 }
@@ -945,13 +946,13 @@ Copyright © HatioLab Inc. All rights reserved.
                 this.$['search-form'].submitMyForm();
               }.bind(this)
             });
-          } else if ((checkedRow.job_type != 'DPS' && checkedRow.job_type != 'PDAS') && checkedRow.status != 'WAIT') { // DPS 외 작업은 가공 대기 상태에서 가능 
+          } else if ((checkedRow.job_type != 'DPS' && checkedRow.job_type != 'SPS' && checkedRow.job_type != 'PDAS') && checkedRow.status != 'WAIT') { // DPS 외 작업은 가공 대기 상태에서 가능 
             this.openInfoMsg({
               type: 'warning',
               title: Things.DataGlobal.t('text.is_not_wait_state')
             });
 
-          } else if ((checkedRow.job_type == 'DPS' || checkedRow.job_type == 'PDAS') && checkedRow.status != 'READY') { // DPS 는 작업지시 대기 상태에서 가능 
+          } else if ((checkedRow.job_type == 'DPS' || checkedRow.job_type == 'SPS' || checkedRow.job_type == 'PDAS') && checkedRow.status != 'READY') { // DPS 는 작업지시 대기 상태에서 가능 
             this.openInfoMsg({
               type: 'warning',
               title: Things.DataGlobal.t('text.is_not_ready_state')
