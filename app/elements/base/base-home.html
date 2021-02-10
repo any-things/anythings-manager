@@ -24,8 +24,8 @@ Copyright © HatioLab Inc. All rights reserved.
 			.container {
 				height: 100%;
 				display: grid;
-				grid-template-rows: 5% 25% 25% 25% auto;
-				grid-template-columns: 10% 65% 20% 5%;
+				grid-template-rows: 7% 27% 27% 27%;
+				grid-template-columns: 10% 75% 15%;
 				border-radius: 4px;
 				grid-column-gap: 1em;
 				grid-row-gap: 1em;
@@ -67,7 +67,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				grid-row-end: 1;
 				grid-column-start: 2;
 				grid-column-end: 2;
-				font-size: 15px;
+				font-size: 20px;
 				padding-top: 1.2em;
 				text-align: center;
         color: #222;
@@ -80,7 +80,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				grid-row-end: 1;
 				grid-column-start: 3;
 				grid-column-end: 3;
-				font-size: 15px;
+				font-size: 20px;
 				padding-top: 1.2em;
 				text-align: center;
         color: #222;
@@ -147,6 +147,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				grid-column-start: 3;
 				grid-column-end: 3;
 				background-color: rgba(255, 255, 255, .04);
+        padding: 0px 20px 0px 0px;
 			}
 
 			#second-month-sum {
@@ -156,6 +157,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				grid-column-start: 3;
 				grid-column-end: 3;
 				background-color: rgba(255, 255, 255, .04);
+        padding: 0px 20px 0px 0px;
 			}
 
 			#third-month-sum {
@@ -165,6 +167,7 @@ Copyright © HatioLab Inc. All rights reserved.
 				grid-column-start: 3;
 				grid-column-end: 3;
 				background-color: rgba(255, 255, 255, .04);
+        padding: 0px 20px 0px 0px;
 			}
 
 			div.bottom-section {
@@ -224,32 +227,36 @@ Copyright © HatioLab Inc. All rights reserved.
 			}
 		</style>
 
+    <!-- 최근 3개월 물동량 데이터 조회 -->
+    <things-ajax 
+      id="latest-volume-summary-ajax" 
+      resource-url="diy_services/latest-volume-summary/read.json" 
+      resource-action="find"
+      last-response="{{volumes}}">
+    </things-ajax>
+
 		<div class="container">
 			<div class="top-section"></div>
 
 			<div id="first-month-text">
-				<span class="month">12월</span>
+				<span class="month">[[firstMonth]]</span>
 			</div>
 
-			<div id="chart-subtitle">최근 3개월 물동량 추이
-				<!--span class="chart-info">전월 최대<br></span>
-				<span class="chart-info">전월 최소<br></span>
-				<span class="chart-info">단위: PCS</span-->
-			</div>
+			<div id="chart-subtitle">최근 3개월 물동량 추이</div>
 
 			<div id="first-chart-container">
         <canvas id="first-chart"></canvas>
 			</div>
 
-			<div id="sum-subtitle">누적 합계</div>
+			<div id="sum-subtitle">합계</div>
 
 			<div id="first-month-sum">
-				<span class="sum-text">1,123,456</span>
-				<span class="percent">5%<div class="arrow-down"></div></span>
+				<span class="sum-text">[[firstMonthSum]]</span>
+				<!--span class="percent">[[firstMonthUpDown]]%<div class="arrow-down"></div></span-->
 			</div>
 
 			<div id="second-month-text">
-				<span class="month">1월</span>
+				<span class="month">[[secondMonth]]</span>
 			</div>
 
 			<div id="second-chart-container">
@@ -257,12 +264,12 @@ Copyright © HatioLab Inc. All rights reserved.
 			</div>
 
 			<div id="second-month-sum">
-				<span class="sum-text">1,324,456</span>
-				<span class="percent">13%<div class="arrow-up"></div></span>
+				<span class="sum-text">[[secondMonthSum]]</span>
+				<!--span class="percent">[[secondMonthUpDown]]%<div class="arrow-up"></div></span-->
 			</div>
 
 			<div id="third-month-text">
-				<span class="month">2월</span>
+				<span class="month">[[thirdMonth]]</span>
 			</div>
 
 			<div id="third-chart-container">
@@ -270,13 +277,9 @@ Copyright © HatioLab Inc. All rights reserved.
 			</div>
 
 			<div id="third-month-sum">
-				<span class="sum-text">823,456</span>
-				<span class="percent">8%<div class="arrow-up"></div></span>
+				<span class="sum-text">[[thirdMonthSum]]</span>
+				<!--span class="percent">[[thirdMonthUpDown]]%<div class="arrow-up"></div></span-->
 			</div>
-
-			<!--div class="bottom-section">
-				<span class="bottom-text">이번 달은 <br>같은 기간 상승/하락</span>
-			</div-->
 		</div>
 	</template>
 
@@ -319,6 +322,97 @@ Copyright © HatioLab Inc. All rights reserved.
          */
         thirdChart: {
           type: Object
+        },
+
+        /**
+         * @description 3개월 물동량 정보
+         ********************
+         * @type {Object}
+         */
+        volumes: {
+          type: Object,
+          observer: '_onVolumeChanged'
+        },
+
+        /**
+         * @description 첫 월
+         ********************
+         * @type {String}
+         */
+        firstMonth: {
+          type: String
+        },
+
+        /**
+         * @description 첫 달 총 물동량
+         ********************
+         * @type {Number}
+         */
+        firstMonthSum: {
+          type: String
+        },
+
+        /**
+         * @description 첫 달 등락 %
+         ********************
+         * @type {Number}
+         */
+        firstMonthUpDown: {
+          type: Number
+        },
+
+        /**
+         * @description 두 번째 월
+         ********************
+         * @type {String}
+         */
+        secondMonth: {
+          type: String
+        },
+
+        /**
+         * @description 두 번째 달 총 물동량
+         ********************
+         * @type {Number}
+         */
+        secondMonthSum: {
+          type: String
+        },
+
+        /**
+         * @description 두 번째 달 등락 %
+         ********************
+         * @type {Number}
+         */
+        secondMonthUpDown: {
+          type: Number
+        },
+
+        /**
+         * @description 세 번째 월
+         ********************
+         * @type {String}
+         */
+        thirdMonth: {
+          type: String
+        },
+
+        /**
+         * @description 세 번째 달 총 물동량
+         ********************
+         * @type {Number}
+         */
+        thirdMonthSum: {
+          type: String
+        },
+
+        /**
+         * @description 세 번째 달 등락 %
+         ********************
+         * @type {Number}
+         */
+        thirdMonthUpDown: {
+          type: Number
         }
       },
 
@@ -334,11 +428,75 @@ Copyright © HatioLab Inc. All rights reserved.
         };
 
         setTimeout(function() {
+          // 1. 표시할 최근 3개월 년/월을 조회한다.
+          this.$['latest-volume-summary-ajax'].generateRequest();
+        }.bind(this), 1000);
+      },
+
+      /**
+       * @description 물동량 정보
+       *******************
+       * @param {Object} volumes
+       */
+      _onVolumeChanged: function(volumes) {
+        if (!volumes || volumes.length == 0) {
           this._renderFirstChart(this.randomActuals(31, '1'));
           this._renderSecondChart(this.randomActuals(28, '2'));
           this._renderThirdChart(this.randomActuals(31, '3'));
-        }.bind(this), 1000)
 
+        } else {
+          this.firstMonth = volumes[0].month;
+          this.secondMonth = volumes[1].month;
+          this.thirdMonth = volumes[2].month;
+
+          var firstDataSet = this.parseActual(volumes[0].data, '1');
+          var secondDataSet = this.parseActual(volumes[1].data, '2');
+          var thirdDataSet = this.parseActual(volumes[2].data, '3');
+
+          this._renderFirstChart(firstDataSet);
+          this._renderSecondChart(secondDataSet);
+          this._renderThirdChart(thirdDataSet);
+        }
+      },
+
+      /**
+       * @description 실적 정보를 파싱
+       *******************
+       * @param {Array} data
+       * @param {String} colorType
+       */
+      parseActual: function(data, colorType) {
+        var labels = data.labels;
+        var actual = data.volumes;
+        var color = 'rgba(';
+
+        if (colorType == '1') {
+          color += '255,99,132';
+          this.firstMonthSum = actual.reduce(function add(sum, curVal) {
+            return sum + curVal;
+          }, 0).toLocaleString('ko-KR');
+        } else if (colorType == '2') {
+          color += '153,102,255';
+          this.secondMonthSum = actual.reduce(function add(sum, curVal) {
+            return sum + curVal;
+          }, 0).toLocaleString('ko-KR');
+        } else {
+          color += '54,162,235';
+          this.thirdMonthSum = actual.reduce(function add(sum, curVal) {
+            return sum + curVal;
+          }, 0).toLocaleString('ko-KR');
+        }
+
+        return {
+          labels: labels,
+          datasets: [{
+            label: '실적',
+            borderWidth: 1,
+            backgroundColor: color + ',0.2)',
+            borderColor: color + ',1)',
+            data: actual
+          }]
+        };
       },
 
       /**
