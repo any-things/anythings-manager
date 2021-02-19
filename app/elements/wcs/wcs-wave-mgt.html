@@ -278,18 +278,15 @@ Copyright © HatioLab Inc. All rights reserved.
        * @param {Object} wave Wave 정보
        */
       changeButtonStatus: function(wave) {
-        if (wave == null) {
-          return;
-        }
+        var isSelected = wave != null;
 
-        var equipGroupCd = wave.equip_group_cd;
         var btns = this.buttons.map(function(b) {
-          if (!equipGroupCd || equipGroupCd === '') {
-            // 1. wave의 설비 그룹이 확정되지 않은 경우
-            b.hidden = (b.id == 'confirm_wave-btn');
+          if (isSelected) {
+            // 1. Wave 선택이 된 경우
+            b.hidden = (b.id == 'receive_wave-btn');
           } else {
-            // 2. wave의 설비 그룹이 확정된 경우
-            b.hidden = (b.id != 'confirm_wave-btn');
+            // 2. Wave 선택이 안 된 경우
+            b.hidden = (b.id == 'classify_wave-btn' || b.id == 'split_wave-btn' || b.id == 'merge_wave-btn' || b.id == 'select_equipment-btn' || b.id == 'confirm_wave-btn');
           }
 
           return Object.assign(new Object(), b);
